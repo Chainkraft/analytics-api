@@ -1,8 +1,7 @@
-import {Bytecode, Operation} from "@ethersproject/asm/src.ts/assembler";
-import {disassemble} from "@ethersproject/asm";
+import { Bytecode, Operation } from '@ethersproject/asm/src.ts/assembler';
+import { disassemble } from '@ethersproject/asm';
 
 class Opcode {
-
   protected readonly opcodes: Bytecode;
   protected readonly nodes: Map<number, Operation[]>;
 
@@ -25,7 +24,6 @@ class Opcode {
     });
     return nodeMap;
   }
-
 }
 
 export default Opcode;

@@ -1,11 +1,11 @@
-import {NextFunction, Request, Response} from 'express';
-import ContractService from "@services/contracts.service";
-import {ProxyImport} from "@/jobs/proxy-import.job";
-import {Contract} from "@interfaces/contracts.interface";
-import ContractMonitorService from "@services/contracts-monitor.service";
+import { NextFunction, Request, Response } from 'express';
+import ContractService from '@services/contracts.service';
+import { ProxyImport } from '@/jobs/proxy-import.job';
+import { Contract } from '@interfaces/contracts.interface';
+import ContractMonitorService from '@services/contracts-monitor.service';
 
 class ContractsController {
-  public contractMonitor = new ContractMonitorService();
+  public contractMonitorService = new ContractMonitorService();
   public contractService = new ContractService();
   public proxyImport = new ProxyImport();
 
@@ -24,7 +24,16 @@ class ContractsController {
       const contractAddress: string = req.params.address;
       const contract: Contract = await this.contractService.findContractByAddress(contractAddress);
 
-      res.status(200).json({data: contract, message: 'findOne'});
+      res.status(200).json({ data: contract, message: 'findOne' });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public processAddressActivityCallback = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await this.contractMonitorService.processAddressActivity(req.body);
+      res.status(200).json();
     } catch (error) {
       next(error);
     }
@@ -32,7 +41,7 @@ class ContractsController {
 
   public import = async (req: Request, res: Response) => {
     await this.proxyImport.doIt();
-    await this.contractMonitor.synchronizeContractWebhooks();
+    await this.contractMonitorService.synchronizeContractWebhooks();
     res.status(200).json();
   };
 }

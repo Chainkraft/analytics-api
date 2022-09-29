@@ -1,6 +1,6 @@
-import {Router} from 'express';
-import {Routes} from '@interfaces/routes.interface';
-import ContractsController from "@controllers/contracts.controller";
+import { Router } from 'express';
+import { Routes } from '@interfaces/routes.interface';
+import ContractsController from '@controllers/contracts.controller';
 
 class ContractsRoute implements Routes {
   public path = '/contracts';
@@ -15,6 +15,7 @@ class ContractsRoute implements Routes {
     this.router.get(`${this.path}`, this.contractsController.index);
     this.router.get(`${this.path}/import`, this.contractsController.import);
     this.router.get(`${this.path}/:address`, this.contractsController.getContractByAddress);
+    this.router.post(`${this.path}/callback/address-activity`, this.contractsController.processAddressActivityCallback);
   }
 }
 

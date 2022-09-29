@@ -1,4 +1,4 @@
-import {Project} from "@interfaces/projects.interface";
+import { Project } from '@interfaces/projects.interface';
 
 export interface Contract {
   address: string;
@@ -21,11 +21,11 @@ export interface Contract {
 }
 
 export interface ContractProxy {
-  type: ContractProxyType
+  type: ContractProxyType;
   implSlot: string;
   adminSlot: string;
-  implHistory: ContractProxyHistory[],
-  adminHistory: ContractProxyHistory[]
+  implHistory: ContractProxyHistory[];
+  adminHistory: ContractProxyHistory[];
 }
 
 export interface ContractProxyHistory {
@@ -37,13 +37,13 @@ export interface ContractProxyHistory {
 }
 
 export enum ContractNetwork {
-  ETH_MAINNET = "eth-mainnet"
+  ETH_MAINNET = 'eth-mainnet',
 }
 
 export enum ContractProxyType {
-  EIP1967 = "eip1967.proxy.implementation",
-  EIP1967Beacon = "eip1967.proxy.beacon",
-  EIP1822 = "eip1822.uups.proxable",
-  Zeppelin = "org.zeppelinos.proxy.implementation",
-  Unknown = ""
+  EIP1967 = 'eip1967.proxy.implementation',
+  EIP1967Beacon = 'eip1967.proxy.beacon',
+  EIP1822 = 'eip1822.uups.proxable',
+  Zeppelin = 'org.zeppelinos.proxy.implementation',
+  Unknown = '',
 }

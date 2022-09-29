@@ -22,36 +22,35 @@ export interface CreateWebhook {
 }
 
 export interface WebhookAddressActivity {
-  webhookId: string,
-  id: string,
-  createdAt: Date,
-  type: string,
+  webhookId: string;
+  id: string;
+  createdAt: Date;
+  type: string;
   event: {
-    network: string,
+    network: string;
     activity: [
       {
-        category: "token",
-        fromAddress: string,
-        toAddress: string,
-        erc721TokenId: "0x1",
+        fromAddress: string;
+        toAddress: string;
+        blockNum: string;
+        hash: string;
+        category: string;
+        value: string;
+        typeTraceAddress: string;
         rawContract: {
-          rawValue: "0x",
-          address: "0x93C46aA4DdfD0413d95D0eF3c478982997cE9861"
-        },
-        log: {
-          removed: false,
-          address: "0x93C46aA4DdfD0413d95D0eF3c478982997cE9861",
-          data: "0x",
-          topics: string[]
-        }
-      }
-    ]
-  }
+          rawValue: string;
+          address: string;
+          decimal;
+        };
+        log: any;
+      },
+    ];
+  };
 }
 
 export enum WebhookType {
-  MINED_TRANSACTION = "MINED_TRANSACTION",
-  DROPPED_TRANSACTION = "DROPPED_TRANSACTION",
-  ADDRESS_ACTIVITY = "ADDRESS_ACTIVITY",
-  NFT_ACTIVITY = "NFT_ACTIVITY"
+  MINED_TRANSACTION = 'MINED_TRANSACTION',
+  DROPPED_TRANSACTION = 'DROPPED_TRANSACTION',
+  ADDRESS_ACTIVITY = 'ADDRESS_ACTIVITY',
+  NFT_ACTIVITY = 'NFT_ACTIVITY',
 }

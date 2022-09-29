@@ -147,7 +147,7 @@ dist
 .ionide
 
 # IntelliJ
-.idea
+.idea/
 *.iws
 *.iml
 *.ipr
