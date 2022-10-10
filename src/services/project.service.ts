@@ -14,7 +14,7 @@ class ProjectService {
     if (isEmpty(name)) throw new HttpException(400, 'Name is empty');
 
     const project: Project = await this.project.findOne({ name });
-    if (!project) throw new HttpException(409, "Project doesn't exist");
+    if (!project) throw new HttpException(409, 'Project doesn\'t exist');
 
     return project;
   }

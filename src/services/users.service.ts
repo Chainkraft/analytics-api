@@ -17,7 +17,7 @@ class UserService {
     if (isEmpty(userId)) throw new HttpException(400, 'UserId is empty');
 
     const findUser: User = await this.users.findOne({ _id: userId });
-    if (!findUser) throw new HttpException(409, "User doesn't exist");
+    if (!findUser) throw new HttpException(409, 'User doesn\'t exist');
 
     return findUser;
   }
@@ -48,14 +48,14 @@ class UserService {
     }
 
     const updateUserById: User = await this.users.findByIdAndUpdate(userId, { userData });
-    if (!updateUserById) throw new HttpException(409, "User doesn't exist");
+    if (!updateUserById) throw new HttpException(409, 'User doesn\'t exist');
 
     return updateUserById;
   }
 
   public async deleteUser(userId: string): Promise<User> {
     const deleteUserById: User = await this.users.findByIdAndDelete(userId);
-    if (!deleteUserById) throw new HttpException(409, "User doesn't exist");
+    if (!deleteUserById) throw new HttpException(409, 'User doesn\'t exist');
 
     return deleteUserById;
   }

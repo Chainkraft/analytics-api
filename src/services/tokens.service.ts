@@ -1,8 +1,5 @@
-import { hash } from 'bcrypt';
-import { HttpException } from '@exceptions/HttpException';
 import { Token } from '@interfaces/tokens.inteface';
 import tokenModel from '@models/tokens.model';
-import { isEmpty } from '@utils/util';
 import axios from 'axios';
 import { stableByMarketCapParser } from '@/utils/helpers';
 
@@ -55,7 +52,7 @@ class TokenService {
     );
   }
 
-  /* 
+  /*
   Methods for twitter bots
   */
 

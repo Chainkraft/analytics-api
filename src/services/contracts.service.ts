@@ -3,7 +3,7 @@ import { isEmpty } from '@utils/util';
 import contractsModel from '@models/contracts.model';
 import { Contract, ContractNetwork, ContractProxyType } from '@interfaces/contracts.interface';
 import ProxyOpcode from '@services/opcode/proxy.opcode';
-import { etherscanApi, providers } from '@config';
+import { etherscans, providers } from '@config';
 import { getFulfilled, isFulfilled, isRejected } from '@utils/typeguard';
 
 class ContractService {
@@ -22,7 +22,7 @@ class ContractService {
     if (isEmpty(address)) throw new HttpException(400, 'Address is empty');
 
     const findContract: Contract = await this.contracts.findOne({ address });
-    if (!findContract) throw new HttpException(409, "Contract doesn't exist");
+    if (!findContract) throw new HttpException(409, 'Contract doesn\'t exist');
 
     return findContract;
   }
@@ -38,9 +38,10 @@ class ContractService {
 
   public async fetchContractDetails(address: string, network: ContractNetwork): Promise<Contract> {
     const provider = providers.get(network);
+    const etherscan = etherscans.get(network);
     const getByteCode = provider.core.getCode(address);
-    const getTransactions = etherscanApi.account.txlist(address, 1, 'latest', 1, 1, 'asc');
-    const getVerifiedCode = etherscanApi.contract.getsourcecode(address);
+    const getTransactions = etherscan.account.txlist(address, 1, 'latest', 1, 1, 'asc');
+    const getVerifiedCode = etherscan.contract.getsourcecode(address);
     const [byteCode, transactions, verifiedCode] = await Promise.allSettled([getByteCode, getTransactions, getVerifiedCode]);
     if (isRejected(byteCode) || isRejected(transactions)) {
       throw new HttpException(400, 'Could not get contract details');
@@ -49,8 +50,12 @@ class ContractService {
     const proxyOpcode = new ProxyOpcode(byteCode.value);
     const initTransaction = transactions.value.result[0];
     const verifiedContractItem = getFulfilled(verifiedCode)?.value?.result[0];
-    const implHistory = proxyOpcode.getProxyImplSlot() ? [{ newAddress: proxyOpcode.getProxyImplSlot() }] : [];
-    const adminHistory = proxyOpcode.getProxyAdminSlot() ? [{ newAddress: proxyOpcode.getProxyAdminSlot() }] : [];
+    const implHistory = proxyOpcode.getProxyImplSlot()
+      ? [{ newAddress: await provider.core.getStorageAt(address, proxyOpcode.getProxyImplSlot()) }]
+      : [];
+    const adminHistory = proxyOpcode.getProxyAdminSlot()
+      ? [{ newAddress: await provider.core.getStorageAt(address, proxyOpcode.getProxyAdminSlot()) }]
+      : [];
 
     return {
       address,

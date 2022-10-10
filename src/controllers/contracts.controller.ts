@@ -32,7 +32,7 @@ class ContractsController {
 
   public processAddressActivityCallback = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await this.contractMonitorService.processAddressActivity(req.body);
+      this.contractMonitorService.processAddressActivity(req.body).then(() => console.log('Received notifications'));
       res.status(200).json();
     } catch (error) {
       next(error);

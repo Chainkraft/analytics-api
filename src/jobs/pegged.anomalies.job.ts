@@ -5,7 +5,7 @@ import { EUploadMimeType, TwitterApi } from 'twitter-api-v2';
 import { ChartConfiguration } from 'chart.js';
 import { ChartCallback, ChartJSNodeCanvas } from 'chartjs-node-canvas';
 
-/* 
+/*
 Stable Alerts twitter bot.
 */
 export class PeggedAssetAnomaliesJob implements RecurringJob {
@@ -129,7 +129,12 @@ export class PeggedAssetAnomaliesJob implements RecurringJob {
       ChartJS.defaults.maintainAspectRatio = false;
     };
 
-    const chartJSNodeCanvas = new ChartJSNodeCanvas({ width, height, backgroundColour: '#1A1A2E', chartCallback: chartCallback });
+    const chartJSNodeCanvas = new ChartJSNodeCanvas({
+      width,
+      height,
+      backgroundColour: '#1A1A2E',
+      chartCallback: chartCallback,
+    });
     const buffer = await chartJSNodeCanvas.renderToBuffer(configuration);
     return buffer;
   }

@@ -4,7 +4,6 @@ import ContractService from '@services/contracts.service';
 import { WebhookAddressActivity, WebhookType } from '@interfaces/alchemy-webhook.interface';
 import { HOST } from '@config';
 import contractsMonitorLogModel from '@models/contracts-monitor-log.model';
-import { ContractMonitorLog } from '@interfaces/contracts-monitor-log.interface';
 
 class ContractMonitorService {
   private contractMonitorLogs = contractsMonitorLogModel;
@@ -12,18 +11,10 @@ class ContractMonitorService {
   public webhookService = new ContractWebhookService();
 
   public async processAddressActivity(callbackData: WebhookAddressActivity) {
-    console.debug('Alchemy webhook notify', callbackData);
-    const logs = callbackData?.event?.activity.map(event => ({
-      hash: event.hash,
-      fromAddress: event.fromAddress,
-      toAddress: event.toAddress,
-      blockNum: parseInt(event.blockNum, 16),
-      network: ContractNetwork[callbackData.event.network],
-      raw: callbackData,
-    } as ContractMonitorLog));
-    if(logs) {
-      await this.contractMonitorLogs.insertMany(logs);
-    }
+    this.contractMonitorLogs.create(callbackData)
+      .then(() => console.log('Alchemy webhook logged', callbackData.id))
+      .catch(error => console.log(error));
+
 
   }
 

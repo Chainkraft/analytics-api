@@ -38,6 +38,7 @@ export interface ContractProxyHistory {
 
 export enum ContractNetwork {
   ETH_MAINNET = 'eth-mainnet',
+  ETH_GOERLI = 'eth-goerli'
 }
 
 export enum ContractProxyType {
