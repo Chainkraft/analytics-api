@@ -1,13 +1,17 @@
-import { Document, model, Schema } from 'mongoose';
+import mongoose, { model, Schema, Document } from 'mongoose';
 import { Token } from '@interfaces/tokens.inteface';
 
 const tokenSchema: Schema = new Schema(
   {
-    address: {
+    name: {
       type: String,
       required: false,
     },
-    name: {
+    description: {
+      type: String,
+      required: false,
+    },
+    image: {
       type: String,
       required: false,
     },
@@ -15,25 +19,8 @@ const tokenSchema: Schema = new Schema(
       type: String,
       required: true,
     },
-    description: {
-      type: String,
-      required: false,
-    },
+
     current_price: {
-      type: Number,
-      required: false,
-    },
-    price_change_24h_usd: {
-      type: Number,
-      required: false,
-    },
-    prices: [
-      {
-        price: Number,
-        date: Date,
-      },
-    ],
-    market_cap: {
       type: Number,
       required: false,
     },
@@ -45,10 +32,57 @@ const tokenSchema: Schema = new Schema(
       type: Number,
       required: false,
     },
-    image: {
+    price_change_24h: {
+      type: Number,
+      required: false,
+    },
+    price_change_24h_percentage: {
+      type: Number,
+      required: false,
+    },
+
+    current_market_cap: {
+      type: Number,
+      required: false,
+    },
+    // market_caps: [
+    //   {
+    //     market_cap: Number,
+    //     date: Date,
+    //   },
+    // ],
+
+    volume_24h: {
+      type: Number,
+      required: false,
+    },
+
+    twitter: {
       type: String,
       required: false,
     },
+
+    audits: {
+      type: [String],
+      required: false,
+    },
+
+    chains: {
+      type: [String],
+      required: false,
+    },
+
+    // apis
+    llama_id: {
+      type: String,
+      required: false,
+    },
+
+    gecko_id: {
+      type: String,
+      required: false,
+    },
+
     pegged: {
       type: Boolean,
       required: false,
@@ -57,6 +91,8 @@ const tokenSchema: Schema = new Schema(
       type: String,
       required: false,
     },
+
+    prices: { type: mongoose.Schema.Types.ObjectId, ref: 'PricesHistory' },
   },
   {
     timestamps: true,

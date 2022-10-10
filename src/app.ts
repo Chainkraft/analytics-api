@@ -30,6 +30,7 @@ class App {
     this.initializeRoutes(routes);
     this.initializeSwagger();
     this.initializeErrorHandling();
+    this.initializeJobManager();
   }
 
   public listen() {
@@ -62,6 +63,9 @@ class App {
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
     this.app.use(cookieParser());
+
+    // static resources
+    this.app.use('/static', express.static('static'));
   }
 
   private initializeRoutes(routes: Routes[]) {

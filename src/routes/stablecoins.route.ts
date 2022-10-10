@@ -2,8 +2,8 @@ import { Router } from 'express';
 import TokensController from '@controllers/tokens.controller';
 import { Routes } from '@interfaces/routes.interface';
 
-class TokensRoute implements Routes {
-  public path = '/tokens';
+class StablecoinsRoute implements Routes {
+  public path = '/stablecoins';
   public router = Router();
   public tokensController = new TokensController();
 
@@ -12,8 +12,9 @@ class TokensRoute implements Routes {
   }
 
   private initializeRoutes() {
+    this.router.get(`${this.path}`, this.tokensController.getPeggedTokens);
     this.router.get(`${this.path}/:symbol`, this.tokensController.getTokenDetails);
   }
 }
 
-export default TokensRoute;
+export default StablecoinsRoute;

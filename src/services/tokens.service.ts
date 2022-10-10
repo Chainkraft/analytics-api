@@ -1,52 +1,72 @@
-import { Token } from '@interfaces/tokens.inteface';
+import { MarketCapHistory, Token, PriceHistory } from '@interfaces/tokens.inteface';
 import tokenModel from '@models/tokens.model';
-import axios from 'axios';
-import { stableByMarketCapParser } from '@/utils/helpers';
+import { llamaStablecoinDetailsParser, llamaStablesListParser, stableByMarketCapParser } from '@/utils/helpers';
+import marketCapHistoryModel from '@/models/mcap-history.model';
+import priceHistoryModel from '@/models/prices-history.model';
+
+import TokenApiService from './token-apis.service';
+import PriceService from './prices.service';
+import { isEmpty } from '@/utils/util';
+import { HttpException } from '@/exceptions/HttpException';
 
 class TokenService {
   public tokens = tokenModel;
+  public marketCapHistory = marketCapHistoryModel;
+  public priceHistory = priceHistoryModel;
+  private priceService = new PriceService();
+  private tokenApiService = new TokenApiService();
 
   public async findAllToken(): Promise<Token[]> {
     const tokens: Token[] = await this.tokens.find();
     return tokens;
   }
 
-  public async findAllPeggedTokens(): Promise<Token[]> {
+  public async findAllStablecoins(): Promise<Token[]> {
     const tokens: Token[] = await this.tokens.find({ pegged: true });
-    if (tokens.length > 0) {
+
+    if (tokens.length == 0) {
+      return this.fetchFreshGeckoAndLlamaStablecoins();
+    } else {
       const refresh = (Date.now() - tokens[0].updatedAt.getTime()) / 1000 > 120 ? true : false;
       if (refresh) {
-        console.log('Fetching fresh stablecoins');
-        return this.fetchFreshPeggedAssets();
+        return this.fetchFreshGeckoAndLlamaStablecoins();
       }
     }
     return tokens;
   }
 
-  private async fetchFreshPeggedAssets(): Promise<Token[]> {
-    const stablesByMarketCap = await axios.get(
-      'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&category=stablecoins&order=market_cap_desc&per_page=100&page=1&sparkline=false',
+  public async fetchFreshGeckoAndLlamaStablecoins(): Promise<Token[]> {
+    const llamaStables = await this.tokenApiService.getStablecoinsFromDefiLlama();
+    const llamaStablesPeggedUSD = llamaStables.filter((token: any) => token.pegType.includes('peggedUSD') && token.price);
+
+    const geckoTokens = await this.tokenApiService.getGeckoTokens(
+      'usd',
+      llamaStablesPeggedUSD.map(token => token.gecko_id),
     );
 
-    const filteredStables = stablesByMarketCap.data.filter(
-      (element: any) => !element.name.toLowerCase().includes('gold') && !element.name.toLowerCase().includes('eur'),
-    );
+    const tokens: Token[] = [];
 
-    const coins: Token[] = [];
-
-    filteredStables.map((coin: any) => {
-      coins.push(stableByMarketCapParser(coin));
+    llamaStablesPeggedUSD.map((llamaToken: any) => {
+      const updatedToken: Token = llamaStablesListParser(llamaToken);
+      const geckoToken = geckoTokens.data.find(gecko => gecko.id == updatedToken.gecko_id);
+      if (geckoToken !== undefined) {
+        updatedToken.image = geckoToken.image;
+        updatedToken.current_price = geckoToken.current_price;
+        updatedToken.volume_24h = geckoToken.total_volume;
+        updatedToken.price_change_24h = geckoToken.price_change_24h;
+      } else {
+        updatedToken.current_price = llamaToken.price;
+      }
+      tokens.push(updatedToken);
     });
 
-    return await Promise.all(
-      coins.map(async (coin: any) => {
-        // array push definition
-        coin.pegged = true;
-        coin.$push = { prices: { price: coin.current_price, date: Date.now() } };
+    return Promise.all(
+      tokens.map(async (token: Token) => {
+        token.pegged = true;
 
-        return await this.tokens.findOneAndUpdate({ symbol: coin.symbol }, coin, {
+        return this.tokens.findOneAndUpdate({ symbol: token.symbol }, token, {
           new: true,
-          upsert: true, // Make this update into an upsert
+          upsert: true,
         });
       }),
     );
@@ -63,67 +83,50 @@ class TokenService {
 
     const depeggedLlamaTokens = llamaTokens.filter((token: any, _ind: any, _arr: any) => token.pegType.includes('peggedUSD') && token.price < 1);
 
-    const lastWeekPrices = [];
-    for (let i = 0; i < 7; i++) {
-      lastWeekPrices.push(llamaPrices.pop());
+    if (isEmpty(token)) throw new HttpException(400, 'Token not found');
+
+    const refresh = (Date.now() - token.updatedAt.getTime()) / 1000 > 120 ? true : false;
+    if (refresh) {
+      return this.fetchFreshTokenDetails(token);
     }
 
-    const averagePrices = new Map<string, number>();
-    for (const day of lastWeekPrices) {
-      for (const key in day.prices) {
-        const dayPrice = day.prices[key];
-        if (averagePrices.has(key)) {
-          averagePrices.set(key, averagePrices.get(key) + dayPrice);
-        } else {
-          averagePrices.set(key, dayPrice);
-        }
-      }
-    }
-
-    for (const [key, value] of averagePrices) {
-      averagePrices.set(key, value / 7);
-    }
-
-    const depegged: { name: string; symbol: string; id: string; price: number; avgPrice: number; prices: number[]; chains: string[] }[] = [];
-
-    for (const llamaToken of depeggedLlamaTokens) {
-      const averagePrice = averagePrices.get(llamaToken.gecko_id);
-      const weeksPrices = [];
-      for (const day of lastWeekPrices) {
-        for (const key in day.prices) {
-          if (key == llamaToken.gecko_id) {
-            weeksPrices.push(day.prices[key]);
-          }
-        }
-      }
-
-      if (llamaToken.price - averagePrice < -0.01) {
-        depegged.push({
-          name: llamaToken.name,
-          symbol: llamaToken.symbol,
-          id: llamaToken.gecko_id,
-          price: llamaToken.price,
-          avgPrice: averagePrice,
-          prices: weeksPrices,
-          chains: llamaToken.chains,
-        });
-      }
-    }
-
-    console.log('depegged: ');
-    console.log(depegged);
-
-    return depegged;
+    return {
+      token: token,
+      marketCapHistory: await this.marketCapHistory.findOne({ token: tokenSymbol }),
+      priceHistory: await this.priceService.findPriceHistoryForToken(tokenSymbol),
+    };
   }
 
-  private async getStablecoinsPricesFromDefiLlama(): Promise<any> {
-    const llamaPrices = await axios.get('https://stablecoins.llama.fi/stablecoinprices');
-    return llamaPrices.data;
+  private async fetchFreshTokenDetails(token: Token): Promise<{ token: Token; marketCapHistory: MarketCapHistory; priceHistory: PriceHistory }> {
+    const llamaToken = await this.tokenApiService.getStablecoinDetailsFromDefiLlama(token.llama_id);
+    const newToken = llamaStablecoinDetailsParser(llamaToken);
+
+    return {
+      token: await this.tokens.findOneAndUpdate({ llama_id: newToken.llama_id }, newToken, {
+        new: true,
+        upsert: true,
+      }),
+      marketCapHistory: await this.computeMarketCapHistory(token.symbol, llamaToken),
+      priceHistory: await this.priceService.findPriceHistoryForToken(token.symbol),
+    };
   }
 
-  private async getStablecoinsFromDefiLlama(): Promise<any> {
-    const llamaStables = await axios.get('https://stablecoins.llama.fi/stablecoins?includePrices=true');
-    return llamaStables.data.peggedAssets;
+  private async computeMarketCapHistory(tokenSymbol: string, llamaToken: any): Promise<MarketCapHistory> {
+    const marketCapHistory = await this.marketCapHistory.findOne({ symbol: tokenSymbol });
+
+    if (marketCapHistory === null) {
+      const freshMarketCapHistory = {
+        market_caps: llamaToken.tokens.map((mCapRow: any) => {
+          return { date: mCapRow.date * 1000, market_cap: mCapRow.circulating.peggedUSD };
+        }),
+      };
+
+      return this.marketCapHistory.findOneAndUpdate({ symbol: tokenSymbol }, freshMarketCapHistory, {
+        new: true,
+        upsert: true,
+      });
+    }
+    return marketCapHistory;
   }
 }
 
