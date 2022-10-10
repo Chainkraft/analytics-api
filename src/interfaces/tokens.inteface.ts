@@ -1,15 +1,42 @@
 export interface Token {
-  address: string;
   name: string;
-  symbol: string;
   description: string;
+  image: string;
+
+  symbol: string;
+
   current_price: number;
-  prices: [{ price: number; date: Date }];
-  price_change_24h_usd: number;
-  market_cap: number;
   atl: number;
   ath: number;
-  updatedAt: Date;
+  price_change_24h: number;
+  price_change_24h_percentage: number;
+
+  current_market_cap: number;
+
+  volume_24h: number;
+
   pegged: boolean;
   peggedAsset: string;
+
+  // new
+  twitter: string;
+  audits: string[];
+  chains: string[];
+
+  // apis
+  llama_id: string;
+  gecko_id: string;
+
+  updatedAt: Date;
+}
+
+export interface PriceHistory {
+  token: string;
+  gecko_id: string;
+  prices: { price: number; date: Date }[];
+}
+
+export interface MarketCapHistory {
+  token: string;
+  market_caps: { market_cap: number; date: Date }[];
 }

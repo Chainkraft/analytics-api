@@ -23,6 +23,21 @@ export const stableByMarketCapParser = R.applySpec({
   image: R.pipe(R.prop('image')),
 });
 
+export const llamaStablesListParser = R.applySpec({
+  gecko_id: R.pipe(R.prop('gecko_id')),
+  llama_id: R.pipe(R.prop('id')),
+  name: R.pipe(R.prop('name')),
+  symbol: R.pipe(R.prop('symbol')),
+  chains: R.pipe(R.prop('chains')),
+});
+
+export const llamaStablecoinDetailsParser = R.applySpec({
+  description: R.pipe(R.prop('description')),
+  audits: R.pipe(R.prop('auditLinks')),
+  twitter: R.pipe(R.prop('twitter')),
+  llama_id: R.pipe(R.prop('id')),
+});
+
 export const currencyFormat = (num: string, fraction = 0) =>
   new Intl.NumberFormat('en-US', {
     style: 'currency',

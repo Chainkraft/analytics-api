@@ -1,5 +1,4 @@
 import mongoose, { Document, model, Schema } from 'mongoose';
-import { Contract } from '@interfaces/contracts.interface';
 import { Project } from '@interfaces/projects.interface';
 
 const projectSchema: Schema = new Schema({
