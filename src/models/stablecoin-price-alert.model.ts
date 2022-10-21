@@ -1,4 +1,4 @@
-import { model, Schema, Document } from 'mongoose';
+import { Document, model, Schema } from 'mongoose';
 import { StablecoinPriceAlert } from '@/interfaces/alerts.interface';
 
 const stablecoinPriceAlertSchema: Schema = new Schema(

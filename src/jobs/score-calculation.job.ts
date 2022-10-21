@@ -58,7 +58,7 @@ export class RefreshScoreJob implements RecurringJob {
 
         const standardDeviation = Math.sqrt(
           sortedPrices.reduce((acc, val) => acc.concat((val - meanValue) ** 2), []).reduce((acc, val) => acc + val, 0) /
-            (sortedPrices.length - (usePopulation ? 0 : 1)),
+          (sortedPrices.length - (usePopulation ? 0 : 1)),
         );
 
         return standardDeviation;

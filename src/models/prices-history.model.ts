@@ -1,4 +1,4 @@
-import { model, Schema, Document } from 'mongoose';
+import { Document, model, Schema } from 'mongoose';
 import { PriceHistory } from '@interfaces/tokens.inteface';
 
 const priceHistorySchema: Schema = new Schema(

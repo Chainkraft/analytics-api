@@ -1,4 +1,4 @@
-import { model, Schema, Document } from 'mongoose';
+import { Document, model, Schema } from 'mongoose';
 import { Score } from '@/interfaces/scores.interface';
 
 const scoreSchema: Schema = new Schema(

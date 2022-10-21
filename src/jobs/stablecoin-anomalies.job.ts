@@ -9,7 +9,7 @@ import AlertService from '@/services/alerts.service';
 import { isEmpty } from '@/utils/util';
 import TokenApiService from '@/services/token-apis.service';
 
-/* 
+/*
   Stable Alerts twitter bot.
 */
 export class StablecoinAnomaliesJob implements RecurringJob {
@@ -25,15 +25,15 @@ export class StablecoinAnomaliesJob implements RecurringJob {
     const tweetTokens = isEmpty(latestAlert)
       ? tokens
       : tokens.filter(token => {
-          const previousTokenAlarm = latestAlert.tokens.find(yesterdayToken => yesterdayToken.token === token.symbol);
-          if (!isEmpty(previousTokenAlarm)) {
-            const diff = previousTokenAlarm.price - token.price;
-            if (diff > 0.03) return true;
-            else return false;
-          }
+        const previousTokenAlarm = latestAlert.tokens.find(yesterdayToken => yesterdayToken.token === token.symbol);
+        if (!isEmpty(previousTokenAlarm)) {
+          const diff = previousTokenAlarm.price - token.price;
+          if (diff > 0.03) return true;
+          else return false;
+        }
 
-          return true;
-        });
+        return true;
+      });
 
     if (tweetTokens.length == 0) return;
 
@@ -232,7 +232,12 @@ export class StablecoinAnomaliesJob implements RecurringJob {
       ChartJS.defaults.maintainAspectRatio = false;
     };
 
-    const chartJSNodeCanvas = new ChartJSNodeCanvas({ width, height, backgroundColour: '#1A1A2E', chartCallback: chartCallback });
+    const chartJSNodeCanvas = new ChartJSNodeCanvas({
+      width,
+      height,
+      backgroundColour: '#1A1A2E',
+      chartCallback: chartCallback,
+    });
     const buffer = await chartJSNodeCanvas.renderToBuffer(configuration);
     return buffer;
   }

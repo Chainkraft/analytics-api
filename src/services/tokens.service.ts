@@ -1,4 +1,4 @@
-import { MarketCapHistory, Token, PriceHistory } from '@interfaces/tokens.inteface';
+import { MarketCapHistory, PriceHistory, Token } from '@interfaces/tokens.inteface';
 import tokenModel from '@models/tokens.model';
 import { llamaStablecoinDetailsParser, llamaStablesListParser } from '@/utils/helpers';
 import marketCapHistoryModel from '@/models/mcap-history.model';

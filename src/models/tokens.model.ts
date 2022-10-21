@@ -1,4 +1,4 @@
-import mongoose, { model, Schema, Document } from 'mongoose';
+import { Document, model, Schema } from 'mongoose';
 import { Token } from '@interfaces/tokens.inteface';
 
 const tokenSchema: Schema = new Schema(
