@@ -19,7 +19,6 @@ const tokenSchema: Schema = new Schema(
       type: String,
       required: true,
     },
-
     current_price: {
       type: Number,
       required: false,
@@ -40,33 +39,22 @@ const tokenSchema: Schema = new Schema(
       type: Number,
       required: false,
     },
-
     current_market_cap: {
       type: Number,
       required: false,
     },
-    // market_caps: [
-    //   {
-    //     market_cap: Number,
-    //     date: Date,
-    //   },
-    // ],
-
     volume_24h: {
       type: Number,
       required: false,
     },
-
     twitter: {
       type: String,
       required: false,
     },
-
     audits: {
       type: [String],
       required: false,
     },
-
     chains: {
       type: [String],
       required: false,
@@ -91,8 +79,10 @@ const tokenSchema: Schema = new Schema(
       type: String,
       required: false,
     },
-
-    prices: { type: mongoose.Schema.Types.ObjectId, ref: 'PricesHistory' },
+    pegMechanism: {
+      type: String,
+      required: false,
+    },
   },
   {
     timestamps: true,

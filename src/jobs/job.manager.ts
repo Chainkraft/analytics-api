@@ -1,13 +1,13 @@
-import { StablecoinAnomaliesJob } from './stablecoin-anomalies.job';
 import { RecurringJob } from './recurring.job';
 import { RefreshStablecoinPricesJob } from './refresh-stablecoin-prices.job';
+import { RefreshScoreJob } from './score-calculation.job';
 
 export class JobManager {
   jobs: RecurringJob[] = [];
 
   constructor() {
     this.addJob(new RefreshStablecoinPricesJob());
-    this.addJob(new StablecoinAnomaliesJob());
+    this.addJob(new RefreshScoreJob());
   }
 
   addJob(...jobs: RecurringJob[]): boolean {

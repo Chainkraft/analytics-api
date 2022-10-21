@@ -11,7 +11,7 @@ class AlertService {
   }
 
   public async findLatestStablecoinPriceAlert(): Promise<StablecoinPriceAlert> {
-    return this.stablecoinPriceAlertModel.findOne().sort({ created_at: -1 });
+    return this.stablecoinPriceAlertModel.findOne().sort({ createdAt: -1 });
   }
 
   public async createStablecoinAlert(alert: StablecoinPriceAlert): Promise<StablecoinPriceAlert> {

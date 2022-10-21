@@ -1,6 +1,6 @@
 import { MarketCapHistory, Token, PriceHistory } from '@interfaces/tokens.inteface';
 import tokenModel from '@models/tokens.model';
-import { llamaStablecoinDetailsParser, llamaStablesListParser, stableByMarketCapParser } from '@/utils/helpers';
+import { llamaStablecoinDetailsParser, llamaStablesListParser } from '@/utils/helpers';
 import marketCapHistoryModel from '@/models/mcap-history.model';
 import priceHistoryModel from '@/models/prices-history.model';
 
@@ -27,7 +27,7 @@ class TokenService {
     if (tokens.length == 0) {
       return this.fetchFreshGeckoAndLlamaStablecoins();
     } else {
-      const refresh = (Date.now() - tokens[0].updatedAt.getTime()) / 1000 > 120 ? true : false;
+      const refresh = (Date.now() - tokens[0].updatedAt.getTime()) / 1000 > 10 ? true : false;
       if (refresh) {
         return this.fetchFreshGeckoAndLlamaStablecoins();
       }
@@ -54,6 +54,7 @@ class TokenService {
         updatedToken.current_price = geckoToken.current_price;
         updatedToken.volume_24h = geckoToken.total_volume;
         updatedToken.price_change_24h = geckoToken.price_change_24h;
+        updatedToken.current_market_cap = geckoToken.market_cap;
       } else {
         updatedToken.current_price = llamaToken.price;
       }
@@ -72,27 +73,20 @@ class TokenService {
     );
   }
 
-  /*
-  Methods for twitter bots
-  */
-
-  public async getPeggedAssetsWithAnomalies() {
-    const llamaTokens = await this.getStablecoinsFromDefiLlama();
-    const llamaPrices = await this.getStablecoinsPricesFromDefiLlama();
-    llamaPrices.pop();
-
-    const depeggedLlamaTokens = llamaTokens.filter((token: any, _ind: any, _arr: any) => token.pegType.includes('peggedUSD') && token.price < 1);
+  public async findStablecoinDetails(tokenSymbol: string): Promise<{ token: Token; marketCapHistory: MarketCapHistory; priceHistory: PriceHistory }> {
+    const token: Token = await this.tokens.findOne({ symbol: tokenSymbol });
+    const marketCapHistory: MarketCapHistory = await this.marketCapHistory.findOne({ symbol: tokenSymbol });
 
     if (isEmpty(token)) throw new HttpException(400, 'Token not found');
 
-    const refresh = (Date.now() - token.updatedAt.getTime()) / 1000 > 120 ? true : false;
+    const refresh = (Date.now() - token.updatedAt.getTime()) / 1000 > 60 || isEmpty(marketCapHistory) ? true : false;
     if (refresh) {
       return this.fetchFreshTokenDetails(token);
     }
 
     return {
       token: token,
-      marketCapHistory: await this.marketCapHistory.findOne({ token: tokenSymbol }),
+      marketCapHistory: marketCapHistory,
       priceHistory: await this.priceService.findPriceHistoryForToken(tokenSymbol),
     };
   }
@@ -114,7 +108,8 @@ class TokenService {
   private async computeMarketCapHistory(tokenSymbol: string, llamaToken: any): Promise<MarketCapHistory> {
     const marketCapHistory = await this.marketCapHistory.findOne({ symbol: tokenSymbol });
 
-    if (marketCapHistory === null) {
+    // if history is from yesterday, then refresh
+    if (isEmpty(marketCapHistory) || marketCapHistory.updatedAt.toDateString() !== new Date().toDateString()) {
       const freshMarketCapHistory = {
         market_caps: llamaToken.tokens.map((mCapRow: any) => {
           return { date: mCapRow.date * 1000, market_cap: mCapRow.circulating.peggedUSD };
@@ -126,6 +121,7 @@ class TokenService {
         upsert: true,
       });
     }
+
     return marketCapHistory;
   }
 }

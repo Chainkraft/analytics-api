@@ -17,6 +17,7 @@ export interface Token {
 
   pegged: boolean;
   peggedAsset: string;
+  pegMechanism: string;
 
   // new
   twitter: string;
@@ -27,16 +28,21 @@ export interface Token {
   llama_id: string;
   gecko_id: string;
 
-  updatedAt: Date;
+  updatedAt?: Date;
+  createdAt?: Date;
 }
 
 export interface PriceHistory {
   token: string;
   gecko_id: string;
   prices: { price: number; date: Date }[];
+  updatedAt?: Date;
+  createdAt?: Date;
 }
 
 export interface MarketCapHistory {
   token: string;
   market_caps: { market_cap: number; date: Date }[];
+  updatedAt?: Date;
+  createdAt?: Date;
 }
