@@ -12,9 +12,8 @@ class ContractsRoute implements Routes {
   }
 
   private initializeRoutes() {
-    this.router.get(`${this.path}`, this.contractsController.index);
-    this.router.get(`${this.path}/import`, this.contractsController.import);
-    this.router.get(`${this.path}/:address`, this.contractsController.getContractByAddress);
+    this.router.get(`${this.path}`, this.contractsController.getContracts);
+    this.router.get(`${this.path}/:network/:address`, this.contractsController.getContract);
     this.router.post(`${this.path}/callback/address-activity`, this.contractsController.processAddressActivityCallback);
   }
 }

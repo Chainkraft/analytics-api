@@ -5,6 +5,7 @@ import { Contract, ContractNetwork, ContractProxyType } from '@interfaces/contra
 import ProxyOpcode from '@services/opcode/proxy.opcode';
 import { etherscans, providers } from '@config';
 import { getFulfilled, isFulfilled, isRejected } from '@utils/typeguard';
+import { ObjectId } from 'mongoose';
 
 class ContractService {
   public contracts = contractsModel;
@@ -18,13 +19,19 @@ class ContractService {
     return this.contracts.find({ network });
   }
 
-  public async findContractByAddress(address: string): Promise<Contract> {
-    if (isEmpty(address)) throw new HttpException(400, 'Address is empty');
+  public async findContractsByNetwork(addresses: string[], network: ContractNetwork): Promise<Contract[]> {
+    if (isEmpty(network)) throw new HttpException(400, 'Network is empty');
+    return this.contracts.find({ address: { '$in': addresses }, network });
+  }
 
-    const findContract: Contract = await this.contracts.findOne({ address });
-    if (!findContract) throw new HttpException(409, 'Contract doesn\'t exist');
+  public async findContractsByProject(projectId: ObjectId): Promise<Contract[]> {
+    if (projectId === undefined) throw new HttpException(400, 'Project is empty');
+    return this.contracts.find({ 'project': projectId });
+  }
 
-    return findContract;
+  public async findContract(address: string, network: ContractNetwork): Promise<Contract> {
+    if (isEmpty(address) || isEmpty(network)) throw new HttpException(400, 'Address is empty');
+    return this.contracts.findOne({ address, network });
   }
 
   public async createContract(contract: Contract): Promise<Contract> {
@@ -51,10 +58,10 @@ class ContractService {
     const initTransaction = transactions.value.result[0];
     const verifiedContractItem = getFulfilled(verifiedCode)?.value?.result[0];
     const implHistory = proxyOpcode.getProxyImplSlot()
-      ? [{ newAddress: await provider.core.getStorageAt(address, proxyOpcode.getProxyImplSlot()) }]
+      ? [{ address: await provider.core.getStorageAt(address, proxyOpcode.getProxyImplSlot()) }]
       : [];
     const adminHistory = proxyOpcode.getProxyAdminSlot()
-      ? [{ newAddress: await provider.core.getStorageAt(address, proxyOpcode.getProxyAdminSlot()) }]
+      ? [{ address: await provider.core.getStorageAt(address, proxyOpcode.getProxyAdminSlot()) }]
       : [];
 
     return {
@@ -68,7 +75,7 @@ class ContractService {
       createdByAddress: initTransaction.from,
 
       verified: isFulfilled(verifiedCode),
-      verifiedAbi: verifiedContractItem?.ABI,
+      verifiedAbi: verifiedContractItem?.ABI.replace('Contract source code not verified', ''),
       verifiedName: verifiedContractItem?.ContractName,
       verifiedSourceCode: verifiedContractItem?.SourceCode,
       verifiedCompilerVersion: verifiedContractItem?.CompilerVersion,

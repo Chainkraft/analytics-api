@@ -7,12 +7,14 @@ import SubscribersRoute from './routes/subscribers.route';
 import TokensRoute from './routes/token.route';
 import ContractsRoute from '@routes/contracts.route';
 import StablecoinsRoute from '@routes/stablecoins.route';
+import ProjectsRoute from '@routes/projects.route';
 
 validateEnv();
 
 const app = new App([
   new AuthRoute(),
   new ContractsRoute(),
+  new ProjectsRoute(),
   new IndexRoute(),
   new SubscribersRoute(),
   new TokensRoute(),

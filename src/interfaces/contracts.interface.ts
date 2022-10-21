@@ -1,6 +1,9 @@
 import { Project } from '@interfaces/projects.interface';
 
 export interface Contract {
+  createdAt?: Date;
+  updatedAt?: Date;
+
   address: string;
   network: ContractNetwork;
   byteCode: string;
@@ -33,7 +36,7 @@ export interface ContractProxyHistory {
   createdByBlock?: number;
   createdByTxHash?: string;
   createdByAddress?: string;
-  newAddress: string;
+  address: string;
 }
 
 export enum ContractNetwork {

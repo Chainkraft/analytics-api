@@ -3,6 +3,7 @@ import { Project } from '@interfaces/projects.interface';
 
 const projectSchema: Schema = new Schema({
   name: { type: String, required: true, unique: true },
+  slug: { type: String, required: true, unique: true },
   description: { type: String },
   url: { type: String },
   logo: { type: String },

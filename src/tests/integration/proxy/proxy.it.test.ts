@@ -7,7 +7,7 @@ describe('Create proxy full flow', () => {
   const PUBLIC_KEY = '0xdC3532b2ce6335acF0A03FB5efEAA0a65bb4E14e';
   const PRIVATE_KEY = '75c533c41230de328a82e4233c66f28fd2361df0576e5ca9e01acd029ee079f8';
   const USER_PRIVATE_KEY = '9d24b1743d5092f395b61a60d368db65590c92841e548f142da2e2b5c7f885fe';
-  const IMPL_ADDRESS = '0x460D036F4B6E11a045826203f6b7FC7bfD299d15';
+  const IMPL_ADDRESS = '0x06878dA8c2fcC4Bf9d40B48b542E0cBbbD04EaC2';
   const PROXY_ADDRESS = '0xCE89E0DA2740e640cfe374C20CF0f3928cb6d265';
 
   let implFactory: ContractFactory;
@@ -36,7 +36,7 @@ describe('Create proxy full flow', () => {
     await implContract.deployed();
 
     console.log('Implementation contract', implContract.address);
-  }, 50000);
+  }, 100000);
 
   it('deploy proxy contract', async () => {
     const proxyContract = await proxyFactory.deploy(IMPL_ADDRESS, PUBLIC_KEY, []);

@@ -2,20 +2,71 @@ import { ContractNetwork } from '@interfaces/contracts.interface';
 import ContractWebhookService from '@services/contracts-webhook.service';
 import ContractService from '@services/contracts.service';
 import { WebhookAddressActivity, WebhookType } from '@interfaces/alchemy-webhook.interface';
-import { HOST } from '@config';
-import contractsMonitorLogModel from '@models/contracts-monitor-log.model';
+import { HOST, providers } from '@config';
+import { getFulfilled } from '@utils/typeguard';
 
 class ContractMonitorService {
-  private contractMonitorLogs = contractsMonitorLogModel;
   public contractService = new ContractService();
   public webhookService = new ContractWebhookService();
+  private processedWebhooks: string[] = [];
 
   public async processAddressActivity(callbackData: WebhookAddressActivity) {
-    this.contractMonitorLogs.create(callbackData)
-      .then(() => console.log('Alchemy webhook logged', callbackData.id))
-      .catch(error => console.log(error));
+    console.log('Alchemy activity webhook', callbackData);
+    if (this.processedWebhooks.includes(callbackData.id)) {
+      return;
+    }
+    this.processedWebhooks.push(callbackData.id);
 
+    const network = ContractNetwork[callbackData.event.network];
+    const provider = providers.get(network);
+    const addresses = callbackData.event.activity.map(tx => tx.toAddress);
 
+    const contracts = (await this.contractService.findContractsByNetwork(addresses, network));
+
+    for await (const contract of contracts) {
+      console.log('Proxy contract interaction detected. %s (%s)', contract.address, contract.network);
+
+      const getProxyImpl = provider.core.getStorageAt(contract.address, contract.proxy.implSlot);
+      const getProxyAdmin = provider.core.getStorageAt(contract.address, contract.proxy.adminSlot);
+      const [proxyImpl, proxyAdmin] = await Promise.allSettled([getProxyImpl, getProxyAdmin]);
+      const newProxyImpl = getFulfilled(proxyImpl).value;
+      const newProxyAdmin = getFulfilled(proxyAdmin).value;
+
+      // this is not the exact transaction since we do not have args data
+      // TODO: fetch transaction details and decode msg data
+      const transaction = callbackData.event.activity.find(tx => tx.toAddress === contract.address);
+      const currentProxyImpl = contract.proxy.implHistory.at(-1);
+      const currentProxyAdmin = contract.proxy.adminHistory.at(-1);
+
+      if (currentProxyImpl?.address != newProxyImpl) {
+        console.log('Proxy=%s (%s) implementation changed %s => %s', contract.address, contract.network,
+          currentProxyImpl.address, newProxyImpl);
+
+        contract.proxy.implHistory.push({
+          createdByArgs: '',
+          createdByBlock: parseInt(transaction.blockNum, 16),
+          createdByTxHash: transaction.hash,
+          createdByAddress: transaction.fromAddress,
+          address: newProxyImpl,
+        });
+      }
+      if (currentProxyAdmin?.address != newProxyAdmin) {
+        console.log('Proxy=%s (%s) admin changed %s => %s', contract.address, contract.network,
+          currentProxyAdmin.address, newProxyAdmin);
+
+        contract.proxy.adminHistory.push({
+          createdByArgs: '',
+          createdByBlock: parseInt(transaction.blockNum, 16),
+          createdByTxHash: transaction.hash,
+          createdByAddress: transaction.fromAddress,
+          address: newProxyAdmin,
+        });
+      }
+
+      if (currentProxyImpl.address != newProxyImpl || currentProxyAdmin.address != newProxyAdmin) {
+        await this.contractService.contracts.updateOne(contract);
+      }
+    }
   }
 
   public async synchronizeContractWebhooks() {

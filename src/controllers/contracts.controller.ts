@@ -1,48 +1,43 @@
 import { NextFunction, Request, Response } from 'express';
 import ContractService from '@services/contracts.service';
-import { ProxyImport } from '@/jobs/proxy-import.job';
-import { Contract } from '@interfaces/contracts.interface';
+import { Contract, ContractNetwork } from '@interfaces/contracts.interface';
 import ContractMonitorService from '@services/contracts-monitor.service';
+import ProjectService from '@services/project.service';
 
 class ContractsController {
   public contractMonitorService = new ContractMonitorService();
   public contractService = new ContractService();
-  public proxyImport = new ProxyImport();
+  public projectService = new ProjectService();
 
-  public index = (req: Request, res: Response, next: NextFunction) => {
+  public getContracts = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      this.contractService.findAllContracts().then(contracts => {
-        res.json(contracts);
-      });
+      const project = await this.projectService.findProjectBySlug(req.query.project);
+      const contracts = await this.contractService.findContractsByProject(project._id);
+      res.json({ data: contracts });
     } catch (error) {
       next(error);
     }
   };
 
-  public getContractByAddress = async (req: Request, res: Response, next: NextFunction) => {
+  public getContract = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const contractAddress: string = req.params.address;
-      const contract: Contract = await this.contractService.findContractByAddress(contractAddress);
+      const contractAddress = req.params.address;
+      const network = ContractNetwork[req.params.network];
+      const contract: Contract = await this.contractService.findContract(contractAddress, network);
 
-      res.status(200).json({ data: contract, message: 'findOne' });
+      res.status(200).json({ data: contract });
     } catch (error) {
       next(error);
     }
   };
 
-  public processAddressActivityCallback = async (req: Request, res: Response, next: NextFunction) => {
+  public processAddressActivityCallback = (req: Request, res: Response, next: NextFunction) => {
     try {
-      this.contractMonitorService.processAddressActivity(req.body).then(() => console.log('Received notifications'));
+      this.contractMonitorService.processAddressActivity(req.body).then(() => console.log('Processed contracts activity'));
       res.status(200).json();
     } catch (error) {
       next(error);
     }
-  };
-
-  public import = async (req: Request, res: Response) => {
-    await this.proxyImport.doIt();
-    await this.contractMonitorService.synchronizeContractWebhooks();
-    res.status(200).json();
   };
 }
 
