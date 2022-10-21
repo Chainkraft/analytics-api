@@ -29,6 +29,7 @@ export const llamaStablesListParser = R.applySpec({
   name: R.pipe(R.prop('name')),
   symbol: R.pipe(R.prop('symbol')),
   chains: R.pipe(R.prop('chains')),
+  pegMechanism: R.pipe(R.prop('pegMechanism')),
 });
 
 export const llamaStablecoinDetailsParser = R.applySpec({

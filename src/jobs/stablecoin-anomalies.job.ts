@@ -28,10 +28,11 @@ export class StablecoinAnomaliesJob implements RecurringJob {
           const previousTokenAlarm = latestAlert.tokens.find(yesterdayToken => yesterdayToken.token === token.symbol);
           if (!isEmpty(previousTokenAlarm)) {
             const diff = previousTokenAlarm.price - token.price;
-            if (diff > 0.03) {
-              return true;
-            }
+            if (diff > 0.03) return true;
+            else return false;
           }
+
+          return true;
         });
 
     if (tweetTokens.length == 0) return;
@@ -52,7 +53,7 @@ export class StablecoinAnomaliesJob implements RecurringJob {
     let firstTweet = `🚨 #Stablecoins with a recent price drop:\n`;
 
     for (const token of tweetTokens) {
-      firstTweet += `\n$${token.symbol} ${currencyFormat(token.price, 3)} USD`;
+      firstTweet += `\n$${token.symbol} ${currencyFormat(token.price.toString(), 3)} USD`;
     }
 
     firstTweet += `\n\nDetails 👇`;
@@ -60,7 +61,8 @@ export class StablecoinAnomaliesJob implements RecurringJob {
     const tweets = [];
     tweets.push({ text: firstTweet });
     for (const token of tweetTokens) {
-      const tweet = `${token.name} $${token.symbol}` + `\nCurrent price: ${currencyFormat(token.price, 3)} USD` + `\nChain: #${token.chains[0]}`;
+      const tweet =
+        `${token.name} $${token.symbol}` + `\nCurrent price: ${currencyFormat(token.price.toString(), 3)} USD` + `\nChain: #${token.chains[0]}`;
       const chartBuffer = await this.createChart(token, numberOfDays);
 
       const watermarkedBuffer = await this.waterMark(chartBuffer);
@@ -114,7 +116,7 @@ export class StablecoinAnomaliesJob implements RecurringJob {
         }
       }
 
-      if (llamaToken.price - averagePrice < -0.01) {
+      if (llamaToken.price - averagePrice < -0.02) {
         depegged.push({
           name: llamaToken.name,
           symbol: llamaToken.symbol,

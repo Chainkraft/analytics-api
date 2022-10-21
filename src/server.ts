@@ -7,6 +7,7 @@ import SubscribersRoute from './routes/subscribers.route';
 import TokensRoute from './routes/token.route';
 import ContractsRoute from '@routes/contracts.route';
 import StablecoinsRoute from '@routes/stablecoins.route';
+import ScoresRoute from './routes/scores.route';
 import ProjectsRoute from '@routes/projects.route';
 
 validateEnv();
@@ -20,6 +21,7 @@ const app = new App([
   new TokensRoute(),
   new StablecoinsRoute(),
   new UsersRoute(),
+  new ScoresRoute(),
 ]);
 
 app.listen();
