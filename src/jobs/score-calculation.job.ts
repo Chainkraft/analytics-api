@@ -30,24 +30,28 @@ export class RefreshScoreJob implements RecurringJob {
     const priceHistories: PriceHistory[] = await this.pricesService.findAllPriceHistories();
 
     const chains: number[] = tokens
+      .filter(token => !isEmpty(token.chains))
       .map(token => {
         return token.chains.length;
       })
       .sort((a, b) => a - b);
 
     const marketCaps: number[] = tokens
+      .filter(token => !isEmpty(token.current_market_cap))
       .map(token => {
         return token.current_market_cap;
       })
       .sort((a, b) => a - b);
 
     const volumes: number[] = tokens
+      .filter(token => !isEmpty(token.volume_24h))
       .map(token => {
         return token.volume_24h;
       })
       .sort((a, b) => a - b);
 
     const priceDeviations: number[] = priceHistories
+      .filter(priceHistory => !isEmpty(priceHistory))
       .map(priceHistory => {
         const sortedPrices = priceHistory.prices
           .sort((objA, objB) => objB.date.getTime() - objA.date.getTime())
@@ -58,7 +62,7 @@ export class RefreshScoreJob implements RecurringJob {
 
         const standardDeviation = Math.sqrt(
           sortedPrices.reduce((acc, val) => acc.concat((val - meanValue) ** 2), []).reduce((acc, val) => acc + val, 0) /
-          (sortedPrices.length - (usePopulation ? 0 : 1)),
+            (sortedPrices.length - (usePopulation ? 0 : 1)),
         );
 
         return standardDeviation;
