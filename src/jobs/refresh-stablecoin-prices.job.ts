@@ -49,6 +49,8 @@ export class RefreshStablecoinPricesJob implements RecurringJob {
       }
     }
 
+    console.log('Refreshed stablecoin prices.');
+
     return Promise.all(
       freshTokensPrices.map(async (priceHistory: PriceHistory) => {
         return this.priceHistory.findOneAndUpdate({ token: priceHistory.token }, priceHistory, {

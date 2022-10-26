@@ -69,6 +69,8 @@ export class RefreshScoreJob implements RecurringJob {
       })
       .sort((a, b) => a - b);
 
+    console.log('Stablecoin score has been refreshed.');
+
     return this.score.create({
       chains: chains,
       volumes: volumes,

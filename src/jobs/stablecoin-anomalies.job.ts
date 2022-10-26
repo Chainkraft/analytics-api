@@ -2,14 +2,12 @@ import { RecurringJob } from './recurring.job';
 import tokenService from '@services/tokens.service';
 import { currencyFormat } from '../utils/helpers';
 import { EUploadMimeType, TwitterApi } from 'twitter-api-v2';
-import { ChartConfiguration } from 'chart.js';
-import { ChartCallback, ChartJSNodeCanvas } from 'chartjs-node-canvas';
 import Jimp from 'jimp';
 import AlertService from '@/services/alerts.service';
 import { isEmpty } from '@/utils/util';
 import TokenApiService from '@/services/token-apis.service';
 
-/*
+/* 
   Stable Alerts twitter bot.
 */
 export class StablecoinAnomaliesJob implements RecurringJob {
@@ -22,18 +20,21 @@ export class StablecoinAnomaliesJob implements RecurringJob {
     const tokens = await this.getStablecoinsForPriceAlert(numberOfDays);
     const latestAlert = await this.alertService.findLatestStablecoinPriceAlert();
 
+    const excludedTokens = [];
     const tweetTokens = isEmpty(latestAlert)
-      ? tokens
+      ? tokens.filter(token => !excludedTokens.includes(token.symbol))
       : tokens.filter(token => {
-        const previousTokenAlarm = latestAlert.tokens.find(yesterdayToken => yesterdayToken.token === token.symbol);
-        if (!isEmpty(previousTokenAlarm)) {
-          const diff = previousTokenAlarm.price - token.price;
-          if (diff > 0.03) return true;
-          else return false;
-        }
+          if (excludedTokens.includes(token.symbol)) return false;
 
-        return true;
-      });
+          const previousTokenAlarm = latestAlert.tokens.find(yesterdayToken => yesterdayToken.token === token.symbol);
+          if (!isEmpty(previousTokenAlarm)) {
+            const diff = previousTokenAlarm.price - token.price;
+            if (diff > 0.03) return true;
+            else return false;
+          }
+
+          return true;
+        });
 
     if (tweetTokens.length == 0) return;
 
@@ -63,12 +64,13 @@ export class StablecoinAnomaliesJob implements RecurringJob {
     for (const token of tweetTokens) {
       const tweet =
         `${token.name} $${token.symbol}` + `\nCurrent price: ${currencyFormat(token.price.toString(), 3)} USD` + `\nChain: #${token.chains[0]}`;
-      const chartBuffer = await this.createChart(token, numberOfDays);
+      // const chartBuffer = await this.createChart(token, numberOfDays);
 
-      const watermarkedBuffer = await this.waterMark(chartBuffer);
+      // const watermarkedBuffer = await this.waterMark(chartBuffer);
 
-      const mediaId = await twitterClient.v1.uploadMedia(watermarkedBuffer, { mimeType: EUploadMimeType.Png });
-      tweets.push({ text: tweet, media: { media_ids: [mediaId] } });
+      // const mediaId = await twitterClient.v1.uploadMedia(watermarkedBuffer, { mimeType: EUploadMimeType.Png });
+      // tweets.push({ text: tweet, media: { media_ids: [mediaId] } });
+      tweets.push({ text: tweet });
     }
     if (tweets.length > 0) console.log(await twitterClient.v2.tweetThread(tweets));
   }
@@ -147,7 +149,7 @@ export class StablecoinAnomaliesJob implements RecurringJob {
     return await chart.getBufferAsync(chart.getMIME());
   }
 
-  private async createChart(token: any, numberOfDays = 7) {
+  /*   private async createChart(token: any, numberOfDays = 7) {
     const dates = [...Array(numberOfDays)].map((_, i) => {
       const d = new Date();
       d.setDate(d.getDate() - i);
@@ -232,13 +234,8 @@ export class StablecoinAnomaliesJob implements RecurringJob {
       ChartJS.defaults.maintainAspectRatio = false;
     };
 
-    const chartJSNodeCanvas = new ChartJSNodeCanvas({
-      width,
-      height,
-      backgroundColour: '#1A1A2E',
-      chartCallback: chartCallback,
-    });
+    const chartJSNodeCanvas = new ChartJSNodeCanvas({ width, height, backgroundColour: '#1A1A2E', chartCallback: chartCallback });
     const buffer = await chartJSNodeCanvas.renderToBuffer(configuration);
     return buffer;
-  }
+  } */
 }
