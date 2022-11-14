@@ -4,13 +4,21 @@ import TokenApiService from '@/services/token-apis.service';
 import { PriceHistory } from '@/interfaces/tokens.inteface';
 import priceHistoryModel from '@/models/prices-history.model';
 import { isEmpty } from '@/utils/util';
+import * as schedule from 'node-schedule';
 
 export class RefreshStablecoinPricesJob implements RecurringJob {
   public tokenService = new TokenService();
   public tokenApiService = new TokenApiService();
   public priceHistory = priceHistoryModel;
 
-  async doIt(): Promise<PriceHistory[]> {
+  doIt(): any {
+    console.log('Scheduling RefreshStablecoinPricesJob');
+    const rule = new schedule.RecurrenceRule();
+    rule.hour = 3;
+    schedule.scheduleJob(rule, () => this.refreshStablecoinPrices());
+  }
+
+  async refreshStablecoinPrices(): Promise<PriceHistory[]> {
     const usdcPriceHistory = await this.priceHistory.findOne({ token: 'USDC' });
 
     if (!isEmpty(usdcPriceHistory)) {

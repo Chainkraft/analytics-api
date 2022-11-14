@@ -9,6 +9,7 @@ import ContractsRoute from '@routes/contracts.route';
 import StablecoinsRoute from '@routes/stablecoins.route';
 import ScoresRoute from './routes/scores.route';
 import ProjectsRoute from '@routes/projects.route';
+import LiquidityPoolsRoute from './routes/pools.route';
 
 validateEnv();
 
@@ -22,6 +23,7 @@ const app = new App([
   new StablecoinsRoute(),
   new UsersRoute(),
   new ScoresRoute(),
+  new LiquidityPoolsRoute(),
 ]);
 
 app.listen();

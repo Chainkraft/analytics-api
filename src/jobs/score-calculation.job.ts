@@ -7,6 +7,8 @@ import scoreModel from '@/models/scores.model';
 import ScoreService from '@/services/scores.service';
 import TokenService from '@/services/tokens.service';
 import PriceService from '@/services/prices.service';
+import { Score } from '@/interfaces/scores.interface';
+import * as schedule from 'node-schedule';
 
 export class RefreshScoreJob implements RecurringJob {
   public scoreService = new ScoreService();
@@ -16,7 +18,14 @@ export class RefreshScoreJob implements RecurringJob {
   public tokens = tokenModel;
   public score = scoreModel;
 
-  async doIt(): Promise<any> {
+  doIt(): any {
+    console.log('Scheduling RefreshScoreJob');
+    const rule = new schedule.RecurrenceRule();
+    rule.hour = 4;
+    schedule.scheduleJob(rule, () => this.refreshScores());
+  }
+
+  async refreshScores(): Promise<Score> {
     const latestScore = await this.scoreService.findLatestScore();
 
     if (!isEmpty(latestScore)) {

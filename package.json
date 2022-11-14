@@ -18,6 +18,8 @@
   "dependencies": {
     "@ethersproject/asm": "^5.7.0",
     "@mailchimp/mailchimp_marketing": "^3.0.78",
+    "@types/memoizee": "^0.4.8",
+    "@types/node-schedule": "^2.1.0",
     "alchemy-sdk": "^2.0.5-rc1",
     "axios": "^0.27.2",
     "bcrypt": "^5.0.1",
@@ -35,6 +37,7 @@
     "hpp": "^0.2.3",
     "jimp": "^0.16.2",
     "jsonwebtoken": "^8.5.1",
+    "memoizee": "^0.4.15",
     "mongoose": "^6.5.0",
     "morgan": "^1.10.0",
     "node-schedule": "^2.1.0",
