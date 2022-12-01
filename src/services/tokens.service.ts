@@ -8,6 +8,7 @@ import TokenApiService from './token-apis.service';
 import PriceService from './prices.service';
 import { isEmpty } from '@/utils/util';
 import { HttpException } from '@/exceptions/HttpException';
+import slug from 'slug';
 
 class TokenService {
   public tokens = tokenModel;
@@ -64,13 +65,32 @@ class TokenService {
     return Promise.all(
       tokens.map(async (token: Token) => {
         token.pegged = true;
+        token.slug = slug(token.name);
 
-        return this.tokens.findOneAndUpdate({ symbol: token.symbol }, token, {
+        return this.tokens.findOneAndUpdate({ slug: token.slug }, token, {
           new: true,
           upsert: true,
         });
       }),
     );
+  }
+
+  public async findStablecoinDetailsBySlug(slug: string): Promise<{ token: Token; marketCapHistory: MarketCapHistory; priceHistory: PriceHistory }> {
+    const token: Token = await this.tokens.findOne({ slug: slug });
+    const marketCapHistory: MarketCapHistory = await this.marketCapHistory.findOne({ slug: slug });
+
+    if (isEmpty(token)) throw new HttpException(400, 'Token not found');
+
+    const refresh = (Date.now() - token.updatedAt.getTime()) / 1000 > 60 || isEmpty(marketCapHistory) ? true : false;
+    if (refresh) {
+      return this.fetchFreshTokenDetails(token);
+    }
+
+    return {
+      token: token,
+      marketCapHistory: marketCapHistory,
+      priceHistory: await this.priceService.findPriceHistoryForTokenBySlug(slug),
+    };
   }
 
   public async findStablecoinDetails(tokenSymbol: string): Promise<{ token: Token; marketCapHistory: MarketCapHistory; priceHistory: PriceHistory }> {
@@ -94,19 +114,20 @@ class TokenService {
   private async fetchFreshTokenDetails(token: Token): Promise<{ token: Token; marketCapHistory: MarketCapHistory; priceHistory: PriceHistory }> {
     const llamaToken = await this.tokenApiService.getStablecoinDetailsFromDefiLlama(token.llama_id);
     const newToken = llamaStablecoinDetailsParser(llamaToken);
+    newToken.slug = slug(newToken.name);
 
     return {
-      token: await this.tokens.findOneAndUpdate({ llama_id: newToken.llama_id }, newToken, {
+      token: await this.tokens.findOneAndUpdate({ slug: newToken.slug }, newToken, {
         new: true,
         upsert: true,
       }),
-      marketCapHistory: await this.computeMarketCapHistory(token.symbol, llamaToken),
-      priceHistory: await this.priceService.findPriceHistoryForToken(token.symbol),
+      marketCapHistory: await this.computeMarketCapHistory(token.slug, llamaToken),
+      priceHistory: await this.priceService.findPriceHistoryForTokenBySlug(token.slug),
     };
   }
 
-  private async computeMarketCapHistory(tokenSymbol: string, llamaToken: any): Promise<MarketCapHistory> {
-    const marketCapHistory = await this.marketCapHistory.findOne({ symbol: tokenSymbol });
+  private async computeMarketCapHistory(slug: string, llamaToken: any): Promise<MarketCapHistory> {
+    const marketCapHistory = await this.marketCapHistory.findOne({ slug: slug });
 
     // if history is from yesterday, then refresh
     if (isEmpty(marketCapHistory) || marketCapHistory.updatedAt.toDateString() !== new Date().toDateString()) {
@@ -116,7 +137,7 @@ class TokenService {
         }),
       };
 
-      return this.marketCapHistory.findOneAndUpdate({ symbol: tokenSymbol }, freshMarketCapHistory, {
+      return this.marketCapHistory.findOneAndUpdate({ slug: slug }, freshMarketCapHistory, {
         new: true,
         upsert: true,
       });

@@ -11,6 +11,10 @@ const priceHistorySchema: Schema = new Schema(
       type: String,
       required: false,
     },
+    slug: {
+      type: String,
+      required: false,
+    },
     prices: [
       {
         price: Number,

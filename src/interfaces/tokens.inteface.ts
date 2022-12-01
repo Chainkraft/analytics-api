@@ -1,5 +1,6 @@
 export interface Token {
   name: string;
+  slug: string;
   description: string;
   image: string;
 
@@ -34,6 +35,7 @@ export interface Token {
 
 export interface PriceHistory {
   token: string;
+  slug: string;
   gecko_id: string;
   prices: { price: number; date: Date }[];
   updatedAt?: Date;
@@ -42,6 +44,8 @@ export interface PriceHistory {
 
 export interface MarketCapHistory {
   token: string;
+  slug: string;
+  gecko_id: string;
   market_caps: { market_cap: number; date: Date }[];
   updatedAt?: Date;
   createdAt?: Date;

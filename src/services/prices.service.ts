@@ -11,6 +11,10 @@ class PriceService {
   public async findPriceHistoryForToken(tokenSymbol: String): Promise<PriceHistory> {
     return this.priceHistory.findOne({ token: tokenSymbol });
   }
+
+  public async findPriceHistoryForTokenBySlug(slug: String): Promise<PriceHistory> {
+    return this.priceHistory.findOne({ slug: slug });
+  }
 }
 
 export default PriceService;

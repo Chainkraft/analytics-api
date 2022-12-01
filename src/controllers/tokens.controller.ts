@@ -9,9 +9,21 @@ class TokensController {
 
   public getPeggedTokens = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const findAllPeggedTokens: Token[] = await this.tokenService.findAllStablecoins();
+      const findAllPeggedTokens: Token[] = (await this.tokenService.findAllStablecoins()).sort((a, b) => b.current_market_cap - a.current_market_cap);
 
       res.status(200).json({ data: findAllPeggedTokens, message: 'findAll' });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getTokenDetailsBySlug = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const slug: string = req.params.slug;
+      const findTokenData: { token: Token; marketCapHistory: MarketCapHistory; priceHistory: PriceHistory } =
+        await this.tokenService.findStablecoinDetailsBySlug(slug);
+
+      res.status(200).json({ data: findTokenData, message: 'findOne' });
     } catch (error) {
       next(error);
     }

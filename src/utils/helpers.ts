@@ -33,6 +33,8 @@ export const llamaStablesListParser = R.applySpec({
 });
 
 export const llamaStablecoinDetailsParser = R.applySpec({
+  name: R.pipe(R.prop('name')),
+  gecko_id: R.pipe(R.prop('gecko_id')),
   description: R.pipe(R.prop('description')),
   audits: R.pipe(R.prop('auditLinks')),
   twitter: R.pipe(R.prop('twitter')),

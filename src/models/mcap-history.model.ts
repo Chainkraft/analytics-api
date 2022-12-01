@@ -7,6 +7,10 @@ const marketCapHistorySchema: Schema = new Schema(
       type: String,
       required: true,
     },
+    slug: {
+      type: String,
+      required: false,
+    },
     market_caps: [
       {
         market_cap: Number,

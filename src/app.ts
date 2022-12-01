@@ -14,6 +14,7 @@ import { Routes } from '@interfaces/routes.interface';
 import errorMiddleware from '@middlewares/error.middleware';
 import { logger, stream } from '@utils/logger';
 import { JobManager } from './jobs/job.manager';
+import { RefreshStablecoinPricesJob } from './jobs/refresh-stablecoin-prices.job';
 
 class App {
   public app: express.Application;
@@ -66,6 +67,8 @@ class App {
 
     // static resources
     this.app.use('/static', express.static('static'));
+
+    new RefreshStablecoinPricesJob().refreshStablecoinPrices();
   }
 
   private initializeRoutes(routes: Routes[]) {

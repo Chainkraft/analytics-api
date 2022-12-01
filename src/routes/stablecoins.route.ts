@@ -13,7 +13,7 @@ class StablecoinsRoute implements Routes {
 
   private initializeRoutes() {
     this.router.get(`${this.path}`, this.tokensController.getPeggedTokens);
-    this.router.get(`${this.path}/:symbol`, this.tokensController.getTokenDetails);
+    this.router.get(`${this.path}/:slug`, this.tokensController.getTokenDetailsBySlug);
   }
 }
 

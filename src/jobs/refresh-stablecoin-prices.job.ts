@@ -51,6 +51,7 @@ export class RefreshStablecoinPricesJob implements RecurringJob {
       if (found) {
         freshTokensPrices.push({
           gecko_id: gecko_id,
+          slug: found.slug,
           token: found.symbol,
           prices: prices,
         });
@@ -61,7 +62,7 @@ export class RefreshStablecoinPricesJob implements RecurringJob {
 
     return Promise.all(
       freshTokensPrices.map(async (priceHistory: PriceHistory) => {
-        return this.priceHistory.findOneAndUpdate({ token: priceHistory.token }, priceHistory, {
+        return this.priceHistory.findOneAndUpdate({ gecko_id: priceHistory.gecko_id }, priceHistory, {
           new: true,
           upsert: true,
         });
