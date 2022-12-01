@@ -9,7 +9,7 @@ const tokenSchema: Schema = new Schema(
     },
     slug: {
       type: String,
-      required: false,
+      required: true,
     },
     description: {
       type: String,
