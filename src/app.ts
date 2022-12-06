@@ -15,6 +15,7 @@ import errorMiddleware from '@middlewares/error.middleware';
 import { logger, stream } from '@utils/logger';
 import { JobManager } from './jobs/job.manager';
 import { RefreshStablecoinPricesJob } from './jobs/refresh-stablecoin-prices.job';
+import { RefreshScoreJob } from './jobs/score-calculation.job';
 
 class App {
   public app: express.Application;
@@ -68,7 +69,13 @@ class App {
     // static resources
     this.app.use('/static', express.static('static'));
 
-    new RefreshStablecoinPricesJob().refreshStablecoinPrices();
+    this.loadInitialData();
+  }
+
+  private loadInitialData() {
+    new RefreshStablecoinPricesJob().refreshStablecoinPrices().then(() => {
+      new RefreshScoreJob().refreshScores();
+    });
   }
 
   private initializeRoutes(routes: Routes[]) {
