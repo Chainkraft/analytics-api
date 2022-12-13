@@ -19,10 +19,10 @@ export class RefreshStablecoinPricesJob implements RecurringJob {
   }
 
   async refreshStablecoinPrices(): Promise<PriceHistory[]> {
-    const usdcPriceHistory = await this.priceHistory.findOne({ token: 'USDC' });
+    const usdcPriceHistory = await this.priceHistory.findOne({ slug: 'usd-coin' });
 
-    if (!isEmpty(usdcPriceHistory)) {
-      const lastPriceDate = usdcPriceHistory.prices.at(-1).date;
+    if (!isEmpty(usdcPriceHistory) && Array.isArray(usdcPriceHistory.prices)) {
+      const lastPriceDate = usdcPriceHistory.prices.pop().date;
 
       // if last price's date is today, don't refresh
       if (lastPriceDate.toDateString() === new Date().toDateString()) {
