@@ -5,7 +5,7 @@ import marketCapHistoryModel from '@/models/mcap-history.model';
 import priceHistoryModel from '@/models/prices-history.model';
 
 import TokenApiService from './token-apis.service';
-import PriceService from './prices.service';
+import TokensPriceService from './tokens-prices.service';
 import { isEmpty } from '@/utils/util';
 import { HttpException } from '@/exceptions/HttpException';
 import slug from 'slug';
@@ -14,7 +14,7 @@ class TokenService {
   public tokens = tokenModel;
   public marketCapHistory = marketCapHistoryModel;
   public priceHistory = priceHistoryModel;
-  private priceService = new PriceService();
+  private priceService = new TokensPriceService();
   private tokenApiService = new TokenApiService();
 
   public async findAllToken(): Promise<Token[]> {
@@ -81,8 +81,10 @@ class TokenService {
 
     if (isEmpty(token)) throw new HttpException(400, 'Token not found');
 
-    const refresh = (Date.now() - token.updatedAt.getTime()) / 1000 > 60 || isEmpty(marketCapHistory) ? true : false;
-    if (refresh) {
+    const tokenRefresh = (Date.now() - token.updatedAt.getTime()) / 1000 > 60 || isEmpty(marketCapHistory) ? true : false;
+    const mCapRefresh = isEmpty(marketCapHistory) || marketCapHistory.updatedAt.toDateString() !== new Date().toDateString() ? true : false;
+
+    if (tokenRefresh || mCapRefresh) {
       return this.fetchFreshTokenDetails(token);
     }
 

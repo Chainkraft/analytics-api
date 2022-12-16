@@ -4,16 +4,16 @@ import priceHistoryModel from '@/models/prices-history.model';
 import { isEmpty } from '@/utils/util';
 import tokenModel from '@/models/tokens.model';
 import scoreModel from '@/models/scores.model';
-import ScoreService from '@/services/scores.service';
+import TokensScoreService from '@/services/tokens-scores.service';
 import TokenService from '@/services/tokens.service';
-import PriceService from '@/services/prices.service';
+import TokensPriceService from '@/services/tokens-prices.service';
 import { Score } from '@/interfaces/scores.interface';
 import * as schedule from 'node-schedule';
 
 export class RefreshScoreJob implements RecurringJob {
-  public scoreService = new ScoreService();
+  public scoreService = new TokensScoreService();
   public tokenService = new TokenService();
-  public pricesService = new PriceService();
+  public pricesService = new TokensPriceService();
   public priceHistory = priceHistoryModel;
   public tokens = tokenModel;
   public score = scoreModel;

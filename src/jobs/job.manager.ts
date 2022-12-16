@@ -4,6 +4,7 @@ import { RefreshScoreJob } from './score-calculation.job';
 import { ContractImport } from '@/jobs/contracts-import.job';
 import { TestJob } from './test.job';
 import { CurvePoolsJob } from './curve-pools.job';
+import { StablecoinAnomaliesJob } from './stablecoin-anomalies.job';
 
 export class JobManager {
   jobs: RecurringJob[] = [];
@@ -15,6 +16,7 @@ export class JobManager {
     this.addJob(new RefreshStablecoinPricesJob());
     this.addJob(new RefreshScoreJob());
     this.addJob(new CurvePoolsJob());
+    this.addJob(new StablecoinAnomaliesJob());
   }
 
   addJob(...jobs: RecurringJob[]): boolean {

@@ -1,7 +1,7 @@
 import { PriceHistory } from '@interfaces/tokens.inteface';
 import priceHistoryModel from '@/models/prices-history.model';
 
-class PriceService {
+class TokensPriceService {
   public priceHistory = priceHistoryModel;
 
   public async findAllPriceHistories(): Promise<PriceHistory[]> {
@@ -17,4 +17,4 @@ class PriceService {
   }
 }
 
-export default PriceService;
+export default TokensPriceService;

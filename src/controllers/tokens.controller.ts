@@ -1,11 +1,11 @@
 import { NextFunction, Request, Response } from 'express';
 import TokenService from '@services/tokens.service';
 import { MarketCapHistory, PriceHistory, Token } from '@/interfaces/tokens.inteface';
-import PriceService from '@/services/prices.service';
+import TokensPriceService from '@/services/tokens-prices.service';
 
 class TokensController {
   public tokenService = new TokenService();
-  public pricesService = new PriceService();
+  public pricesService = new TokensPriceService();
 
   public getPeggedTokens = async (req: Request, res: Response, next: NextFunction) => {
     try {

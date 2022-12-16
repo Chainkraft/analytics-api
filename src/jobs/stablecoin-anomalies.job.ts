@@ -8,6 +8,8 @@ import Jimp from 'jimp';
 import AlertService from '@/services/alerts.service';
 import { isEmpty } from '@/utils/util';
 import TokenApiService from '@/services/token-apis.service';
+import slug from 'slug';
+import * as schedule from 'node-schedule';
 
 /* 
   Stable Alerts twitter bot.
@@ -17,7 +19,14 @@ export class StablecoinAnomaliesJob implements RecurringJob {
   public alertService = new AlertService();
   public tokenApiService = new TokenApiService();
 
-  async doIt() {
+  doIt(): any {
+    console.log('Scheduling StablecoinAnomaliesJob');
+    const rule = new schedule.RecurrenceRule();
+    rule.hour = 13;
+    schedule.scheduleJob(rule, () => this.refreshAlerts());
+  }
+
+  async refreshAlerts() {
     const numberOfDays = 14;
     const tokens = await this.getStablecoinsForPriceAlert(numberOfDays);
     const latestAlert = await this.alertService.findLatestStablecoinPriceAlert();
@@ -39,8 +48,7 @@ export class StablecoinAnomaliesJob implements RecurringJob {
         });
 
     if (tweetTokens.length == 0) return;
-    console.log(tweetTokens);
-    return;
+
     this.alertService.createStablecoinAlert({
       tokens: tokens.map(token => {
         return { token: token.symbol, price: token.price };
@@ -66,7 +74,11 @@ export class StablecoinAnomaliesJob implements RecurringJob {
     tweets.push({ text: firstTweet });
     for (const token of tweetTokens) {
       const tweet =
-        `${token.name} $${token.symbol}` + `\nCurrent price: ${currencyFormat(token.price.toString(), 3)} USD` + `\nChain: #${token.chains[0]}`;
+        `${token.name} $${token.symbol}` +
+        `\nCurrent price: ${currencyFormat(token.price.toString(), 3)} USD` +
+        `\nChain: #${token.chains[0]}` +
+        `\n\nhttps://analytics.chainkraft.com/tokens/${token.slug}`;
+
       const chartBuffer = await this.createChart(token, numberOfDays);
 
       const watermarkedBuffer = await this.waterMark(chartBuffer);
@@ -107,7 +119,16 @@ export class StablecoinAnomaliesJob implements RecurringJob {
       averagePrices.set(key, value / numberOfDays);
     }
 
-    const depegged: { name: string; symbol: string; id: string; price: number; avgPrice: number; prices: number[]; chains: string[] }[] = [];
+    const depegged: {
+      name: string;
+      slug: string;
+      symbol: string;
+      id: string;
+      price: number;
+      avgPrice: number;
+      prices: number[];
+      chains: string[];
+    }[] = [];
 
     for (const llamaToken of depeggedLlamaTokens) {
       const averagePrice = averagePrices.get(llamaToken.gecko_id);
@@ -123,6 +144,7 @@ export class StablecoinAnomaliesJob implements RecurringJob {
       if (llamaToken.price - averagePrice < -0.02) {
         depegged.push({
           name: llamaToken.name,
+          slug: slug(llamaToken.name),
           symbol: llamaToken.symbol,
           id: llamaToken.gecko_id,
           price: llamaToken.price,

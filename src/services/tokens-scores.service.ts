@@ -3,7 +3,7 @@ import { HttpException } from '@/exceptions/HttpException';
 import scoreModel from '@/models/scores.model';
 import { Score } from '@/interfaces/scores.interface';
 
-class ScoreService {
+class TokensScoreService {
   public scoreModel = scoreModel;
 
   public async findLatestScore(): Promise<Score> {
@@ -16,4 +16,4 @@ class ScoreService {
   }
 }
 
-export default ScoreService;
+export default TokensScoreService;

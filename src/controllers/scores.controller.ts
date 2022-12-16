@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response } from 'express';
-import ScoreService from '@/services/scores.service';
+import TokensScoreService from '@/services/tokens-scores.service';
 import { Score } from '@/interfaces/scores.interface';
 
 class ScoresController {
-  public scoreService = new ScoreService();
+  public scoreService = new TokensScoreService();
 
   public getLastScore = async (req: Request, res: Response, next: NextFunction) => {
     try {
