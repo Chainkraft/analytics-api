@@ -1,6 +1,6 @@
 {
   "name": "analytics-api",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "Chainkaft analytics API",
   "author": "",
   "license": "ISC",
@@ -23,6 +23,8 @@
     "alchemy-sdk": "^2.0.5-rc1",
     "axios": "^0.27.2",
     "bcrypt": "^5.0.1",
+    "chart.js": "^3.9.1",
+    "chartjs-node-canvas": "^4.1.6",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.13.2",
     "compression": "^1.7.4",

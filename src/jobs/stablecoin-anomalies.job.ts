@@ -22,7 +22,7 @@ export class StablecoinAnomaliesJob implements RecurringJob {
   doIt(): any {
     console.log('Scheduling StablecoinAnomaliesJob');
     const rule = new schedule.RecurrenceRule();
-    rule.hour = 13;
+    rule.hour = 14;
     schedule.scheduleJob(rule, () => this.refreshAlerts());
   }
 
