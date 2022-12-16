@@ -2,14 +2,14 @@ import { RecurringJob } from './recurring.job';
 import tokenService from '@services/tokens.service';
 import { currencyFormat } from '../utils/helpers';
 import { EUploadMimeType, TwitterApi } from 'twitter-api-v2';
-import { ChartConfiguration } from 'chart.js';
-import { ChartCallback, ChartJSNodeCanvas } from 'chartjs-node-canvas';
 import Jimp from 'jimp';
+import { ChartConfiguration } from 'chart.js';
 import AlertService from '@/services/alerts.service';
 import { isEmpty } from '@/utils/util';
 import TokenApiService from '@/services/token-apis.service';
 import slug from 'slug';
 import * as schedule from 'node-schedule';
+const ChartJsImage = require('chartjs-to-image');
 
 /* 
   Stable Alerts twitter bot.
@@ -253,13 +253,14 @@ export class StablecoinAnomaliesJob implements RecurringJob {
         },
       },
     };
-    const chartCallback: ChartCallback = ChartJS => {
-      ChartJS.defaults.responsive = true;
-      ChartJS.defaults.maintainAspectRatio = false;
-    };
 
-    const chartJSNodeCanvas = new ChartJSNodeCanvas({ width, height, backgroundColour: '#1A1A2E', chartCallback: chartCallback });
-    const buffer = await chartJSNodeCanvas.renderToBuffer(configuration);
-    return buffer;
+    const chart = new ChartJsImage();
+    chart.setConfig(configuration);
+    chart.setWidth(width);
+    chart.setHeight(height);
+    chart.setChartJsVersion('3.9.1');
+    chart.setBackgroundColor('#1A1A2E');
+
+    return await chart.toBinary();
   }
 }
