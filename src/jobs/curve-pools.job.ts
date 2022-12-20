@@ -24,9 +24,7 @@ export class CurvePoolsJob implements RecurringJob {
 
   doIt(): any {
     console.log('Scheduling CurvePoolsJob');
-    const rule = new schedule.RecurrenceRule();
-    rule.hour = 5;
-    schedule.scheduleJob(rule, () => this.refreshCurvePools());
+    schedule.scheduleJob({ hour: 5, minute: 0 }, () => this.refreshCurvePools());
   }
 
   async refreshCurvePools(): Promise<LiquidityPoolHistory[]> {

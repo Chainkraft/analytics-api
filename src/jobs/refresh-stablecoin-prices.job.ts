@@ -13,9 +13,7 @@ export class RefreshStablecoinPricesJob implements RecurringJob {
 
   doIt(): any {
     console.log('Scheduling RefreshStablecoinPricesJob');
-    const rule = new schedule.RecurrenceRule();
-    rule.hour = 3;
-    schedule.scheduleJob(rule, () => this.refreshStablecoinPrices());
+    schedule.scheduleJob({ hour: 1, minute: 0 }, () => this.refreshStablecoinPrices());
   }
 
   async refreshStablecoinPrices(): Promise<PriceHistory[]> {

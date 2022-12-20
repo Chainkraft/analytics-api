@@ -20,9 +20,7 @@ export class RefreshScoreJob implements RecurringJob {
 
   doIt(): any {
     console.log('Scheduling RefreshScoreJob');
-    const rule = new schedule.RecurrenceRule();
-    rule.hour = 4;
-    schedule.scheduleJob(rule, () => this.refreshScores());
+    schedule.scheduleJob({ hour: 1, minute: 30 }, () => this.refreshScores());
   }
 
   async refreshScores(): Promise<Score> {
