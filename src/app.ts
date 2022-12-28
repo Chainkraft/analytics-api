@@ -32,7 +32,10 @@ class App {
     this.initializeRoutes(routes);
     this.initializeSwagger();
     this.initializeErrorHandling();
-    this.initializeJobManager();
+
+    if (this.env === 'production') {
+      this.initializeJobManager();
+    }
   }
 
   public listen() {

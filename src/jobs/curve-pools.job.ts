@@ -30,6 +30,8 @@ export class CurvePoolsJob implements RecurringJob {
   async refreshCurvePools(): Promise<LiquidityPoolHistory[]> {
     const remotePools = await _getPoolsFromApi('ethereum', 'main');
 
+    console.log('CurvePoolsJob', remotePools.poolData.length, 'pools to update');
+
     return Promise.all(
       remotePools.poolData.map(remotePool => {
         return this.lpBalanceHistory.findOneAndUpdate(

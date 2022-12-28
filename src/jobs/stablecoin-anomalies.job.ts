@@ -45,6 +45,8 @@ export class StablecoinAnomaliesJob implements RecurringJob {
           return true;
         });
 
+    console.log('StablecoinAnomaliesJob', tweetTokens.length, 'tokens to tweet');
+
     if (tweetTokens.length == 0) return;
 
     this.alertService.createStablecoinAlert({
