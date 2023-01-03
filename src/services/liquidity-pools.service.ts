@@ -1,5 +1,5 @@
-import { LiquidityPoolHistory } from '@/interfaces/curve-interfaces';
-import liquidityPoolHistoryModel from '@/models/lp-history.model';
+import { LiquidityPoolHistory } from '@/interfaces/liquidity-pool-history.interface';
+import liquidityPoolHistoryModel from '@/models/liquidity-pool-history.model';
 
 class LiquidityPoolService {
   public liquiditiyPoolHistory = liquidityPoolHistoryModel;

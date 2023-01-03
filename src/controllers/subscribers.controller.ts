@@ -12,8 +12,8 @@ class SubscribersController {
 
       res.status(201).json({ data: addSubscriberData, message: 'created' });
     } catch (error) {
+      error.message = error.response.body.title;
       next(error);
-      console.log(error);
     }
   };
 }

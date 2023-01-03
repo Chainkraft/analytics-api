@@ -1,14 +1,14 @@
 import { NextFunction, Request, Response } from 'express';
 import LiquidityPoolService from '@/services/liquidity-pools.service';
-import { LiquidityPoolHistory } from '@/interfaces/curve-interfaces';
+import { LiquidityPoolHistory } from '@/interfaces/liquidity-pool-history.interface';
 
 class LiquidityPoolsController {
   public lpsService = new LiquidityPoolService();
 
-  public getLiquidityPoolHistoryDetails = async (req: Request, res: Response, next: NextFunction) => {
+  public getLiquidityPoolHistoryDetailsBySymbol = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const lpSymbol: string = req.params.symbol;
-      const dex = 'curve';
+      const dex: string = req.params.dex;
       const lpHistoryData: LiquidityPoolHistory = await this.lpsService.findLiquiditiyPoolHistory(lpSymbol, dex);
 
       res.status(200).json({ data: lpHistoryData, message: 'findOne' });
@@ -22,7 +22,18 @@ class LiquidityPoolsController {
       const dex: string = req.params.dex;
       const lpHistoryData: LiquidityPoolHistory[] = await this.lpsService.findLiquidityPoolsByDex(dex);
 
-      res.status(200).json({ data: lpHistoryData, message: 'findOne' });
+      res.status(200).json({ data: lpHistoryData, message: 'findMany' });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getLiquidityPoolHistoryDetailsByAddress = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const dex: string = req.params.dex;
+      const lpHistoryData: LiquidityPoolHistory[] = await this.lpsService.findLiquidityPoolsByDex(dex);
+
+      res.status(200).json({ data: lpHistoryData, message: 'findMany' });
     } catch (error) {
       next(error);
     }
