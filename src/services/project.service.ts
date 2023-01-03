@@ -15,16 +15,18 @@ class ProjectService {
     if (isEmpty(slug)) throw new HttpException(400, 'Name is empty');
 
     const project: Project = await this.project.findOne({ slug });
-    if (!project) throw new HttpException(409, 'Project doesn\'t exist');
+    if (!project) throw new HttpException(404, 'Project doesn\'t exist');
 
     return project;
   }
 
   public async createOrUpdateProject(project: Project): Promise<Project> {
     if (isEmpty(project)) throw new HttpException(400, 'Project is empty');
-    project.slug = slug(project.name);
+    if (isEmpty(project._id)) {
+      project.slug = slug(project.name);
+    }
 
-    return this.project.findOneAndUpdate({ name: project.name }, project, {
+    return this.project.findOneAndUpdate({ slug: project.slug }, project, {
       upsert: true,
       new: true,
       setDefaultsOnInsert: true,

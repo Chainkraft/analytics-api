@@ -7,7 +7,7 @@ const contractProxyHistorySchema: Schema = new Schema({
   createdByTxHash: String,
   createdByAddress: String,
   address: String,
-}, { _id: false });
+});
 
 const contractProxySchema: Schema = new Schema({
   type: { type: String, enum: ContractProxyType, default: ContractProxyType.Unknown },

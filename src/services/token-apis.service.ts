@@ -37,6 +37,18 @@ class TokenApiService {
       },
     });
   }
+
+  public async getGeckoToken(id: string): Promise<any> {
+    return this.geckoClient.get(`coins/${id}`, {
+      params: {
+        localization: false,
+        tickers: false,
+        market_data: false,
+        community_data: false,
+        developer_data: false,
+      },
+    });
+  }
 }
 
 export default TokenApiService;

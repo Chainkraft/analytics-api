@@ -1,4 +1,3 @@
-import { Contract } from '@interfaces/contracts.interface';
 import { ObjectId } from 'mongoose';
 
 export interface Project {
@@ -8,5 +7,4 @@ export interface Project {
   description: string;
   url: string;
   logo: string;
-  contracts: Contract[];
 }

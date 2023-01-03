@@ -36,6 +36,11 @@ class TokenService {
     return tokens;
   }
 
+  public async findTokenBySlug(slug: string): Promise<Token> {
+    if (slug === undefined) throw new HttpException(400, 'Slug is empty');
+    return this.tokens.findOne({ slug: slug }).populate('contracts');;
+  }
+
   public async fetchFreshGeckoAndLlamaStablecoins(): Promise<Token[]> {
     const llamaStables = await this.tokenApiService.getStablecoinsFromDefiLlama();
     const llamaStablesPeggedUSD = llamaStables.filter((token: any) => token.pegType.includes('peggedUSD') && token.price);
@@ -113,16 +118,25 @@ class TokenService {
     };
   }
 
+  public async createOrUpdateToken(token: Token): Promise<Token> {
+    if (isEmpty(token)) throw new HttpException(400, 'Token is empty');
+    if (isEmpty(token.slug)) {
+      token.slug = slug(token.name);
+    }
+
+    return this.tokens.findOneAndUpdate({ slug: token.slug }, token, {
+      upsert: true,
+      new: true,
+      setDefaultsOnInsert: true,
+    });
+  }
+
   private async fetchFreshTokenDetails(token: Token): Promise<{ token: Token; marketCapHistory: MarketCapHistory; priceHistory: PriceHistory }> {
     const llamaToken = await this.tokenApiService.getStablecoinDetailsFromDefiLlama(token.llama_id);
     const newToken = llamaStablecoinDetailsParser(llamaToken);
-    newToken.slug = slug(newToken.name);
 
     return {
-      token: await this.tokens.findOneAndUpdate({ slug: newToken.slug }, newToken, {
-        new: true,
-        upsert: true,
-      }),
+      token: await this.createOrUpdateToken(newToken),
       marketCapHistory: await this.computeMarketCapHistory(token.slug, llamaToken),
       priceHistory: await this.priceService.findPriceHistoryForTokenBySlug(token.slug),
     };

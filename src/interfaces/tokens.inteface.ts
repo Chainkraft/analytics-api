@@ -1,3 +1,5 @@
+import { Contract, ContractNetwork } from '@interfaces/contracts.interface';
+
 export interface Token {
   name: string;
   slug: string;
@@ -19,6 +21,8 @@ export interface Token {
   pegged: boolean;
   peggedAsset: string;
   pegMechanism: string;
+
+  contracts: Contract[];
 
   // new
   twitter: string;

@@ -13,6 +13,7 @@ class ContractsRoute implements Routes {
 
   private initializeRoutes() {
     this.router.get(`${this.path}`, this.contractsController.getContracts);
+    this.router.get(`${this.path}/:slug/summary`, this.contractsController.getContractsSummaryForToken);
     this.router.get(`${this.path}/:network/:address`, this.contractsController.getContract);
     this.router.post(`${this.path}/callback/address-activity`, this.contractsController.processAddressActivityCallback);
   }

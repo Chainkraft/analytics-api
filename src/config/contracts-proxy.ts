@@ -4,6 +4,8 @@ import { Project } from '@interfaces/projects.interface';
 export const PROXY_CONTRACTS = [
   {
     project: {
+      _id: undefined,
+      slug: undefined,
       name: 'Chainkraft Proxy',
       description:
         'Chainkraft test contract.',
@@ -18,24 +20,28 @@ export const PROXY_CONTRACTS = [
       },
     ],
   },
-  {
-    project: {
-      name: 'Paxos Gold',
-      description:
-        'Pax Gold (PAXG) is a digital asset. Each token is backed by one fine troy ounce (t oz) of a 400 oz London Good Delivery gold bar, stored in Brink’s vaults. If you own PAXG, you own the underlying physical gold, held in custody by Paxos Trust Company.',
-      url: 'https://paxos.com/paxgold/',
-      logo: '',
-      contracts: [],
-    },
-    contracts: [
-      {
-        address: '0x45804880de22913dafe09f4980848ece6ecbaf78',
-        network: ContractNetwork.ETH_MAINNET,
-      },
-    ],
-  },
   // {
   //   project: {
+  //     _id: undefined,
+  //     slug: undefined,
+  //     name: 'Paxos Gold',
+  //     description:
+  //       'Pax Gold (PAXG) is a digital asset. Each token is backed by one fine troy ounce (t oz) of a 400 oz London Good Delivery gold bar, stored in Brink’s vaults. If you own PAXG, you own the underlying physical gold, held in custody by Paxos Trust Company.',
+  //     url: 'https://paxos.com/paxgold/',
+  //     logo: '',
+  //     contracts: [],
+  //   },
+  //   contracts: [
+  //     {
+  //       address: '0x45804880de22913dafe09f4980848ece6ecbaf78',
+  //       network: ContractNetwork.ETH_MAINNET,
+  //     },
+  //   ],
+  // },
+  // {
+  //   project: {
+  //     _id: undefined,
+  //     slug: undefined,
   //     name: 'Binance USD',
   //     description:
   //       'BUSD is a stablecoin pegged to the US Dollar (USD), issued by Paxos. Approved by the NYDFS, BUSD is available for purchase and redemption at a rate of 1 BUSD to 1 USD.',
@@ -123,6 +129,46 @@ export const PROXY_CONTRACTS = [
   //       address: '0x41A08648C3766F9F9d85598fF102a08f4ef84F84', // ABPT token
   //       network: ContractNetwork.ETH_MAINNET,
   //     },
+  //   ],
+  // },
+  // {
+  //   project: {
+  //     name: 'Tether',
+  //     description:
+  //       '',
+  //     url: 'https://tether.to/',
+  //     logo: '',
+  //     contracts: [],
+  //   },
+  //   contracts: [
+  //     {
+  //       address: '0xdac17f958d2ee523a2206206994597c13d831ec7', // USDT
+  //       network: ContractNetwork.ETH_MAINNET,
+  //     },
+  //     {
+  //       address: '0xC581b735A1688071A1746c968e0798D642EDE491', // EURT
+  //       network: ContractNetwork.ETH_MAINNET,
+  //     },
+  //     {
+  //       address: '0x6e109e9dd7fa1a58bc3eff667e8e41fc3cc07aef', // CNHT
+  //       network: ContractNetwork.ETH_MAINNET,
+  //     },
+  //   ],
+  // },
+  // {
+  //   project: {
+  //     name: 'DAI',
+  //     description:
+  //       '',
+  //     url: 'https://makerdao.com',
+  //     logo: '',
+  //     contracts: [],
+  //   },
+  //   contracts: [
+  //     {
+  //       address: '0x6b175474e89094c44da98b954eedeac495271d0f', // DAI
+  //       network: ContractNetwork.ETH_MAINNET,
+  //     }
   //   ],
   // },
 ];

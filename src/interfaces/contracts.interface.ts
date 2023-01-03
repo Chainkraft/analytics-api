@@ -20,7 +20,7 @@ export interface Contract {
   verifiedSourceCode: string;
   verifiedCompilerVersion: string;
 
-  proxy: ContractProxy;
+  proxy?: ContractProxy;
 }
 
 export interface ContractProxy {
@@ -32,6 +32,7 @@ export interface ContractProxy {
 }
 
 export interface ContractProxyHistory {
+  createdAt?: Date,
   createdByArgs?: string;
   createdByBlock?: number;
   createdByTxHash?: string;
@@ -41,7 +42,13 @@ export interface ContractProxyHistory {
 
 export enum ContractNetwork {
   ETH_MAINNET = 'eth-mainnet',
-  ETH_GOERLI = 'eth-goerli'
+  ETH_GOERLI = 'eth-goerli',
+  // OPT_MAINNET = 'opt-mainnet',
+  // OPT_GOERLI = "opt-goerli",
+  // ARB_MAINNET = "arb-mainnet",
+  // ARB_GOERLI = "arb-goerli",
+  // MATIC_MAINNET = "polygon-mainnet",
+  // MATIC_MUMBAI = "polygon-mumbai",
 }
 
 export enum ContractProxyType {
@@ -50,4 +57,13 @@ export enum ContractProxyType {
   EIP1822 = 'eip1822.uups.proxable',
   Zeppelin = 'org.zeppelinos.proxy.implementation',
   Unknown = '',
+}
+
+export const mapGeckoNetwork = (network: string) => {
+  switch(network) {
+    case "ethereum":
+      return ContractNetwork.ETH_MAINNET;
+    default:
+      return undefined;
+  }
 }

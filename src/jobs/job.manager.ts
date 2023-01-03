@@ -1,10 +1,11 @@
 import { RecurringJob } from './recurring.job';
 import { RefreshStablecoinPricesJob } from './refresh-stablecoin-prices.job';
 import { RefreshScoreJob } from './score-calculation.job';
-import { ContractImport } from '@/jobs/contracts-import.job';
+import { StablecoinContractsImport } from '@/jobs/stablecoin-contracts.job';
 import { TestJob } from './test.job';
 import { CurvePoolsJob } from './curve-pools.job';
 import { StablecoinAnomaliesJob } from './stablecoin-anomalies.job';
+import { DefiContractsImport } from '@/jobs/defi-contracts.job';
 
 export class JobManager {
   jobs: RecurringJob[] = [];
@@ -12,11 +13,12 @@ export class JobManager {
   constructor() {
     this.addJob(new TestJob());
 
-    this.addJob(new ContractImport());
     this.addJob(new RefreshStablecoinPricesJob());
     this.addJob(new RefreshScoreJob());
     this.addJob(new CurvePoolsJob());
     this.addJob(new StablecoinAnomaliesJob());
+    this.addJob(new StablecoinContractsImport());
+    this.addJob(new DefiContractsImport());
   }
 
   addJob(...jobs: RecurringJob[]): boolean {

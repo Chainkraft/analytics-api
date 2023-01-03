@@ -3,7 +3,7 @@ import { Routes } from '@interfaces/routes.interface';
 import ProjectsController from '@controllers/projects.controller';
 
 class ProjectsRoute implements Routes {
-  public path = '/projects';
+  public path = '/defi';
   public router = Router();
   public projectsController = new ProjectsController();
 

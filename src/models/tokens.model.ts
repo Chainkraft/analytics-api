@@ -1,4 +1,4 @@
-import { Document, model, Schema } from 'mongoose';
+import mongoose, { Document, model, Schema } from 'mongoose';
 import { Token } from '@interfaces/tokens.inteface';
 
 const tokenSchema: Schema = new Schema(
@@ -87,6 +87,10 @@ const tokenSchema: Schema = new Schema(
       type: String,
       required: false,
     },
+    contracts: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Contract'
+    }],
   },
   {
     timestamps: true,

@@ -4,19 +4,19 @@ import ContractService from '@services/contracts.service';
 import { PROXY_CONTRACTS } from '@/config/contracts-proxy';
 import ContractMonitorService from '@services/contracts-monitor.service';
 
-export class ContractImport implements RecurringJob {
+export class DefiContractsImport implements RecurringJob {
   private projectService = new ProjectService();
   private contractService = new ContractService();
   private contractMonitorService = new ContractMonitorService();
 
   async doIt() {
-    console.log('Importing contracts...');
+    console.log('Importing defi contracts...');
     await this.importData();
-    console.log('Importing contracts finished.');
+    console.log('Importing defi contracts finished.');
 
-    console.log('Synchronizing contract hooks...');
+    console.log('Synchronizing defi contract hooks...');
     await this.contractMonitorService.synchronizeContractWebhooks();
-    console.log('Synchronizing contract hooks finished.');
+    console.log('Synchronizing defi contract hooks finished.');
   }
 
   private async importData() {
@@ -26,7 +26,7 @@ export class ContractImport implements RecurringJob {
         try {
           const contract = await this.contractService.findContract(contractAddress.address, contractAddress.network);
           if (!contract) {
-            const contract = await this.contractService.fetchContractDetails(contractAddress.address, contractAddress.network);
+            let contract = await this.contractService.fetchContractDetails(contractAddress.address, contractAddress.network);
             contract.project = project;
             await this.contractService.createContract(contract);
 
