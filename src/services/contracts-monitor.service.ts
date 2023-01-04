@@ -10,6 +10,8 @@ class ContractMonitorService {
   public webhookService = new ContractWebhookService();
   private processedWebhooks: string[] = [];
 
+  private readonly CALLBACK_URL = HOST + '/contracts/callback/address-activity';
+
   public async processAddressActivity(callbackData: WebhookAddressActivity) {
     console.log('Alchemy activity webhook', callbackData);
     if (this.processedWebhooks.includes(callbackData.id)) {
@@ -76,7 +78,7 @@ class ContractMonitorService {
 
     for (let network in ContractNetwork) {
       this.contractService.findAllContractsByNetwork(ContractNetwork[network]).then(contracts => {
-        const webhook = webhooks.data.find(wh => wh.network == network.valueOf());
+        const webhook = webhooks.data.find(wh => wh.network == network.valueOf() && wh.webhook_url == this.CALLBACK_URL);
 
         if (webhook) {
           const newAddresses = contracts?.map(contract => contract.address).filter(address => !webhook.addresses?.includes(address));
@@ -97,7 +99,7 @@ class ContractMonitorService {
             .createWebhook({
               network: network,
               webhook_type: WebhookType.ADDRESS_ACTIVITY,
-              webhook_url: HOST + '/contracts/callback/address-activity',
+              webhook_url: this.CALLBACK_URL,
               addresses: contracts.map(contract => contract.address),
             })
             .then(response => {
