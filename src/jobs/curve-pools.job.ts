@@ -37,7 +37,7 @@ export class CurvePoolsJob implements RecurringJob {
     return Promise.all(
       remotePools.poolData.map(remotePool => {
         return this.lpBalanceHistory.findOneAndUpdate(
-          { symbol: remotePool.symbol },
+          { network: network, address: remotePool.address },
           {
             dex: dex,
             network: network,

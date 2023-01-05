@@ -29,6 +29,9 @@ export class StablecoinAnomaliesJob implements RecurringJob {
     const tokens = await this.getStablecoinsForPriceAlert(numberOfDays);
     const latestAlert = await this.alertService.findLatestStablecoinPriceAlert();
 
+    console.log('StablecoinAnomaliesJob anomalies found', tokens);
+    console.log('StablecoinAnomaliesJob latest alert', latestAlert);
+
     const excludedTokens = [''];
     const tweetTokens = isEmpty(latestAlert)
       ? tokens.filter(token => !excludedTokens.includes(token.symbol))

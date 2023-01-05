@@ -15,6 +15,14 @@ class LiquidityPoolService {
   public async findLiquiditiyPoolHistory(symbol: String, dex: String): Promise<LiquidityPoolHistory> {
     return this.liquiditiyPoolHistory.findOne({ symbol: { $regex: symbol, $options: 'i' }, dex: dex });
   }
+
+  public async findLiquiditiyPoolHistoryByDexAndNetwork(dex: String, network: String): Promise<LiquidityPoolHistory[]> {
+    return this.liquiditiyPoolHistory.find({ network: network, dex: dex });
+  }
+
+  public async findLiquiditiyPoolHistoryByAddressAndNetwork(address: String, network: String): Promise<LiquidityPoolHistory> {
+    return this.liquiditiyPoolHistory.findOne({ address: { $regex: address, $options: 'i' }, network: network });
+  }
 }
 
 export default LiquidityPoolService;

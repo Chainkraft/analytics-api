@@ -7,8 +7,7 @@ export const PROXY_CONTRACTS = [
       _id: undefined,
       slug: undefined,
       name: 'Chainkraft Proxy',
-      description:
-        'Chainkraft test contract.',
+      description: 'Chainkraft test contract.',
       url: 'https://chainkraft.com',
       logo: '',
       contracts: [],

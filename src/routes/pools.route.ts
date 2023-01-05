@@ -14,6 +14,7 @@ class LiquidityPoolsRoute implements Routes {
   private initializeRoutes() {
     this.router.get(`${this.path}/dex/:dex`, this.poolsController.getLiquidityPoolsByDex);
     this.router.get(`${this.path}/dex/:dex/:symbol`, this.poolsController.getLiquidityPoolHistoryDetailsBySymbol);
+    this.router.get(`${this.path}/:network/dex/:dex`, this.poolsController.getLiquidityPoolsByDex);
     this.router.get(`${this.path}/:network/address/:address`, this.poolsController.getLiquidityPoolHistoryDetailsByAddress);
   }
 }
