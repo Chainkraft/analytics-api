@@ -38,7 +38,7 @@ export class StablecoinAnomaliesJob implements RecurringJob {
       : tokens.filter(token => {
           if (excludedTokens.includes(token.symbol)) return false;
 
-          const previousTokenAlarm = latestAlert.tokens.find(yesterdayToken => yesterdayToken.token === token.symbol);
+          const previousTokenAlarm = latestAlert.tokens.find(previousAlertToken => previousAlertToken.token === token.symbol);
           if (!isEmpty(previousTokenAlarm)) {
             const diff = previousTokenAlarm.price - token.price;
             if (diff > 0.03) return true;
@@ -54,7 +54,13 @@ export class StablecoinAnomaliesJob implements RecurringJob {
 
     this.alertService.createStablecoinAlert({
       tokens: tokens.map(token => {
-        return { token: token.symbol, price: token.price };
+        return {
+          token: token.symbol,
+          price:
+            tweetTokens.find(tweetedToken => tweetedToken.symbol === token.symbol)?.price ??
+            latestAlert.tokens.find(previousAlertToken => previousAlertToken.token === token.symbol)?.price ??
+            token.price,
+        };
       }),
     });
 

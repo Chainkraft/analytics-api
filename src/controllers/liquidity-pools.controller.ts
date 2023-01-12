@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import LiquidityPoolService from '@/services/liquidity-pools.service';
 import { LiquidityPoolHistory } from '@/interfaces/liquidity-pool-history.interface';
+import { ShortLiquidityPool, stablePools } from '@/config/stable-pools';
 
 class LiquidityPoolsController {
   public lpsService = new LiquidityPoolService();
@@ -32,9 +33,9 @@ class LiquidityPoolsController {
     try {
       const address: string = req.params.address;
       const network: string = req.params.network;
-      const lpHistoryData: LiquidityPoolHistory = await this.lpsService.findLiquiditiyPoolHistoryByAddressAndNetwork(address, network);
+      const data: LiquidityPoolHistory = await this.lpsService.findLiquiditiyPoolHistoryByAddressAndNetwork(address, network);
 
-      res.status(200).json({ data: lpHistoryData, message: 'findOne' });
+      res.status(200).json(data);
     } catch (error) {
       next(error);
     }
@@ -47,6 +48,17 @@ class LiquidityPoolsController {
       const lpHistoryData: LiquidityPoolHistory[] = await this.lpsService.findLiquiditiyPoolHistoryByDexAndNetwork(dex, network);
 
       res.status(200).json({ data: lpHistoryData, message: 'findMany' });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getLiquidityPoolsForToken = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const token: string = req.params.token;
+
+      const pools: ShortLiquidityPool[] = await this.lpsService.findLiquidityPoolForToken(token);
+      res.status(200).json(pools);
     } catch (error) {
       next(error);
     }
