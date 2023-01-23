@@ -13,6 +13,7 @@ class SubscribersRoute implements Routes {
 
   private initializeRoutes() {
     this.router.post(`${this.path}/alerting`, this.subscribersController.createSubscriber);
+    this.router.post(`${this.path}/request-access`, this.subscribersController.saveAccessRequest);
   }
 }
 
