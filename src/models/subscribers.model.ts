@@ -1,5 +1,5 @@
 import { Document, model, Schema } from 'mongoose';
-import { AccessRequest } from '@interfaces/access-requests.interface';
+import { AccessRequest } from '@interfaces/subscribers.interface';
 
 const accessRequestSchema: Schema = new Schema({
   firstName: {
@@ -27,6 +27,6 @@ const accessRequestSchema: Schema = new Schema({
   },
 }, { timestamps: true });
 
-const accessRequestsModel = model<AccessRequest & Document>('AccessRequest', accessRequestSchema);
+const subscribersModel = model<AccessRequest & Document>('AccessRequest', accessRequestSchema);
 
-export default accessRequestsModel;
+export default subscribersModel;

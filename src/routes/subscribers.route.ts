@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { Routes } from '@interfaces/routes.interface';
 import SubscribersController from '@/controllers/subscribers.controller';
+import validationMiddleware from '@middlewares/validation.middleware';
+import { AccessRequestDto } from '@dtos/subscribers.dto';
 
 class SubscribersRoute implements Routes {
   public path = '/subscribers';
@@ -12,8 +14,7 @@ class SubscribersRoute implements Routes {
   }
 
   private initializeRoutes() {
-    this.router.post(`${this.path}/alerting`, this.subscribersController.createSubscriber);
-    this.router.post(`${this.path}/request-access`, this.subscribersController.saveAccessRequest);
+    this.router.post(`${this.path}`, validationMiddleware(AccessRequestDto, 'body'), this.subscribersController.saveAccessRequest);
   }
 }
 

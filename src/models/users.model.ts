@@ -1,5 +1,5 @@
 import { Document, model, Schema } from 'mongoose';
-import { User } from '@interfaces/users.interface';
+import { Role, User } from '@interfaces/users.interface';
 
 const userSchema: Schema = new Schema({
   email: {
@@ -11,6 +11,11 @@ const userSchema: Schema = new Schema({
     type: String,
     required: true,
   },
+  roles: [{
+    type: String,
+    required: true,
+    enum: Role
+  }],
 });
 
 const userModel = model<User & Document>('User', userSchema);

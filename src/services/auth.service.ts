@@ -1,10 +1,10 @@
 import { compare, hash } from 'bcrypt';
 import { sign } from 'jsonwebtoken';
-import { SECRET_KEY } from '@config';
+import { JWT_EXPIRATION_TIME, JWT_SECRET_KEY } from '@config';
 import { CreateUserDto } from '@dtos/users.dto';
 import { HttpException } from '@exceptions/HttpException';
 import { DataStoredInToken, TokenData } from '@interfaces/auth.interface';
-import { User } from '@interfaces/users.interface';
+import { Role, User } from '@interfaces/users.interface';
 import userModel from '@models/users.model';
 import { isEmpty } from '@utils/util';
 
@@ -18,7 +18,11 @@ class AuthService {
     if (findUser) throw new HttpException(409, `This email ${userData.email} already exists`);
 
     const hashedPassword = await hash(userData.password, 10);
-    const createUserData: User = await this.users.create({ ...userData, password: hashedPassword });
+    const createUserData: User = await this.users.create({
+      ...userData,
+      password: hashedPassword,
+      roles: [Role.USER]
+    });
 
     return createUserData;
   }
@@ -48,15 +52,18 @@ class AuthService {
   }
 
   public createToken(user: User): TokenData {
-    const dataStoredInToken: DataStoredInToken = { _id: user._id };
-    const secretKey: string = SECRET_KEY;
-    const expiresIn: number = 60 * 60;
+    const dataStoredInToken: DataStoredInToken = {
+      email: user.email,
+      roles: user.roles,
+    };
+    const secretKey: string = JWT_SECRET_KEY;
+    const expiresIn: number = Number(JWT_EXPIRATION_TIME);
 
     return { expiresIn, token: sign(dataStoredInToken, secretKey, { expiresIn }) };
   }
 
   public createCookie(tokenData: TokenData): string {
-    return `Authorization=${tokenData.token}; HttpOnly; Max-Age=${tokenData.expiresIn};`;
+    return `Authorization=${tokenData.token}; HttpOnly; Path=/; Max-Age=${tokenData.expiresIn};`;
   }
 }
 
