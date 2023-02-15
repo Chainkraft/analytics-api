@@ -11,6 +11,7 @@ export interface Contract {
 
   createdByArgs: string;
   createdByBlock: number;
+  createdByBlockAt: Date;
   createdByTxHash: string;
   createdByAddress: string;
 
@@ -32,9 +33,9 @@ export interface ContractProxy {
 }
 
 export interface ContractProxyHistory {
-  createdAt?: Date,
   createdByArgs?: string;
   createdByBlock?: number;
+  createdByBlockAt?: Date;
   createdByTxHash?: string;
   createdByAddress?: string;
   address: string;

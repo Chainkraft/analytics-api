@@ -57,35 +57,33 @@ class ContractService {
     const proxyOpcode = new ProxyOpcode(byteCode.value);
     const initTransaction = transactions.value.result[0];
     const verifiedContractItem = getFulfilled(verifiedCode)?.value?.result[0];
+    const isVerified = verifiedContractItem !== undefined && !!verifiedContractItem.SourceCode;
 
     const contract: Contract = {
       address,
       network,
       byteCode: byteCode.value,
 
-      createdByArgs: verifiedContractItem?.ConstructorArguments,
+      createdByArgs: isVerified ? verifiedContractItem.ConstructorArguments : undefined,
       createdByBlock: initTransaction.blockNumber,
+      createdByBlockAt: new Date(initTransaction.timeStamp * 1000),
       createdByTxHash: initTransaction.hash,
       createdByAddress: initTransaction.from,
 
-      verified: isFulfilled(verifiedCode),
-      verifiedAbi: verifiedContractItem?.ABI.replace('Contract source code not verified', ''),
-      verifiedName: verifiedContractItem?.ContractName,
-      verifiedSourceCode: verifiedContractItem?.SourceCode,
-      verifiedCompilerVersion: verifiedContractItem?.CompilerVersion,
+      verified: isVerified,
+      verifiedAbi: isVerified ? verifiedContractItem.ABI : undefined,
+      verifiedName: isVerified ? verifiedContractItem.ContractName : undefined,
+      verifiedSourceCode: isVerified ? verifiedContractItem.SourceCode : undefined,
+      verifiedCompilerVersion: isVerified ? verifiedContractItem.CompilerVersion : undefined
     };
 
-    if(proxyOpcode.isProxyContract()) {
+    if (proxyOpcode.isProxyContract()) {
       contract.proxy = {
         type: proxyOpcode.getProxyType() as ContractProxyType,
-          implSlot: proxyOpcode.getProxyImplSlot(),
-          adminSlot: proxyOpcode.getProxyAdminSlot(),
-          implHistory: proxyOpcode.getProxyImplSlot()
-            ? [{ address: await provider.core.getStorageAt(address, proxyOpcode.getProxyImplSlot()) }]
-            : [],
-          adminHistory: proxyOpcode.getProxyAdminSlot()
-            ? [{ address: await provider.core.getStorageAt(address, proxyOpcode.getProxyAdminSlot()) }]
-            : []
+        implSlot: proxyOpcode.getProxyImplSlot(),
+        adminSlot: proxyOpcode.getProxyAdminSlot(),
+        implHistory: [],
+        adminHistory: [],
       };
     }
 
@@ -96,20 +94,32 @@ class ContractService {
     return contract.proxy !== undefined;
   }
 
-  public hasProxyContractChanged(contract: Contract): boolean {
-    if(this.isProxyContract(contract)) {
-      const currentProxyImpl = contract.proxy.implHistory.at(-1);
-      const currentProxyAdmin = contract.proxy.adminHistory.at(-1);
-      const hasValueChangedInTheLastMonth = (history: ContractProxyHistory) => {
-        if(history !== undefined && history.createdAt !== undefined) {
-          return Number(new Date()) - Number(history.createdAt) < 2628288000;
-        }
-        return false;
-      };
-
-      return hasValueChangedInTheLastMonth(currentProxyImpl) || hasValueChangedInTheLastMonth(currentProxyAdmin);
+  public hasProxyContractChanged(contract: Contract, days: number = 90): boolean {
+    if (this.isProxyContract(contract)) {
+      const lastChange = this.getProxyContractChangedRecord(contract);
+      if (lastChange !== undefined && lastChange.createdByBlockAt !== undefined) {
+        return Number(new Date()) - Number(lastChange.createdByBlockAt) < (days * 86_400_000);
+      }
     }
     return false;
+  }
+
+  public getProxyContractChangedRecord(contract: Contract): ContractProxyHistory {
+    if (!this.isProxyContract(contract)) {
+      return undefined;
+    }
+    const lastModifiedProxy = contract.proxy.implHistory.at(-1);
+    const lastModifiedAdmin = contract.proxy.adminHistory.at(-1);
+    if (lastModifiedProxy === undefined) {
+      return lastModifiedAdmin;
+    }
+    if (lastModifiedAdmin === undefined) {
+      return lastModifiedProxy;
+    }
+
+    return lastModifiedProxy.createdByBlock > lastModifiedAdmin.createdByBlock
+      ? lastModifiedProxy
+      : lastModifiedAdmin;
   }
 }
 

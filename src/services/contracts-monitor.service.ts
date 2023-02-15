@@ -45,9 +45,9 @@ class ContractMonitorService {
           currentProxyImpl.address, newProxyImpl);
 
         contract.proxy.implHistory.push({
-          createdAt: new Date(),
           createdByArgs: '',
           createdByBlock: parseInt(transaction.blockNum, 16),
+          createdByBlockAt: new Date(),
           createdByTxHash: transaction.hash,
           createdByAddress: transaction.fromAddress,
           address: newProxyImpl,
@@ -58,9 +58,9 @@ class ContractMonitorService {
           currentProxyAdmin.address, newProxyAdmin);
 
         contract.proxy.adminHistory.push({
-          createdAt: new Date(),
           createdByArgs: '',
           createdByBlock: parseInt(transaction.blockNum, 16),
+          createdByBlockAt: new Date(),
           createdByTxHash: transaction.hash,
           createdByAddress: transaction.fromAddress,
           address: newProxyAdmin,

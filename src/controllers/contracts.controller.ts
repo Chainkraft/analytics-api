@@ -6,6 +6,7 @@ import ProjectService from '@services/project.service';
 import { TokenContractSummary, TokenContractSummaryStatus } from '@dtos/token-contract.summary';
 import TokenService from '@services/tokens.service';
 import { HttpException } from '@exceptions/HttpException';
+import { RequestWithUser } from '@interfaces/auth.interface';
 
 class ContractsController {
   public contractMonitorService = new ContractMonitorService();
@@ -35,7 +36,7 @@ class ContractsController {
     }
   };
 
-  public getContractsSummaryForToken = async (req: Request, res: Response, next: NextFunction) => {
+  public getContractsSummaryForToken = async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
       const slug = req.params.slug;
       const token = await this.tokenService.findTokenBySlug(slug);
@@ -43,20 +44,60 @@ class ContractsController {
         throw new HttpException(404, 'Token does not have contracts');
       }
 
-      const hasProxyContracts = token.contracts.filter(this.contractService.isProxyContract, this.contractService).length > 0;
-      const hasProxyContractsChanged = token.contracts.filter(this.contractService.hasProxyContractChanged, this.contractService).length > 0;
+      let summary: TokenContractSummary[] = [];
+      token.contracts.forEach((contract: Contract) => {
+        const isProxy = this.contractService.isProxyContract(contract);
+        const isProxyUpdated = this.contractService.hasProxyContractChanged(contract);
+        const latestProxyUpdate = this.contractService.getProxyContractChangedRecord(contract);
 
-      let status = TokenContractSummaryStatus.OK;
-      if (hasProxyContractsChanged) {
-        status = TokenContractSummaryStatus.ALARM;
-      } else if (hasProxyContracts) {
-        status = TokenContractSummaryStatus.WARNING;
-      }
+        let blockSummary: TokenContractSummary = {
+          slug,
+          network: contract.network,
+          proxyPattern: {
+            status: !isProxy
+              ? TokenContractSummaryStatus.OK
+              : isProxyUpdated
+                ? TokenContractSummaryStatus.ALARM
+                : TokenContractSummaryStatus.WARNING,
+          },
+          sourceCode: {
+            status: contract.verified
+              ? TokenContractSummaryStatus.OK
+              : TokenContractSummaryStatus.WARNING,
+          },
+          proofOfTime: {
+            status: Number(new Date()) - Number(contract.createdByBlockAt) > 2628288000 && !isProxyUpdated // last 90 days
+              ? TokenContractSummaryStatus.OK
+              : TokenContractSummaryStatus.ALARM,
+          },
+        };
 
-      const summary: TokenContractSummary = {
-        slug: slug,
-        status,
-      };
+        if (req.user) {
+          blockSummary.proxyPattern = {
+            status: blockSummary.proxyPattern.status,
+            type: contract.proxy?.type,
+            address: contract.address,
+            implSlot: contract.proxy?.implSlot,
+            adminSlot: contract.proxy?.adminSlot,
+          };
+          blockSummary.sourceCode = {
+            status: blockSummary.sourceCode.status,
+            size: contract.byteCode.length / 2 - 1,
+            createdByBlock: contract.createdByBlock,
+            createdByAddress: contract.createdByAddress,
+            compilerVersion: contract.verifiedCompilerVersion,
+          };
+          blockSummary.proofOfTime = {
+            status: blockSummary.proofOfTime.status,
+            createdByBlock: contract.createdByBlock,
+            createdByBlockAt: contract.createdByBlockAt,
+            updatedByBlock: latestProxyUpdate !== undefined ? latestProxyUpdate.createdByBlock : undefined,
+            updatedByBlockAt: latestProxyUpdate !== undefined ? latestProxyUpdate.createdByBlockAt : undefined,
+          };
+        }
+
+        summary.push(blockSummary);
+      });
 
       res.json(summary);
     } catch (error) {

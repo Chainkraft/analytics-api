@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { Routes } from '@interfaces/routes.interface';
 import ContractsController from '@controllers/contracts.controller';
+import { authMiddleware } from '@middlewares/auth.middleware';
 
 class ContractsRoute implements Routes {
   public path = '/contracts';
@@ -13,7 +14,7 @@ class ContractsRoute implements Routes {
 
   private initializeRoutes() {
     this.router.get(`${this.path}`, this.contractsController.getContracts);
-    this.router.get(`${this.path}/:slug/summary`, this.contractsController.getContractsSummaryForToken);
+    this.router.get(`${this.path}/:slug/summary`, [authMiddleware.getUser], this.contractsController.getContractsSummaryForToken);
     this.router.get(`${this.path}/:network/:address`, this.contractsController.getContract);
     this.router.post(`${this.path}/callback/address-activity`, this.contractsController.processAddressActivityCallback);
   }

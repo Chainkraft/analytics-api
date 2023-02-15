@@ -4,6 +4,7 @@ import { Contract, ContractNetwork, ContractProxyType } from '@interfaces/contra
 const contractProxyHistorySchema: Schema = new Schema({
   createdByArgs: String,
   createdByBlock: Number,
+  createdByBlockAt: Date,
   createdByTxHash: String,
   createdByAddress: String,
   address: String,
@@ -25,6 +26,7 @@ const contractSchema: Schema = new Schema({
 
     createdByArgs: { type: String },
     createdByBlock: { type: Number, required: true },
+    createdByBlockAt: { type: Date, required: true },
     createdByTxHash: { type: String, required: true },
     createdByAddress: { type: String, required: true },
 
