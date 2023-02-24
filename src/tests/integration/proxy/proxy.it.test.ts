@@ -3,7 +3,6 @@ import * as fs from 'fs';
 import * as solc from 'solc';
 
 describe('Create proxy full flow', () => {
-
   const PUBLIC_KEY = '0xdC3532b2ce6335acF0A03FB5efEAA0a65bb4E14e';
   const PRIVATE_KEY = '75c533c41230de328a82e4233c66f28fd2361df0576e5ca9e01acd029ee079f8';
   const USER_PRIVATE_KEY = '9d24b1743d5092f395b61a60d368db65590c92841e548f142da2e2b5c7f885fe';
@@ -81,7 +80,7 @@ describe('Create proxy full flow', () => {
     const contractName = pathFragments.pop();
     const dependencyPath = pathFragments.join('/');
 
-    const findImports = (path) => {
+    const findImports = path => {
       const proxyPath = `${dependencyPath}/dependencies/${path}`;
       return {
         contents: fs.readFileSync(proxyPath).toString(),

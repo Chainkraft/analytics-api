@@ -11,11 +11,13 @@ const userSchema: Schema = new Schema({
     type: String,
     required: true,
   },
-  roles: [{
-    type: String,
-    required: true,
-    enum: Role
-  }],
+  roles: [
+    {
+      type: String,
+      required: true,
+      enum: Role,
+    },
+  ],
 });
 
 const userModel = model<User & Document>('User', userSchema);

@@ -38,7 +38,7 @@ class TokenService {
 
   public async findTokenBySlug(slug: string): Promise<Token> {
     if (slug === undefined) throw new HttpException(400, 'Slug is empty');
-    return this.tokens.findOne({ slug: slug }).populate('contracts');;
+    return this.tokens.findOne({ slug: slug }).populate('contracts');
   }
 
   public async fetchFreshGeckoAndLlamaStablecoins(): Promise<Token[]> {

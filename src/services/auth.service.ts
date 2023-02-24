@@ -21,7 +21,7 @@ class AuthService {
     const createUserData: User = await this.users.create({
       ...userData,
       password: hashedPassword,
-      roles: [Role.USER]
+      roles: [Role.USER],
     });
 
     return createUserData;
@@ -57,7 +57,7 @@ class AuthService {
       roles: user.roles,
     };
     const secretKey: string = JWT_SECRET_KEY;
-    const expiresIn: number = Number(JWT_EXPIRATION_TIME);
+    const expiresIn = Number(JWT_EXPIRATION_TIME);
 
     return { expiresIn, token: sign(dataStoredInToken, secretKey, { expiresIn }) };
   }

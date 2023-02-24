@@ -3,7 +3,6 @@ import { providers } from '@config';
 import { BlockNumberCache } from '@/config/cache';
 
 class BlockchainService {
-
   public async getBlockNumber(network: ContractNetwork): Promise<number> {
     let block: number = BlockNumberCache.get(network);
     if (block === undefined) {

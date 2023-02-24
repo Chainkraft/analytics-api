@@ -26,7 +26,7 @@ export class DefiContractsImport implements RecurringJob {
         try {
           const contract = await this.contractService.findContract(contractAddress.address, contractAddress.network);
           if (!contract) {
-            let contract = await this.contractService.fetchContractDetails(contractAddress.address, contractAddress.network);
+            const contract = await this.contractService.fetchContractDetails(contractAddress.address, contractAddress.network);
             contract.project = project;
             await this.contractService.createContract(contract);
 

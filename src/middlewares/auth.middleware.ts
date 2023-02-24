@@ -6,11 +6,7 @@ import { DataStoredInToken, RequestWithUser } from '@interfaces/auth.interface';
 import userModel from '@models/users.model';
 import { Role, User } from '@interfaces/users.interface';
 
-const getUser = async (
-  req: RequestWithUser,
-  res: Response,
-  next: NextFunction,
-) => {
+const getUser = async (req: RequestWithUser, res: Response, next: NextFunction) => {
   try {
     const authorization = req.cookies['Authorization'] || (req.header('Authorization') ? req.header('Authorization').split('Bearer ')[1] : null);
 
@@ -30,11 +26,7 @@ const getUser = async (
 };
 
 const hasRole = (value: Role) => {
-  return async (
-    req: RequestWithUser,
-    res: Response,
-    next: NextFunction,
-  ) => {
+  return async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
       const user: User = req.user;
       if (user && user.roles.includes(value)) {

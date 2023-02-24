@@ -61,10 +61,10 @@ export enum ContractProxyType {
 }
 
 export const mapGeckoNetwork = (network: string) => {
-  switch(network) {
-    case "ethereum":
+  switch (network) {
+    case 'ethereum':
       return ContractNetwork.ETH_MAINNET;
     default:
       return undefined;
   }
-}
+};

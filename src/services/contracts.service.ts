@@ -21,12 +21,12 @@ class ContractService {
 
   public async findContractsByNetwork(addresses: string[], network: ContractNetwork): Promise<Contract[]> {
     if (isEmpty(network)) throw new HttpException(400, 'Network is empty');
-    return this.contracts.find({ address: { '$in': addresses }, network });
+    return this.contracts.find({ address: { $in: addresses }, network });
   }
 
   public async findContractsByProject(projectId: ObjectId): Promise<Contract[]> {
     if (projectId === undefined) throw new HttpException(400, 'Project is empty');
-    return this.contracts.find({ 'project': projectId });
+    return this.contracts.find({ project: projectId });
   }
 
   public async findContract(address: string, network: ContractNetwork): Promise<Contract> {
@@ -74,7 +74,7 @@ class ContractService {
       verifiedAbi: isVerified ? verifiedContractItem.ABI : undefined,
       verifiedName: isVerified ? verifiedContractItem.ContractName : undefined,
       verifiedSourceCode: isVerified ? verifiedContractItem.SourceCode : undefined,
-      verifiedCompilerVersion: isVerified ? verifiedContractItem.CompilerVersion : undefined
+      verifiedCompilerVersion: isVerified ? verifiedContractItem.CompilerVersion : undefined,
     };
 
     if (proxyOpcode.isProxyContract()) {
@@ -94,11 +94,11 @@ class ContractService {
     return contract.proxy !== undefined;
   }
 
-  public hasProxyContractChanged(contract: Contract, days: number = 90): boolean {
+  public hasProxyContractChanged(contract: Contract, days = 90): boolean {
     if (this.isProxyContract(contract)) {
       const lastChange = this.getProxyContractChangedRecord(contract);
       if (lastChange !== undefined && lastChange.createdByBlockAt !== undefined) {
-        return Number(new Date()) - Number(lastChange.createdByBlockAt) < (days * 86_400_000);
+        return Number(new Date()) - Number(lastChange.createdByBlockAt) < days * 86_400_000;
       }
     }
     return false;
@@ -117,9 +117,7 @@ class ContractService {
       return lastModifiedProxy;
     }
 
-    return lastModifiedProxy.createdByBlock > lastModifiedAdmin.createdByBlock
-      ? lastModifiedProxy
-      : lastModifiedAdmin;
+    return lastModifiedProxy.createdByBlock > lastModifiedAdmin.createdByBlock ? lastModifiedProxy : lastModifiedAdmin;
   }
 }
 

@@ -44,31 +44,26 @@ class ContractsController {
         throw new HttpException(404, 'Token does not have contracts');
       }
 
-      let summary: TokenContractSummary[] = [];
+      const summary: TokenContractSummary[] = [];
       token.contracts.forEach((contract: Contract) => {
         const isProxy = this.contractService.isProxyContract(contract);
         const isProxyUpdated = this.contractService.hasProxyContractChanged(contract);
         const latestProxyUpdate = this.contractService.getProxyContractChangedRecord(contract);
 
-        let blockSummary: TokenContractSummary = {
+        const blockSummary: TokenContractSummary = {
           slug,
           network: contract.network,
           proxyPattern: {
-            status: !isProxy
-              ? TokenContractSummaryStatus.OK
-              : isProxyUpdated
-                ? TokenContractSummaryStatus.ALARM
-                : TokenContractSummaryStatus.WARNING,
+            status: !isProxy ? TokenContractSummaryStatus.OK : isProxyUpdated ? TokenContractSummaryStatus.ALARM : TokenContractSummaryStatus.WARNING,
           },
           sourceCode: {
-            status: contract.verified
-              ? TokenContractSummaryStatus.OK
-              : TokenContractSummaryStatus.WARNING,
+            status: contract.verified ? TokenContractSummaryStatus.OK : TokenContractSummaryStatus.WARNING,
           },
           proofOfTime: {
-            status: Number(new Date()) - Number(contract.createdByBlockAt) > 2628288000 && !isProxyUpdated // last 90 days
-              ? TokenContractSummaryStatus.OK
-              : TokenContractSummaryStatus.ALARM,
+            status:
+              Number(new Date()) - Number(contract.createdByBlockAt) > 2628288000 && !isProxyUpdated // last 90 days
+                ? TokenContractSummaryStatus.OK
+                : TokenContractSummaryStatus.ALARM,
           },
         };
 

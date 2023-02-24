@@ -72,19 +72,22 @@ describe('Testing ContractService', () => {
       type: ContractProxyType.EIP1822,
       implSlot: '',
       adminSlot: '',
-      implHistory: [{
-        address: '',
-      }],
-      adminHistory: [{
-        address: '',
-      }],
+      implHistory: [
+        {
+          address: '',
+        },
+      ],
+      adminHistory: [
+        {
+          address: '',
+        },
+      ],
     },
   };
 
   const getSubtractedDate = (subtractDays: number) => {
     const date = new Date();
-    date.setTime(Date.now() - (24 * 60 * 60 * 1000 * subtractDays));
+    date.setTime(Date.now() - 24 * 60 * 60 * 1000 * subtractDays);
     return date;
   };
 });
-

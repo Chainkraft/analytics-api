@@ -23,16 +23,18 @@ export const {
 } = process.env;
 
 export const etherscans = new Map<ContractNetwork, any>([
-  [
-    ContractNetwork.ETH_MAINNET,
-    new init(process.env.ETHERSCAN_API_KEY),
-  ],
+  [ContractNetwork.ETH_MAINNET, new init(process.env.ETHERSCAN_API_KEY)],
   [
     ContractNetwork.ETH_GOERLI,
-    new init(process.env.ETHERSCAN_API_KEY, null, 10000, axios.create({
-      baseURL: 'https://api-goerli.etherscan.io/',
-      timeout: 10000,
-    })),
+    new init(
+      process.env.ETHERSCAN_API_KEY,
+      null,
+      10000,
+      axios.create({
+        baseURL: 'https://api-goerli.etherscan.io/',
+        timeout: 10000,
+      }),
+    ),
   ],
 ]);
 

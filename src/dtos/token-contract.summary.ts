@@ -29,5 +29,5 @@ export interface TokenContractSummary {
 export enum TokenContractSummaryStatus {
   OK = 'OK',
   WARNING = 'WARNING',
-  ALARM = 'ALARM'
+  ALARM = 'ALARM',
 }

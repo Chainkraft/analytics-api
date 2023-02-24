@@ -10,7 +10,6 @@ export class CreateUserDto {
 }
 
 export class UserProfileDto {
-
   constructor(user: User) {
     this.email = user.email;
     this.roles = user.roles;

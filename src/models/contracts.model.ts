@@ -10,15 +10,19 @@ const contractProxyHistorySchema: Schema = new Schema({
   address: String,
 });
 
-const contractProxySchema: Schema = new Schema({
-  type: { type: String, enum: ContractProxyType, default: ContractProxyType.Unknown },
-  implSlot: String,
-  adminSlot: String,
-  implHistory: [contractProxyHistorySchema],
-  adminHistory: [contractProxyHistorySchema],
-}, { _id: false });
+const contractProxySchema: Schema = new Schema(
+  {
+    type: { type: String, enum: ContractProxyType, default: ContractProxyType.Unknown },
+    implSlot: String,
+    adminSlot: String,
+    implHistory: [contractProxyHistorySchema],
+    adminHistory: [contractProxyHistorySchema],
+  },
+  { _id: false },
+);
 
-const contractSchema: Schema = new Schema({
+const contractSchema: Schema = new Schema(
+  {
     address: { type: String, required: true, lowercase: true },
     network: { type: String, required: true, enum: ContractNetwork },
     byteCode: { type: String, required: true },
@@ -40,7 +44,8 @@ const contractSchema: Schema = new Schema({
   },
   {
     timestamps: true,
-  });
+  },
+);
 
 contractSchema.index({ address: 1, network: -1 }, { unique: true });
 const contractsModel = model<Contract & Document>('Contract', contractSchema);

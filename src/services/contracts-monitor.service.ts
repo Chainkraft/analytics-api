@@ -23,7 +23,7 @@ class ContractMonitorService {
     const provider = providers.get(network);
     const addresses = callbackData.event.activity.map(tx => tx.toAddress);
 
-    const contracts = (await this.contractService.findContractsByNetwork(addresses, network));
+    const contracts = await this.contractService.findContractsByNetwork(addresses, network);
 
     for await (const contract of contracts) {
       console.log('Proxy contract interaction detected. %s (%s)', contract.address, contract.network);
@@ -41,8 +41,7 @@ class ContractMonitorService {
       const currentProxyAdmin = contract.proxy.adminHistory.at(-1);
 
       if (currentProxyImpl?.address != newProxyImpl) {
-        console.log('Proxy=%s (%s) implementation changed %s => %s', contract.address, contract.network,
-          currentProxyImpl.address, newProxyImpl);
+        console.log('Proxy=%s (%s) implementation changed %s => %s', contract.address, contract.network, currentProxyImpl.address, newProxyImpl);
 
         contract.proxy.implHistory.push({
           createdByArgs: '',
@@ -54,8 +53,7 @@ class ContractMonitorService {
         });
       }
       if (currentProxyAdmin?.address != newProxyAdmin) {
-        console.log('Proxy=%s (%s) admin changed %s => %s', contract.address, contract.network,
-          currentProxyAdmin.address, newProxyAdmin);
+        console.log('Proxy=%s (%s) admin changed %s => %s', contract.address, contract.network, currentProxyAdmin.address, newProxyAdmin);
 
         contract.proxy.adminHistory.push({
           createdByArgs: '',
@@ -76,7 +74,7 @@ class ContractMonitorService {
   public async synchronizeContractWebhooks() {
     const webhooks = (await this.webhookService.getAllWebhooks()).data;
 
-    for (let network in ContractNetwork) {
+    for (const network in ContractNetwork) {
       this.contractService.findAllContractsByNetwork(ContractNetwork[network]).then(contracts => {
         const webhook = webhooks.data.find(wh => wh.network == network.valueOf() && wh.webhook_url == this.CALLBACK_URL);
 
