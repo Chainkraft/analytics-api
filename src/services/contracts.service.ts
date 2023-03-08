@@ -59,6 +59,10 @@ class ContractService {
     const verifiedContractItem = getFulfilled(verifiedCode)?.value?.result[0];
     const isVerified = verifiedContractItem !== undefined && !!verifiedContractItem.SourceCode;
 
+    const getProxyImpl = provider.core.getStorageAt(address, proxyOpcode.getProxyImplSlot());
+    const getProxyAdmin = provider.core.getStorageAt(address, proxyOpcode.getProxyAdminSlot());
+    const [proxyImpl, proxyAdmin] = await Promise.allSettled([getProxyImpl, getProxyAdmin]);
+
     const contract: Contract = {
       address,
       network,
@@ -82,8 +86,16 @@ class ContractService {
         type: proxyOpcode.getProxyType() as ContractProxyType,
         implSlot: proxyOpcode.getProxyImplSlot(),
         adminSlot: proxyOpcode.getProxyAdminSlot(),
-        implHistory: [],
-        adminHistory: [],
+        implHistory: [{
+          createdByBlock: contract.createdByBlock,
+          createdByBlockAt: contract.createdByBlockAt,
+          address: getFulfilled(proxyImpl).value
+        }],
+        adminHistory: [{
+          createdByBlock: contract.createdByBlock,
+          createdByBlockAt: contract.createdByBlockAt,
+          address: getFulfilled(proxyAdmin).value
+        }],
       };
     }
 

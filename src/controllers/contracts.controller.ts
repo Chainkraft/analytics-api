@@ -72,8 +72,8 @@ class ContractsController {
             status: blockSummary.proxyPattern.status,
             type: contract.proxy?.type,
             address: contract.address,
-            implSlot: contract.proxy?.implSlot,
-            adminSlot: contract.proxy?.adminSlot,
+            implSlot: contract.proxy?.implHistory?.at(-1)?.address,
+            adminSlot: contract.proxy?.adminHistory?.at(-1)?.address,
           };
           blockSummary.sourceCode = {
             status: blockSummary.sourceCode.status,
