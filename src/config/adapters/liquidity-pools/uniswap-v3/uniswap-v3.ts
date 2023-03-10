@@ -97,7 +97,7 @@ export const main = async (): Promise<any> => {
         assetTypeName: '',
         address: remotePool.id,
         isMetaPool: false,
-        usdTotal: remotePool.totalValueLockedUSD,
+        usdTotal: remotePool?.totalValueLockedUSD ?? 0,
         $push: {
           balances: {
             $each: balancesToUpdate.map(balance => {

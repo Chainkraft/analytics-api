@@ -137,4 +137,59 @@ export const uniswapPools: ShortLiquidityPool[] = [
     address: '0xc66e3c356be06b344508392fefb9bc658825035d',
     dex: 'uniswap',
   },
+
+  //OUSD
+
+  {
+    name: 'Uniswap OUSD/USDT',
+    address: '0x129360c964e2e13910d603043f6287e5e9383374',
+    dex: 'uniswap',
+  },
+
+  // DOLA
+
+  {
+    name: 'Uniswap DOLA/USDC',
+    address: '0x7c082bf85e01f9bb343dbb460a14e51f67c58cfb',
+    dex: 'uniswap',
+  },
+
+  // RSV
+  {
+    name: 'Uniswap RSV/USDC',
+    address: '0x98a19d4954b433bd315335a05d7d6371d812a492',
+    dex: 'uniswap',
+  },
+
+  // BOB
+  {
+    name: 'Uniswap USDC/BOB',
+    address: '0xc0d19f4fae83eb51b2adb59eb649c7bc2b19b2f6',
+    dex: 'uniswap',
+  },
+  {
+    name: 'Uniswap USDC/BOB',
+    address: '0x8fb60298c6bbafa428494fd2d63d116063ef32e2',
+    dex: 'uniswap',
+  },
+  {
+    name: 'Uniswap USDT/BOB',
+    address: '0x0230ddd838e499865405042560e72aa38324acd1',
+    dex: 'uniswap',
+  },
+
+  // USDS
+  // {
+  //   name: 'Uniswap USDC/USDS',
+  //   address: '0xe749598cb821d45a0c2cad7332cfb3b86a5d7fa3',
+  //   dex: 'uniswap',
+  // },
+
+  // XAI
+
+  {
+    name: 'Uniswap USDC/XAI',
+    address: '0x55bb9904df17f3b07551aa117841b3bbfc66646d',
+    dex: 'uniswap',
+  },
 ];
