@@ -1,22 +1,41 @@
-export interface StablecoinLiquidityPoolSummary {
-  tokenSymbol: string;
-  tokenSlug: string;
-  pools: ShortLiquidityPool[];
-}
-
-export interface ShortLiquidityPool {
-  name: string;
-  symbol?: string;
-  address: string;
-  dex: string;
-  tvl?: number;
-}
+import { StablecoinLiquidityPoolSummary } from '@/interfaces/liquidity-pool-history.interface';
 
 export const stablePools: StablecoinLiquidityPoolSummary[] = [
   {
     tokenSymbol: 'DAI',
     tokenSlug: 'dai',
     pools: [
+      {
+        name: 'Uniswap DAI/USDC',
+        address: '0x5777d92f208679db4b9778590fa3cab3ac9e2168',
+        dex: 'uniswap',
+      },
+      {
+        name: 'Uniswap DAI/USDC',
+        address: '0x6c6bc977e13df9b0de53b251522280bb72383700',
+        dex: 'uniswap',
+      },
+      {
+        name: 'Uniswap DAI/FRAX',
+        address: '0x97e7d56a0408570ba1a7852de36350f7713906ec',
+        dex: 'uniswap',
+      },
+      {
+        name: 'Uniswap DAI/USDT',
+        address: '0x48da0965ab2d2cbf1c17c09cfb5cbe67ad5b1406',
+        dex: 'uniswap',
+      },
+
+      {
+        name: 'Uniswap DAI/USDT',
+        address: '0x6f48eca74b38d2936b02ab603ff4e36a6c0e3a77',
+        dex: 'uniswap',
+      },
+      {
+        name: 'Uniswap DAI/FRAX',
+        address: '0x97e7d56a0408570ba1a7852de36350f7713906ec',
+        dex: 'uniswap',
+      },
       {
         name: 'Curve.fi DAI/USDC/USDT',
         address: '0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7',
@@ -118,6 +137,76 @@ export const stablePools: StablecoinLiquidityPoolSummary[] = [
     tokenSymbol: 'USDC',
     tokenSlug: 'usd-coin',
     pools: [
+      {
+        name: 'Uniswap DAI/USDC',
+        address: '0x5777d92f208679db4b9778590fa3cab3ac9e2168',
+        dex: 'uniswap',
+      },
+      {
+        name: 'Uniswap DAI/USDC',
+        address: '0x6c6bc977e13df9b0de53b251522280bb72383700',
+        dex: 'uniswap',
+      },
+      {
+        name: 'Uniswap USDC/USDT',
+        address: '0x3416cf6c708da44db2624d63ea0aaef7113527c6',
+        dex: 'uniswap',
+      },
+      {
+        name: 'Uniswap USDC/USDT',
+        address: '0x7858e59e0c01ea06df3af3d20ac7b0003275d4bf',
+        dex: 'uniswap',
+      },
+      {
+        name: 'Uniswap USDC/TUSD',
+        address: '0x39529e96c28807655b5856b3d342c6225111770e',
+        dex: 'uniswap',
+      },
+      {
+        name: 'Uniswap USDC/FEI',
+        address: '0x8c54aa2a32a779e6f6fbea568ad85a19e0109c26',
+        dex: 'uniswap',
+      },
+      {
+        name: 'Uniswap USDC/FRAX',
+        address: '0xc63b0708e2f7e69cb8a1df0e1389a98c35a76d52',
+        dex: 'uniswap',
+      },
+      {
+        name: 'Uniswap USDC/FEI',
+        address: '0x5180545835bd68810fb7e11c7160bb7ea4ae8744',
+        dex: 'uniswap',
+      },
+      {
+        name: 'Uniswap USDC/FRAX',
+        address: '0xc63b0708e2f7e69cb8a1df0e1389a98c35a76d52',
+        dex: 'uniswap',
+      },
+      {
+        name: 'Uniswap USDC/FRAX',
+        address: '0x9a834b70c07c81a9fcd6f22e842bf002fbffbe4d',
+        dex: 'uniswap',
+      },
+      {
+        name: 'Uniswap USDC/LUSD',
+        address: '0x4e0924d3a751be199c426d52fb1f2337fa96f736',
+        dex: 'uniswap',
+      },
+      {
+        name: 'Uniswap USDC/LUSD',
+        address: '0x9902affdd3b8ef60304958c60377110c6d6ab1df',
+        dex: 'uniswap',
+      },
+      {
+        name: 'Uniswap USDC/USDD',
+        address: '0x1c5c60bef00c820274d4938a5e6d04b124d4910b',
+        dex: 'uniswap',
+      },
+      {
+        name: 'Uniswap USDC/BUSD',
+        address: '0x5e35c4eba72470ee1177dcb14dddf4d9e6d915f4',
+        dex: 'uniswap',
+      },
       {
         name: 'Curve.fi DAI/USDC/USDT',
         address: '0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7',
@@ -234,6 +323,43 @@ export const stablePools: StablecoinLiquidityPoolSummary[] = [
     tokenSymbol: 'USDT',
     tokenSlug: 'tether',
     pools: [
+      {
+        name: 'Uniswap USDT/BUSD',
+        address: '0xc66e3c356be06b344508392fefb9bc658825035d',
+        dex: 'uniswap',
+      },
+      {
+        name: 'Uniswap USDC/USDT',
+        address: '0x3416cf6c708da44db2624d63ea0aaef7113527c6',
+        dex: 'uniswap',
+      },
+      {
+        name: 'Uniswap USDC/USDT',
+        address: '0x7858e59e0c01ea06df3af3d20ac7b0003275d4bf',
+        dex: 'uniswap',
+      },
+
+      {
+        name: 'Uniswap DAI/USDT',
+        address: '0x48da0965ab2d2cbf1c17c09cfb5cbe67ad5b1406',
+        dex: 'uniswap',
+      },
+
+      {
+        name: 'Uniswap DAI/USDT',
+        address: '0x6f48eca74b38d2936b02ab603ff4e36a6c0e3a77',
+        dex: 'uniswap',
+      },
+      {
+        name: 'Uniswap USDT/FRAX',
+        address: '0xc2a856c3aff2110c1171b8f942256d40e980c726',
+        dex: 'uniswap',
+      },
+      {
+        name: 'Uniswap USDT/USDD',
+        address: '0x2bc477c7c00511ec8a2ea667dd8210af9ff15e1d',
+        dex: 'uniswap',
+      },
       {
         name: 'Curve.fi DAI/USDC/USDT',
         address: '0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7',
@@ -390,48 +516,6 @@ export const stablePools: StablecoinLiquidityPoolSummary[] = [
     ],
   },
   {
-    tokenSymbol: 'ETH',
-    tokenSlug: undefined,
-    pools: [
-      {
-        name: 'Curve.fi ETH/aETH',
-        address: '0xA96A65c051bF88B4095Ee1f2451C2A9d43F53Ae2',
-        dex: 'curve',
-      },
-      {
-        name: 'Curve.fi ETH/sETH',
-        address: '0xc5424B857f758E906013F3555Dad202e4bdB4567',
-        dex: 'curve',
-      },
-      {
-        name: 'Curve.fi ETH/stETH',
-        address: '0xDC24316b9AE028F1497c275EB9192a3Ea0f67022',
-        dex: 'curve',
-      },
-      {
-        name: 'Curve.fi ETH/rETH',
-        address: '0xF9440930043eb3997fc70e1339dBb11F341de7A8',
-        dex: 'curve',
-      },
-      {
-        name: 'Curve.fi ETH/frxETH',
-        address: '0xa1F8A6807c402E4A15ef4EBa36528A3FED24E577',
-        dex: 'curve',
-      },
-    ],
-  },
-  {
-    tokenSymbol: 'ankrETH',
-    tokenSlug: undefined,
-    pools: [
-      {
-        name: 'Curve.fi ETH/aETH',
-        address: '0xA96A65c051bF88B4095Ee1f2451C2A9d43F53Ae2',
-        dex: 'curve',
-      },
-    ],
-  },
-  {
     tokenSymbol: 'yDAI',
     tokenSlug: undefined,
     pools: [
@@ -550,68 +634,6 @@ export const stablePools: StablecoinLiquidityPoolSummary[] = [
     ],
   },
   {
-    tokenSymbol: 'HBTC',
-    tokenSlug: undefined,
-    pools: [
-      {
-        name: 'Curve.fi hBTC/wBTC',
-        address: '0x4CA9b3063Ec5866A4B82E437059D2C43d1be596F',
-        dex: 'curve',
-      },
-    ],
-  },
-  {
-    tokenSymbol: 'WBTC',
-    tokenSlug: undefined,
-    pools: [
-      {
-        name: 'Curve.fi hBTC/wBTC',
-        address: '0x4CA9b3063Ec5866A4B82E437059D2C43d1be596F',
-        dex: 'curve',
-      },
-      {
-        name: 'Curve.fi renBTC/wBTC',
-        address: '0x93054188d876f558f4a66B2EF1d97d16eDf0895B',
-        dex: 'curve',
-      },
-      {
-        name: 'Curve.fi renBTC/wBTC/sBTC',
-        address: '0x7fC77b5c7614E1533320Ea6DDc2Eb61fa00A9714',
-        dex: 'curve',
-      },
-      {
-        name: 'Curve.fi bBTC/sbtcCRV',
-        address: '0x071c661B4DeefB59E2a3DdB20Db036821eeE8F4b',
-        dex: 'curve',
-      },
-      {
-        name: 'Curve.fi oBTC/sbtcCRV',
-        address: '0xd81dA8D904b52208541Bade1bD6595D8a251F8dd',
-        dex: 'curve',
-      },
-      {
-        name: 'Curve.fi pBTC/sbtcCRV',
-        address: '0x7F55DDe206dbAD629C080068923b36fe9D6bDBeF',
-        dex: 'curve',
-      },
-      {
-        name: 'Curve.fi tBTC/sbtcCrv',
-        address: '0xC25099792E9349C7DD09759744ea681C7de2cb66',
-        dex: 'curve',
-      },
-      {
-        name: 'Curve.fi USD-BTC-ETH',
-        address: '0x80466c64868E1ab14a1Ddf27A676C3fcBE638Fe5',
-        dex: 'curve',
-      },
-      {
-        name: 'Curve.fi wBTC/sBTC',
-        address: '0xf253f83AcA21aAbD2A20553AE0BF7F65C755A07F',
-        dex: 'curve',
-      },
-    ],
-  },
-  {
     tokenSymbol: 'iDAI',
     tokenSlug: undefined,
     pools: [
@@ -640,28 +662,6 @@ export const stablePools: StablecoinLiquidityPoolSummary[] = [
       {
         name: 'Curve.fi cyDAI/cyUSDC/cyUSDT',
         address: '0x2dded6Da1BF5DBdF597C45fcFaa3194e53EcfeAF',
-        dex: 'curve',
-      },
-    ],
-  },
-  {
-    tokenSymbol: 'LINK',
-    tokenSlug: undefined,
-    pools: [
-      {
-        name: 'Curve.fi LINK/sLINK',
-        address: '0xF178C0b5Bb7e7aBF4e12A4838C7b7c5bA2C623c0',
-        dex: 'curve',
-      },
-    ],
-  },
-  {
-    tokenSymbol: 'sLINK',
-    tokenSlug: undefined,
-    pools: [
-      {
-        name: 'Curve.fi LINK/sLINK',
-        address: '0xF178C0b5Bb7e7aBF4e12A4838C7b7c5bA2C623c0',
         dex: 'curve',
       },
     ],
@@ -716,106 +716,12 @@ export const stablePools: StablecoinLiquidityPoolSummary[] = [
     ],
   },
   {
-    tokenSymbol: 'renBTC',
-    tokenSlug: undefined,
-    pools: [
-      {
-        name: 'Curve.fi renBTC/wBTC',
-        address: '0x93054188d876f558f4a66B2EF1d97d16eDf0895B',
-        dex: 'curve',
-      },
-      {
-        name: 'Curve.fi renBTC/wBTC/sBTC',
-        address: '0x7fC77b5c7614E1533320Ea6DDc2Eb61fa00A9714',
-        dex: 'curve',
-      },
-      {
-        name: 'Curve.fi bBTC/sbtcCRV',
-        address: '0x071c661B4DeefB59E2a3DdB20Db036821eeE8F4b',
-        dex: 'curve',
-      },
-      {
-        name: 'Curve.fi oBTC/sbtcCRV',
-        address: '0xd81dA8D904b52208541Bade1bD6595D8a251F8dd',
-        dex: 'curve',
-      },
-      {
-        name: 'Curve.fi pBTC/sbtcCRV',
-        address: '0x7F55DDe206dbAD629C080068923b36fe9D6bDBeF',
-        dex: 'curve',
-      },
-      {
-        name: 'Curve.fi tBTC/sbtcCrv',
-        address: '0xC25099792E9349C7DD09759744ea681C7de2cb66',
-        dex: 'curve',
-      },
-    ],
-  },
-  {
     tokenSymbol: 'aSUSD',
     tokenSlug: undefined,
     pools: [
       {
         name: 'Curve.fi aDAI/aSUSD',
         address: '0xEB16Ae0052ed37f479f7fe63849198Df1765a733',
-        dex: 'curve',
-      },
-    ],
-  },
-  {
-    tokenSymbol: 'sBTC',
-    tokenSlug: undefined,
-    pools: [
-      {
-        name: 'Curve.fi renBTC/wBTC/sBTC',
-        address: '0x7fC77b5c7614E1533320Ea6DDc2Eb61fa00A9714',
-        dex: 'curve',
-      },
-      {
-        name: 'Curve.fi bBTC/sbtcCRV',
-        address: '0x071c661B4DeefB59E2a3DdB20Db036821eeE8F4b',
-        dex: 'curve',
-      },
-      {
-        name: 'Curve.fi oBTC/sbtcCRV',
-        address: '0xd81dA8D904b52208541Bade1bD6595D8a251F8dd',
-        dex: 'curve',
-      },
-      {
-        name: 'Curve.fi pBTC/sbtcCRV',
-        address: '0x7F55DDe206dbAD629C080068923b36fe9D6bDBeF',
-        dex: 'curve',
-      },
-      {
-        name: 'Curve.fi tBTC/sbtcCrv',
-        address: '0xC25099792E9349C7DD09759744ea681C7de2cb66',
-        dex: 'curve',
-      },
-      {
-        name: 'Curve.fi wBTC/sBTC',
-        address: '0xf253f83AcA21aAbD2A20553AE0BF7F65C755A07F',
-        dex: 'curve',
-      },
-    ],
-  },
-  {
-    tokenSymbol: 'sETH',
-    tokenSlug: undefined,
-    pools: [
-      {
-        name: 'Curve.fi ETH/sETH',
-        address: '0xc5424B857f758E906013F3555Dad202e4bdB4567',
-        dex: 'curve',
-      },
-    ],
-  },
-  {
-    tokenSymbol: 'stETH',
-    tokenSlug: undefined,
-    pools: [
-      {
-        name: 'Curve.fi ETH/stETH',
-        address: '0xDC24316b9AE028F1497c275EB9192a3Ea0f67022',
         dex: 'curve',
       },
     ],
@@ -861,6 +767,11 @@ export const stablePools: StablecoinLiquidityPoolSummary[] = [
         name: 'Curve.fi GUSD/3Crv',
         address: '0x4f062658EaAF2C1ccf8C8e36D6824CDf41167956',
         dex: 'curve',
+      },
+      {
+        name: 'Uniswap USDC/GUSD',
+        address: '0x5aa1356999821b533ec5d9f79c23b8cb7c295c61',
+        dex: 'uniswap',
       },
     ],
   },
@@ -947,57 +858,18 @@ export const stablePools: StablecoinLiquidityPoolSummary[] = [
     ],
   },
   {
-    tokenSymbol: 'BBTC',
-    tokenSlug: undefined,
-    pools: [
-      {
-        name: 'Curve.fi bBTC/sbtcCRV',
-        address: '0x071c661B4DeefB59E2a3DdB20Db036821eeE8F4b',
-        dex: 'curve',
-      },
-    ],
-  },
-  {
-    tokenSymbol: 'oBTC',
-    tokenSlug: undefined,
-    pools: [
-      {
-        name: 'Curve.fi oBTC/sbtcCRV',
-        address: '0xd81dA8D904b52208541Bade1bD6595D8a251F8dd',
-        dex: 'curve',
-      },
-    ],
-  },
-  {
-    tokenSymbol: 'pBTC',
-    tokenSlug: undefined,
-    pools: [
-      {
-        name: 'Curve.fi pBTC/sbtcCRV',
-        address: '0x7F55DDe206dbAD629C080068923b36fe9D6bDBeF',
-        dex: 'curve',
-      },
-    ],
-  },
-  {
-    tokenSymbol: 'TBTC',
-    tokenSlug: undefined,
-    pools: [
-      {
-        name: 'Curve.fi tBTC/sbtcCrv',
-        address: '0xC25099792E9349C7DD09759744ea681C7de2cb66',
-        dex: 'curve',
-      },
-    ],
-  },
-  {
     tokenSymbol: 'TUSD',
     tokenSlug: 'trueusd',
     pools: [
       {
-        name: undefined,
+        name: 'Curve.fi TUSD/3Crv',
         address: '0xEcd5e75AFb02eFa118AF914515D6521aaBd189F1',
         dex: 'curve',
+      },
+      {
+        name: 'Uniswap USDC/TUSD',
+        address: '0x39529e96c28807655b5856b3d342c6225111770e',
+        dex: 'uniswap',
       },
     ],
   },
@@ -1009,6 +881,16 @@ export const stablePools: StablecoinLiquidityPoolSummary[] = [
         name: undefined,
         address: '0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA',
         dex: 'curve',
+      },
+      {
+        name: 'Uniswap USDC/LUSD',
+        address: '0x4e0924d3a751be199c426d52fb1f2337fa96f736',
+        dex: 'uniswap',
+      },
+      {
+        name: 'Uniswap USDC/LUSD',
+        address: '0x9902affdd3b8ef60304958c60377110c6d6ab1df',
+        dex: 'uniswap',
       },
     ],
   },
@@ -1031,6 +913,11 @@ export const stablePools: StablecoinLiquidityPoolSummary[] = [
         address: '0xDcEF968d416a41Cdac0ED8702fAC8128A64241A2',
         dex: 'curve',
       },
+      {
+        name: 'Uniswap DAI/FRAX',
+        address: '0x97e7d56a0408570ba1a7852de36350f7713906ec',
+        dex: 'uniswap',
+      },
     ],
   },
   {
@@ -1042,16 +929,15 @@ export const stablePools: StablecoinLiquidityPoolSummary[] = [
         address: '0x4807862AA8b2bF68830e4C8dc86D0e9A998e085a',
         dex: 'curve',
       },
-    ],
-  },
-  {
-    tokenSymbol: 'rETH',
-    tokenSlug: undefined,
-    pools: [
       {
-        name: 'Curve.fi ETH/rETH',
-        address: '0xF9440930043eb3997fc70e1339dBb11F341de7A8',
-        dex: 'curve',
+        name: 'Uniswap BUSD/USDC',
+        address: '0x5e35c4eba72470ee1177dcb14dddf4d9e6d915f4',
+        dex: 'uniswap',
+      },
+      {
+        name: 'Uniswap BUSD/USDT',
+        address: '0xc66e3c356be06b344508392fefb9bc658825035d',
+        dex: 'uniswap',
       },
     ],
   },
@@ -1062,17 +948,6 @@ export const stablePools: StablecoinLiquidityPoolSummary[] = [
       {
         name: undefined,
         address: '0x43b4FdFD4Ff969587185cDB6f0BD875c5Fc83f8c',
-        dex: 'curve',
-      },
-    ],
-  },
-  {
-    tokenSymbol: 'WETH',
-    tokenSlug: undefined,
-    pools: [
-      {
-        name: 'Curve.fi USD-BTC-ETH',
-        address: '0x80466c64868E1ab14a1Ddf27A676C3fcBE638Fe5',
         dex: 'curve',
       },
     ],
@@ -1097,6 +972,11 @@ export const stablePools: StablecoinLiquidityPoolSummary[] = [
         address: '0x5a6A4D54456819380173272A5E8E9B9904BdF41B',
         dex: 'curve',
       },
+      {
+        name: 'Uniswap USDC/MIM',
+        address: '0x298b7c5e0770d151e4c5cf6cca4dae3a3ffc8e27',
+        dex: 'uniswap',
+      },
     ],
   },
   {
@@ -1111,13 +991,18 @@ export const stablePools: StablecoinLiquidityPoolSummary[] = [
     ],
   },
   {
-    tokenSymbol: 'frxETH',
-    tokenSlug: undefined,
+    tokenSymbol: 'USDD',
+    tokenSlug: 'usdd',
     pools: [
       {
-        name: 'Curve.fi ETH/frxETH',
-        address: '0xa1F8A6807c402E4A15ef4EBa36528A3FED24E577',
-        dex: 'curve',
+        name: 'Uniswap USDC/USDD',
+        address: '0x1c5c60bef00c820274d4938a5e6d04b124d4910b',
+        dex: 'uniswap',
+      },
+      {
+        name: 'Uniswap USDT/USDD',
+        address: '0x2bc477c7c00511ec8a2ea667dd8210af9ff15e1d',
+        dex: 'uniswap',
       },
     ],
   },

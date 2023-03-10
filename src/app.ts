@@ -16,6 +16,7 @@ import { logger, stream } from '@utils/logger';
 import { JobManager } from './jobs/job.manager';
 import { RefreshStablecoinPricesJob } from './jobs/refresh-stablecoin-prices.job';
 import { RefreshScoreJob } from './jobs/score-calculation.job';
+import { main as uniswapPools } from './config/adapters/liquidity-pools/uniswap-v3/uniswap-v3';
 
 class App {
   public app: express.Application;
@@ -78,6 +79,8 @@ class App {
   private loadInitialData() {
     new RefreshStablecoinPricesJob().refreshStablecoinPrices().then(() => {
       new RefreshScoreJob().refreshScores();
+
+      uniswapPools();
     });
   }
 

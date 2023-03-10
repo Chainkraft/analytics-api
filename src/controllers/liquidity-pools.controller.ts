@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import LiquidityPoolService from '@/services/liquidity-pools.service';
-import { LiquidityPoolHistory } from '@/interfaces/liquidity-pool-history.interface';
-import { ShortLiquidityPool, stablePools } from '@/config/stable-pools';
+import { LiquidityPoolHistory, ShortLiquidityPool } from '@/interfaces/liquidity-pool-history.interface';
 
 class LiquidityPoolsController {
   public lpsService = new LiquidityPoolService();
@@ -33,7 +32,7 @@ class LiquidityPoolsController {
     try {
       const address: string = req.params.address;
       const network: string = req.params.network;
-      const data: LiquidityPoolHistory = await this.lpsService.findLiquiditiyPoolHistoryByAddressAndNetwork(address, network);
+      const data: LiquidityPoolHistory = await this.lpsService.findLiquiditiyPoolHistoryByAddressAndNetwork(address, network, true);
 
       res.status(200).json(data);
     } catch (error) {

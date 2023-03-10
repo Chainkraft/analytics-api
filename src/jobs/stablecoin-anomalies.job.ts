@@ -1,16 +1,11 @@
-import { RecurringJob } from "./recurring.job";
-import tokenService from "@services/tokens.service";
-import NotificationService from "@services/notifications.service";
-import { isEmpty } from "@/utils/util";
-import TokenApiService from "@/services/token-apis.service";
-import { Token } from "@interfaces/tokens.inteface";
-import * as schedule from "node-schedule";
-import {
-  Notification,
-  NotificationSeverity,
-  NotificationStablecoinDepegDataSchema,
-  NotificationType
-} from "@interfaces/notifications.interface";
+import { RecurringJob } from './recurring.job';
+import tokenService from '@services/tokens.service';
+import NotificationService from '@services/notifications.service';
+import { isEmpty } from '@/utils/util';
+import TokenApiService from '@/services/token-apis.service';
+import { Token } from '@interfaces/tokens.inteface';
+import * as schedule from 'node-schedule';
+import { Notification, NotificationSeverity, NotificationStablecoinDepegDataSchema, NotificationType } from '@interfaces/notifications.interface';
 
 export class StablecoinAnomaliesJob implements RecurringJob {
   public tokenService = new tokenService();
@@ -18,19 +13,19 @@ export class StablecoinAnomaliesJob implements RecurringJob {
   public tokenApiService = new TokenApiService();
 
   doIt(): any {
-    console.log("Scheduling StablecoinAnomaliesJob");
+    console.log('Scheduling StablecoinAnomaliesJob');
     schedule.scheduleJob('0 */4 * * *', () => this.generateNotifications());
   }
 
   async generateNotifications() {
-    const excludedTokens = [""];
+    const excludedTokens = [''];
     const numberOfDays = 14;
 
     const latestNotifications: Notification[] = await this.notificationService.notifications.find({
       type: NotificationType.STABLECOIN_DEPEG,
       createdAt: {
-        $gt: new Date(Date.now() - 86_400_000)
-      }
+        $gt: new Date(Date.now() - 86_400_000),
+      },
     });
     const depegTokens = (await this.getStablecoinsForPriceAlert(numberOfDays))
       .filter(depeg => !excludedTokens.includes(depeg.token.symbol))
@@ -42,7 +37,7 @@ export class StablecoinAnomaliesJob implements RecurringJob {
         return true;
       });
 
-    console.log("StablecoinAnomaliesJob anomalies found", depegTokens);
+    console.log('StablecoinAnomaliesJob anomalies found', depegTokens);
 
     if (depegTokens.length > 0) {
       depegTokens.forEach(depeg => {
@@ -57,8 +52,8 @@ export class StablecoinAnomaliesJob implements RecurringJob {
               depeg.price,
             avgPrice: depeg.avgPrice,
             prices: depeg.prices,
-            chains: depeg.chains
-          }
+            chains: depeg.chains,
+          },
         });
       });
     }
@@ -71,11 +66,7 @@ export class StablecoinAnomaliesJob implements RecurringJob {
     llamaPrices.pop();
 
     const depeggedLlamaTokens = llamaTokens.filter(
-      (token: any) =>
-        token.price
-        && token.price < 1
-        && token.pegType.includes("peggedUSD")
-        && !excludeTokens.includes(token.symbol)
+      (token: any) => token.price && token.price < 1 && token.pegType.includes('peggedUSD') && !excludeTokens.includes(token.symbol),
     );
 
     const lastWeekPrices = [];
@@ -117,7 +108,7 @@ export class StablecoinAnomaliesJob implements RecurringJob {
           price: llamaToken.price,
           avgPrice: averagePrice,
           prices: weeksPrices,
-          chains: llamaToken.chains
+          chains: llamaToken.chains,
         });
       }
     }

@@ -8,13 +8,54 @@ export interface LiquidityPoolHistory {
   symbol: string;
   assetTypeName: string;
   address: string;
-  balances: { coins: ICoinFromPoolDataApi[]; date: Date }[];
-  underlyingBalances: { coins: ICoinFromPoolDataApi[]; date: Date }[];
+  pricingType: LiquidityPoolPricingType;
+  balances: { coins: ICoinFromPoolDataApi[]; date: Date; block: number }[];
+  underlyingBalances: { coins: ICoinFromPoolDataApi[]; date: Date; block: number }[];
+  poolDayData: IPoolDayData[];
   isMetaPool: boolean;
+  tvlUSD: number;
+  volumeUSD: number;
   usdTotal: number;
   usdtotalExcludingBasePool: number;
   updatedAt?: Date;
   createdAt?: Date;
+}
+
+export enum LiquidityPoolPricingType {
+  USD = 'USD',
+  RATIO = 'RATIO',
+}
+
+export enum SupportedDexes {
+  CURVE = 'curve',
+  UNISWAP = 'uniswap',
+}
+
+// This is from uniswap-v3 subgraph
+export interface IPoolDayData {
+  date: Date;
+  tvlUSD: string;
+  volumeToken0: string;
+  volumeToken1: string;
+  volumeUSD: string;
+  token0Price: string;
+  token1Price: string;
+}
+
+//This is done for recurring jobs:
+
+export interface StablecoinLiquidityPoolSummary {
+  tokenSymbol: string;
+  tokenSlug: string;
+  pools: ShortLiquidityPool[];
+}
+
+export interface ShortLiquidityPool {
+  name: string;
+  symbol?: string;
+  address: string;
+  dex: string;
+  tvl?: number;
 }
 
 // Everything below this comment is taken from curve-js lib
@@ -87,8 +128,10 @@ export interface ICoinFromPoolDataApi {
   symbol: string;
   decimals: string;
   usdPrice: number | string;
+  price: string;
   // added by us
   poolBalance: string;
+  weight: number;
 }
 
 export interface IReward {

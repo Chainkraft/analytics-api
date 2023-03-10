@@ -9,11 +9,9 @@ const accessRequestSchema: Schema = new Schema(
     },
     lastName: {
       type: String,
-      required: true,
     },
     company: {
       type: String,
-      required: true,
     },
     email: {
       type: String,

@@ -9,6 +9,7 @@ const liquidityPoolHistorySchema: Schema = new Schema(
     symbol: String,
     assetTypeName: String,
     address: String,
+    pricingType: String,
     balances: [
       {
         coins: [
@@ -17,11 +18,14 @@ const liquidityPoolHistorySchema: Schema = new Schema(
             symbol: String,
             decimals: String,
             usdPrice: Number,
+            price: Number,
             // added by us
             poolBalance: String,
+            weight: Number,
           },
         ],
         date: Date,
+        block: Number,
       },
     ],
     underlyingBalances: [
@@ -32,13 +36,29 @@ const liquidityPoolHistorySchema: Schema = new Schema(
             symbol: String,
             decimals: String,
             usdPrice: Number,
+            price: Number,
             // added by us
             poolBalance: String,
+            weight: Number,
           },
         ],
         date: Date,
+        block: Number,
       },
     ],
+    poolDayData: [
+      {
+        date: Date,
+        tvlUSD: Number,
+        volumeToken0: Number,
+        volumeToken1: Number,
+        volumeUSD: Number,
+        token0Price: Number,
+        token1Price: Number,
+      },
+    ],
+    tvlUSD: Number,
+    volumeUSD: Number,
     isMetaPool: Boolean,
     usdTotal: Number,
     usdtotalExcludingBasePool: Number,
