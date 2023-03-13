@@ -1,42 +1,40 @@
-import { RecurringJob } from "./recurring.job";
-import { currencyFormat } from "../utils/helpers";
-import { EUploadMimeType, TwitterApi } from "twitter-api-v2";
-import Jimp from "jimp";
-import { ChartConfiguration } from "chart.js";
-import NotificationService from "@services/notifications.service";
-import * as schedule from "node-schedule";
-import {
-  Notification,
-  NotificationStablecoinDepegDataSchema,
-  NotificationType
-} from "@interfaces/notifications.interface";
+import { RecurringJob } from './recurring.job';
+import { currencyFormat } from '../utils/helpers';
+import { EUploadMimeType, TwitterApi } from 'twitter-api-v2';
+import Jimp from 'jimp';
+import { ChartConfiguration } from 'chart.js';
+import NotificationService from '@services/notifications.service';
+import * as schedule from 'node-schedule';
+import { Notification, NotificationStablecoinDepegDataSchema, NotificationType } from '@interfaces/notifications.interface';
 
-const ChartJsImage = require("chartjs-to-image");
+const ChartJsImage = require('chartjs-to-image');
 
 export class StablecoinTwitterJob implements RecurringJob {
   public notificationService = new NotificationService();
 
   doIt(): any {
-    console.log("Scheduling StablecoinTwitterJob");
+    console.log('Scheduling StablecoinTwitterJob');
     schedule.scheduleJob({ hour: 13, minute: 0 }, () => this.generateTweets());
   }
 
   async generateTweets() {
     const numberOfDays = 1;
-    const notifications: Notification[] = await this.notificationService.notifications.find({
-      type: NotificationType.STABLECOIN_DEPEG,
-      createdAt: {
-        $gt: new Date(Date.now() - numberOfDays * 86_400_000)
-      }
-    });
-    console.log("StablecoinTwitterJob notifications", notifications);
+    const notifications: Notification[] = await this.notificationService.notifications
+      .find({
+        type: NotificationType.STABLECOIN_DEPEG,
+        createdAt: {
+          $gt: new Date(Date.now() - numberOfDays * 86_400_000),
+        },
+      })
+      .populate('token');
+    console.log('StablecoinTwitterJob notifications', notifications);
 
     if (notifications.length > 0) {
       const twitterClient = new TwitterApi({
         appKey: process.env.STABLEALERTS_APP_KEY,
         appSecret: process.env.STABLEALERTS_APP_SECRET,
         accessToken: process.env.STABLEALERTS_ACCESS_TOKEN,
-        accessSecret: process.env.STABLEALERTS_ACCESS_SECRET
+        accessSecret: process.env.STABLEALERTS_ACCESS_SECRET,
       });
 
       let firstTweet = `🚨 #Stablecoins with a recent price drop:\n`;
@@ -71,14 +69,14 @@ export class StablecoinTwitterJob implements RecurringJob {
 
   private async waterMark(input: Buffer) {
     const chart = await Jimp.read(input);
-    const watermark = await Jimp.read("static/logo.png");
+    const watermark = await Jimp.read('static/logo.png');
 
     watermark.resize(chart.bitmap.width / 4, Jimp.AUTO);
 
     chart.composite(watermark, chart.getWidth() / 2 - watermark.getWidth() / 2, chart.getHeight() / 2 - watermark.getHeight() / 2, {
       mode: Jimp.BLEND_SOURCE_OVER,
       opacityDest: 1,
-      opacitySource: 0.3
+      opacitySource: 0.3,
     });
 
     return await chart.getBufferAsync(chart.getMIME());
@@ -89,7 +87,7 @@ export class StablecoinTwitterJob implements RecurringJob {
     const dates = [...Array(numberOfDays)].map((_, i) => {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      return d.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit" });
+      return d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
     });
 
     const chartPrices = data.prices.reverse();
@@ -98,43 +96,43 @@ export class StablecoinTwitterJob implements RecurringJob {
 
     const width = 800;
     const height = 480;
-    const textColor = "white";
+    const textColor = 'white';
     const configuration: ChartConfiguration = {
-      type: "line",
+      type: 'line',
       data: {
         labels: dates.reverse(),
         datasets: [
           {
             label: depeg.token.name,
-            data: chartPrices
-          }
-        ]
+            data: chartPrices,
+          },
+        ],
       },
       options: {
         layout: {
-          padding: 30
+          padding: 30,
         },
         elements: {
           point: {
             radius: 0,
-            backgroundColor: "#F9A822"
+            backgroundColor: '#F9A822',
           },
           line: {
             borderWidth: 4,
-            borderColor: "#F9A822"
-          }
+            borderColor: '#F9A822',
+          },
         },
         scales: {
           x: {
             ticks: {
               color: textColor,
               font: {
-                size: 14
-              }
+                size: 14,
+              },
             },
             grid: {
-              borderColor: textColor
-            }
+              borderColor: textColor,
+            },
           },
           y: {
             suggestedMax: Math.max(...chartPrices) + 0.05,
@@ -142,13 +140,13 @@ export class StablecoinTwitterJob implements RecurringJob {
             ticks: {
               color: textColor,
               font: {
-                size: 14
-              }
+                size: 14,
+              },
             },
             grid: {
-              borderColor: textColor
-            }
-          }
+              borderColor: textColor,
+            },
+          },
         },
         plugins: {
           title: {
@@ -156,22 +154,22 @@ export class StablecoinTwitterJob implements RecurringJob {
             text: depeg.token.name,
             color: textColor,
             font: {
-              size: 16
-            }
+              size: 16,
+            },
           },
           legend: {
-            display: false
-          }
-        }
-      }
+            display: false,
+          },
+        },
+      },
     };
 
     const chart = new ChartJsImage();
     chart.setConfig(configuration);
     chart.setWidth(width);
     chart.setHeight(height);
-    chart.setChartJsVersion("3.9.1");
-    chart.setBackgroundColor("#1A1A2E");
+    chart.setChartJsVersion('3.9.1');
+    chart.setBackgroundColor('#1A1A2E');
 
     return await chart.toBinary();
   }

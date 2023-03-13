@@ -1,15 +1,17 @@
-import mongoose, { Document, model, Schema } from "mongoose";
-import { Contract, ContractNetwork, ContractProxyType } from "@interfaces/contracts.interface";
+import mongoose, { Document, model, Schema } from 'mongoose';
+import { Contract, ContractNetwork, ContractProxyType } from '@interfaces/contracts.interface';
 
-const contractProxyHistorySchema: Schema = new Schema({
+const contractProxyHistorySchema: Schema = new Schema(
+  {
     createdByArgs: String,
     createdByBlock: Number,
     createdByBlockAt: Date,
     createdByTxHash: String,
     createdByAddress: String,
-    address: String
+    address: String,
   },
-  { _id: false });
+  { _id: false },
+);
 
 const contractProxySchema: Schema = new Schema(
   {
@@ -17,9 +19,9 @@ const contractProxySchema: Schema = new Schema(
     implSlot: String,
     adminSlot: String,
     implHistory: [contractProxyHistorySchema],
-    adminHistory: [contractProxyHistorySchema]
+    adminHistory: [contractProxyHistorySchema],
   },
-  { _id: false }
+  { _id: false },
 );
 
 const contractSchema: Schema = new Schema(
@@ -27,7 +29,7 @@ const contractSchema: Schema = new Schema(
     address: { type: String, required: true, lowercase: true },
     network: { type: String, required: true, enum: ContractNetwork },
     byteCode: { type: String, required: true },
-    project: { type: mongoose.Schema.Types.ObjectId, ref: "Project" },
+    project: { type: mongoose.Schema.Types.ObjectId, ref: 'Project' },
 
     createdByArgs: { type: String },
     createdByBlock: { type: Number, required: true },
@@ -41,14 +43,14 @@ const contractSchema: Schema = new Schema(
     verifiedSourceCode: String,
     verifiedCompilerVersion: String,
 
-    proxy: contractProxySchema
+    proxy: contractProxySchema,
   },
   {
-    timestamps: true
-  }
+    timestamps: true,
+  },
 );
 
 contractSchema.index({ address: 1, network: -1 }, { unique: true });
-const contractsModel = model<Contract & Document>("Contract", contractSchema);
+const contractsModel = model<Contract & Document>('Contract', contractSchema);
 
 export default contractsModel;

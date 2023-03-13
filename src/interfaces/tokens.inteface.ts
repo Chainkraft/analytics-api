@@ -1,4 +1,4 @@
-import { Contract } from "@interfaces/contracts.interface";
+import { Contract } from '@interfaces/contracts.interface';
 
 export interface Token {
   _id: string;

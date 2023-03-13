@@ -1,5 +1,10 @@
+import { ObjectId } from 'mongoose';
+
 export interface User {
-  _id: string;
+  _id: ObjectId;
+  createdAt?: Date;
+  updatedAt?: Date;
+
   email: string;
   password: string;
   roles: Role[];

@@ -4,31 +4,25 @@ import { JWT_SECRET_KEY } from '@config';
 import { HttpException } from '@exceptions/HttpException';
 import { DataStoredInToken, RequestWithUser } from '@interfaces/auth.interface';
 import userModel from '@models/users.model';
-import { Role, User } from '@interfaces/users.interface';
+import { Role } from '@interfaces/users.interface';
+import { LoggedUserCache } from '@/config/cache';
 
-const getUser = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+export const isLogged = (req: RequestWithUser, res: Response, next: NextFunction) => {
   try {
-    const authorization = req.cookies['Authorization'] || (req.header('Authorization') ? req.header('Authorization').split('Bearer ')[1] : null);
-
-    if (authorization) {
-      const secretKey: string = JWT_SECRET_KEY;
-      const verificationResponse = (await verify(authorization, secretKey)) as DataStoredInToken;
-      const findUser = await userModel.findOne({ email: verificationResponse.email });
-
-      if (findUser) {
-        req.user = findUser;
-      }
+    if (!req.user) {
+      next(new HttpException(401, `User not authenticated`));
+    } else {
+      next();
     }
-    next();
   } catch (error) {
     next(new HttpException(401, 'Wrong authentication token'));
   }
 };
 
-const hasRole = (value: Role) => {
+export const hasRole = (value: Role) => {
   return async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
-      const user: User = req.user;
+      const user = req.user;
       if (user && user.roles.includes(value)) {
         next();
       } else {
@@ -40,7 +34,21 @@ const hasRole = (value: Role) => {
   };
 };
 
-export const authMiddleware = {
-  getUser,
-  hasRole,
+export const userContext = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+  try {
+    const authorization = req.cookies['Authorization'] || (req.header('Authorization') ? req.header('Authorization').split('Bearer ')[1] : null);
+    if (authorization) {
+      const secretKey: string = JWT_SECRET_KEY;
+      const verificationResponse = (await verify(authorization, secretKey)) as DataStoredInToken;
+
+      req.user = LoggedUserCache.get(verificationResponse.email);
+      if (req.user === undefined) {
+        req.user = await userModel.findOne({ email: verificationResponse.email });
+        LoggedUserCache.set(verificationResponse.email, req.user);
+      }
+    }
+  } catch (error) {
+    next(new HttpException(401, 'Wrong authentication token'));
+  }
+  next();
 };

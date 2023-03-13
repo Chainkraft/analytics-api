@@ -1,15 +1,11 @@
-import { RecurringJob } from "./recurring.job";
-import NotificationService from "@services/notifications.service";
-import * as schedule from "node-schedule";
-import {
-  NotificationContractChangeDataSchema,
-  NotificationSeverity,
-  NotificationType
-} from "@interfaces/notifications.interface";
-import ContractService from "@services/contracts.service";
-import { providers } from "@config";
-import { getFulfilled } from "@utils/typeguard";
-import BlockchainService from "@services/blockchain.service";
+import { RecurringJob } from './recurring.job';
+import NotificationService from '@services/notifications.service';
+import * as schedule from 'node-schedule';
+import { NotificationContractChangeDataSchema, NotificationSeverity, NotificationType } from '@interfaces/notifications.interface';
+import ContractService from '@services/contracts.service';
+import { providers } from '@config';
+import { getFulfilled } from '@utils/typeguard';
+import BlockchainService from '@services/blockchain.service';
 
 export class ContractAnomaliesJob implements RecurringJob {
   public contractService = new ContractService();
@@ -17,14 +13,13 @@ export class ContractAnomaliesJob implements RecurringJob {
   public notificationService = new NotificationService();
 
   doIt(): any {
-    console.log("Scheduling ContractAnomaliesJob");
-    schedule.scheduleJob("0 */5 * * *", () => this.generateNotifications());
+    console.log('Scheduling ContractAnomaliesJob');
+    schedule.scheduleJob('0 */5 * * *', () => this.generateNotifications());
   }
 
   async generateNotifications() {
-    const contracts = (await this.contractService.findAllContracts())
-      .filter(this.contractService.isProxyContract);
-    console.log("ContractAnomaliesJob will check %d contracts", contracts.length);
+    const contracts = (await this.contractService.findAllContracts()).filter(this.contractService.isProxyContract);
+    console.log('ContractAnomaliesJob will check %d contracts', contracts.length);
 
     // TODO: inaccurate temp solution to bypass alchemy api limits regarding notify api
     let detectedChanges = 0;
@@ -41,21 +36,21 @@ export class ContractAnomaliesJob implements RecurringJob {
       const currentProxyAdmin = contract.proxy.adminHistory.at(-1);
 
       if (currentProxyImpl?.address != newProxyImpl) {
-        console.log("Proxy=%s (%s) implementation changed %s => %s", contract.address, contract.network, currentProxyImpl.address, newProxyImpl);
+        console.log('Proxy=%s (%s) implementation changed %s => %s', contract.address, contract.network, currentProxyImpl.address, newProxyImpl);
 
         contract.proxy.implHistory.push({
           createdByBlock: await this.blockchainService.getBlockNumber(contract.network),
           createdByBlockAt: new Date(),
-          address: newProxyImpl
+          address: newProxyImpl,
         });
       }
       if (currentProxyAdmin?.address != newProxyAdmin) {
-        console.log("Proxy=%s (%s) admin changed %s => %s", contract.address, contract.network, currentProxyAdmin.address, newProxyAdmin);
+        console.log('Proxy=%s (%s) admin changed %s => %s', contract.address, contract.network, currentProxyAdmin.address, newProxyAdmin);
 
         contract.proxy.adminHistory.push({
           createdByBlock: await this.blockchainService.getBlockNumber(contract.network),
           createdByBlockAt: new Date(),
-          address: newProxyAdmin
+          address: newProxyAdmin,
         });
       }
 
@@ -70,8 +65,8 @@ export class ContractAnomaliesJob implements RecurringJob {
             contract: contract,
             data: <NotificationContractChangeDataSchema>{
               oldAddress: currentProxyImpl.address,
-              newAddress: newProxyImpl
-            }
+              newAddress: newProxyImpl,
+            },
           });
         }
 
@@ -82,13 +77,13 @@ export class ContractAnomaliesJob implements RecurringJob {
             contract: contract,
             data: <NotificationContractChangeDataSchema>{
               oldAddress: currentProxyAdmin.address,
-              newAddress: newProxyAdmin
-            }
+              newAddress: newProxyAdmin,
+            },
           });
         }
       }
     }
 
-    console.log("ContractAnomaliesJob finished. Changes detected: %d", detectedChanges);
+    console.log('ContractAnomaliesJob finished. Changes detected: %d', detectedChanges);
   }
 }

@@ -86,16 +86,20 @@ class ContractService {
         type: proxyOpcode.getProxyType() as ContractProxyType,
         implSlot: proxyOpcode.getProxyImplSlot(),
         adminSlot: proxyOpcode.getProxyAdminSlot(),
-        implHistory: [{
-          createdByBlock: contract.createdByBlock,
-          createdByBlockAt: contract.createdByBlockAt,
-          address: getFulfilled(proxyImpl).value
-        }],
-        adminHistory: [{
-          createdByBlock: contract.createdByBlock,
-          createdByBlockAt: contract.createdByBlockAt,
-          address: getFulfilled(proxyAdmin).value
-        }],
+        implHistory: [
+          {
+            createdByBlock: contract.createdByBlock,
+            createdByBlockAt: contract.createdByBlockAt,
+            address: getFulfilled(proxyImpl).value,
+          },
+        ],
+        adminHistory: [
+          {
+            createdByBlock: contract.createdByBlock,
+            createdByBlockAt: contract.createdByBlockAt,
+            address: getFulfilled(proxyAdmin).value,
+          },
+        ],
       };
     }
 

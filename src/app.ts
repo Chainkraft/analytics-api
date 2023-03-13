@@ -12,6 +12,7 @@ import { CREDENTIALS, LOG_FORMAT, NODE_ENV, ORIGIN, PORT } from '@config';
 import { dbConnection } from '@databases';
 import { Routes } from '@interfaces/routes.interface';
 import errorMiddleware from '@middlewares/error.middleware';
+import { userContext } from '@middlewares/auth.middleware';
 import { logger, stream } from '@utils/logger';
 import { JobManager } from './jobs/job.manager';
 import { RefreshStablecoinPricesJob } from './jobs/refresh-stablecoin-prices.job';
@@ -69,6 +70,7 @@ class App {
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
     this.app.use(cookieParser());
+    this.app.use(userContext);
 
     // static resources
     this.app.use('/static', express.static('static'));
