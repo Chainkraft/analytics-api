@@ -14,7 +14,8 @@ export class StablecoinAnomaliesJob implements RecurringJob {
 
   doIt(): any {
     console.log('Scheduling StablecoinAnomaliesJob');
-    schedule.scheduleJob('0 */4 * * *', () => this.generateNotifications());
+    //schedule.scheduleJob('0 */4 * * *', () => this.generateNotifications());
+    this.generateNotifications();
   }
 
   async generateNotifications() {
@@ -30,7 +31,7 @@ export class StablecoinAnomaliesJob implements RecurringJob {
     const depegTokens = (await this.getStablecoinsForPriceAlert(numberOfDays))
       .filter(depeg => !excludedTokens.includes(depeg.token.symbol))
       .filter(depeg => {
-        const prevNotification = latestNotifications.find(notification => notification.token._id === depeg.token._id);
+        const prevNotification = latestNotifications.find(notification => notification.token._id.equals(depeg.token._id));
         if (!isEmpty(prevNotification)) {
           return prevNotification.data.price - depeg.price > 0.03;
         }
@@ -47,8 +48,8 @@ export class StablecoinAnomaliesJob implements RecurringJob {
           token: depeg.token,
           data: <NotificationStablecoinDepegDataSchema>{
             price:
-              depegTokens.find(tweetedToken => tweetedToken.token._id === depeg.token._id)?.price ??
-              latestNotifications.find(notification => notification.token._id === depeg.token._id)?.data?.price ??
+              depegTokens.find(tweetedToken => tweetedToken.token._id.equals(depeg.token._id))?.price ??
+              latestNotifications.find(notification => notification.token._id.equals(depeg.token._id))?.data?.price ??
               depeg.price,
             avgPrice: depeg.avgPrice,
             prices: depeg.prices,

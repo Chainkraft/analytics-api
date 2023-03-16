@@ -90,14 +90,14 @@ class ContractService {
           {
             createdByBlock: contract.createdByBlock,
             createdByBlockAt: contract.createdByBlockAt,
-            address: getFulfilled(proxyImpl).value,
+            address: getFulfilled(proxyImpl)?.value,
           },
         ],
         adminHistory: [
           {
             createdByBlock: contract.createdByBlock,
             createdByBlockAt: contract.createdByBlockAt,
-            address: getFulfilled(proxyAdmin).value,
+            address: getFulfilled(proxyAdmin)?.value,
           },
         ],
       };

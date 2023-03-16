@@ -1,7 +1,8 @@
 import { Contract } from '@interfaces/contracts.interface';
+import { Types } from 'mongoose';
 
 export interface Token {
-  _id: string;
+  _id: Types.ObjectId;
   name: string;
   slug: string;
   description: string;

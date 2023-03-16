@@ -8,9 +8,9 @@ class NotificationsController {
   public getNotifications = async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
       const user = req.user;
-      const page = parseInt(<string>req.query.page);
-      const notifications = await this.notificationService.findNotifications(page, user._id);
-      res.json({ data: notifications });
+      const page = parseInt(<string>req.query.page) || 0;
+      const notifications = await this.notificationService.findNotifications(user, page);
+      res.json(notifications);
     } catch (error) {
       next(error);
     }

@@ -1,7 +1,7 @@
-import { ObjectId } from 'mongoose';
+import { Types } from 'mongoose';
 
 export interface Project {
-  _id: ObjectId;
+  _id: Types.ObjectId;
   name: string;
   slug: string;
   description: string;
