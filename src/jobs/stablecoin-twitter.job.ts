@@ -39,31 +39,35 @@ export class StablecoinTwitterJob implements RecurringJob {
 
       let firstTweet = `🚨 #Stablecoins with a recent price drop:\n`;
 
-      for (const depeg of notifications) {
-        const data: NotificationStablecoinDepegDataSchema = depeg.data;
-        firstTweet += `\n$${depeg.token.symbol} ${currencyFormat(data.price.toString(), 3)} USD`;
+      for (let i = 0; i < Math.ceil(notifications.length / 5); i++) {
+        const partialNotifications = notifications.slice(i * 5, i * 5 + 5);
+
+        for (const depeg of partialNotifications) {
+          const data: NotificationStablecoinDepegDataSchema = depeg.data;
+          firstTweet += `\n$${depeg.token.symbol} ${currencyFormat(data.price.toString(), 3)} USD`;
+        }
+
+        firstTweet += `\n\nDetails 👇`;
+
+        const tweets = [];
+        tweets.push({ text: firstTweet });
+        for (const depeg of partialNotifications) {
+          const data: NotificationStablecoinDepegDataSchema = depeg.data;
+          const tweet =
+            `${depeg.token.name} $${depeg.token.symbol}` +
+            `\nCurrent price: ${currencyFormat(data.price.toString(), 3)} USD` +
+            `\nChain: #${data.chains[0]}` +
+            `\n\nhttps://analytics.chainkraft.com/tokens/${depeg.token.slug}`;
+
+          const chartBuffer = await this.createChart(depeg, numberOfDays);
+
+          const watermarkedBuffer = await this.waterMark(chartBuffer);
+
+          const mediaId = await twitterClient.v1.uploadMedia(watermarkedBuffer, { mimeType: EUploadMimeType.Png });
+          tweets.push({ text: tweet, media: { media_ids: [mediaId] } });
+        }
+        console.log(await twitterClient.v2.tweetThread(tweets));
       }
-
-      firstTweet += `\n\nDetails 👇`;
-
-      const tweets = [];
-      tweets.push({ text: firstTweet });
-      for (const depeg of notifications) {
-        const data: NotificationStablecoinDepegDataSchema = depeg.data;
-        const tweet =
-          `${depeg.token.name} $${depeg.token.symbol}` +
-          `\nCurrent price: ${currencyFormat(data.price.toString(), 3)} USD` +
-          `\nChain: #${data.chains[0]}` +
-          `\n\nhttps://analytics.chainkraft.com/tokens/${depeg.token.slug}`;
-
-        const chartBuffer = await this.createChart(depeg, numberOfDays);
-
-        const watermarkedBuffer = await this.waterMark(chartBuffer);
-
-        const mediaId = await twitterClient.v1.uploadMedia(watermarkedBuffer, { mimeType: EUploadMimeType.Png });
-        tweets.push({ text: tweet, media: { media_ids: [mediaId] } });
-      }
-      console.log(await twitterClient.v2.tweetThread(tweets));
     }
   }
 
