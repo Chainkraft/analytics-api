@@ -14,8 +14,7 @@ export class StablecoinAnomaliesJob implements RecurringJob {
 
   doIt(): any {
     console.log('Scheduling StablecoinAnomaliesJob');
-    //schedule.scheduleJob('0 */4 * * *', () => this.generateNotifications());
-    this.generateNotifications();
+    schedule.scheduleJob('0 */4 * * *', () => this.generateNotifications());
   }
 
   async generateNotifications() {

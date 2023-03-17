@@ -18,56 +18,60 @@ export class StablecoinTwitterJob implements RecurringJob {
   }
 
   async generateTweets() {
-    const numberOfDays = 1;
     const notifications: Notification[] = await this.notificationService.notifications
       .find({
         type: NotificationType.STABLECOIN_DEPEG,
         createdAt: {
-          $gt: new Date(Date.now() - numberOfDays * 86_400_000),
+          $gt: new Date(Date.now() - 86_400_000),
         },
       })
       .populate('token');
-    console.log('StablecoinTwitterJob notifications', notifications);
 
-    if (notifications.length > 0) {
-      const twitterClient = new TwitterApi({
-        appKey: process.env.STABLEALERTS_APP_KEY,
-        appSecret: process.env.STABLEALERTS_APP_SECRET,
-        accessToken: process.env.STABLEALERTS_ACCESS_TOKEN,
-        accessSecret: process.env.STABLEALERTS_ACCESS_SECRET,
-      });
+    if (notifications.length === 0) {
+      return;
+    }
+
+    const twitterClient = new TwitterApi({
+      appKey: process.env.STABLEALERTS_APP_KEY,
+      appSecret: process.env.STABLEALERTS_APP_SECRET,
+      accessToken: process.env.STABLEALERTS_ACCESS_TOKEN,
+      accessSecret: process.env.STABLEALERTS_ACCESS_SECRET,
+    });
+
+    const filteredNotifications = this.filterNotifcationsForTweet(notifications);
+
+    console.log('StablecoinTwitterJob notifications', filteredNotifications);
+
+    for (let i = 0; i < Math.ceil(filteredNotifications.length / 5); i++) {
+      const partialNotifications = filteredNotifications.slice(i * 5, i * 5 + 5);
 
       let firstTweet = `🚨 #Stablecoins with a recent price drop:\n`;
 
-      for (let i = 0; i < Math.ceil(notifications.length / 5); i++) {
-        const partialNotifications = notifications.slice(i * 5, i * 5 + 5);
-
-        for (const depeg of partialNotifications) {
-          const data: NotificationStablecoinDepegDataSchema = depeg.data;
-          firstTweet += `\n$${depeg.token.symbol} ${currencyFormat(data.price.toString(), 3)} USD`;
-        }
-
-        firstTweet += `\n\nDetails 👇`;
-
-        const tweets = [];
-        tweets.push({ text: firstTweet });
-        for (const depeg of partialNotifications) {
-          const data: NotificationStablecoinDepegDataSchema = depeg.data;
-          const tweet =
-            `${depeg.token.name} $${depeg.token.symbol}` +
-            `\nCurrent price: ${currencyFormat(data.price.toString(), 3)} USD` +
-            `\nChain: #${data.chains[0]}` +
-            `\n\nhttps://analytics.chainkraft.com/tokens/${depeg.token.slug}`;
-
-          const chartBuffer = await this.createChart(depeg, numberOfDays);
-
-          const watermarkedBuffer = await this.waterMark(chartBuffer);
-
-          const mediaId = await twitterClient.v1.uploadMedia(watermarkedBuffer, { mimeType: EUploadMimeType.Png });
-          tweets.push({ text: tweet, media: { media_ids: [mediaId] } });
-        }
-        console.log(await twitterClient.v2.tweetThread(tweets));
+      for (const depeg of partialNotifications) {
+        const data: NotificationStablecoinDepegDataSchema = depeg.data;
+        firstTweet += `\n$${depeg.token.symbol} ${currencyFormat(data.price.toString(), 3)} USD`;
       }
+
+      firstTweet += `\n\nDetails 👇`;
+
+      const tweets = [];
+      tweets.push({ text: firstTweet });
+      for (const depeg of partialNotifications) {
+        const data: NotificationStablecoinDepegDataSchema = depeg.data;
+        const tweet =
+          `${depeg.token.name} $${depeg.token.symbol}` +
+          `\nCurrent price: ${currencyFormat(data.price.toString(), 3)} USD` +
+          `\nChain: #${data.chains[0]}` +
+          `\n\nhttps://analytics.chainkraft.com/tokens/${depeg.token.slug}`;
+
+        const chartBuffer = await this.createChart(depeg, 14);
+
+        const watermarkedBuffer = await this.waterMark(chartBuffer);
+
+        const mediaId = await twitterClient.v1.uploadMedia(watermarkedBuffer, { mimeType: EUploadMimeType.Png });
+        tweets.push({ text: tweet, media: { media_ids: [mediaId] } });
+      }
+      console.log(await twitterClient.v2.tweetThread(tweets));
     }
   }
 
@@ -84,6 +88,35 @@ export class StablecoinTwitterJob implements RecurringJob {
     });
 
     return await chart.getBufferAsync(chart.getMIME());
+  }
+
+  private filterNotifcationsForTweet(notifications: Notification[]): Notification[] {
+    const uniqueTokens = new Map<string, Notification>();
+    // create a new Map() to store the latest Notification for each unique token
+
+    notifications.forEach(notification => {
+      if (notification.token) {
+        if (!uniqueTokens.has(notification.token.slug)) {
+          // if the token is not in the Map, add the current Notification to the Map
+          uniqueTokens.set(notification.token.slug, notification);
+        } else {
+          // if the token is in the Map, check if the createdAt time is greater than the previous Notification for that token
+          const existingNotification = uniqueTokens.get(notification.token.slug);
+          if (
+            existingNotification &&
+            notification.updatedAt &&
+            existingNotification.updatedAt &&
+            notification.updatedAt > existingNotification.updatedAt
+          ) {
+            uniqueTokens.set(notification.token.slug, notification);
+          }
+        }
+      }
+    });
+
+    const latestNotificationsArray = Array.from(uniqueTokens.values());
+    // convert the Map to an array of the latest Notifications
+    return latestNotificationsArray;
   }
 
   private async createChart(depeg: Notification, numberOfDays = 7) {
