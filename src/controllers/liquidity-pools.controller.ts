@@ -5,6 +5,16 @@ import { LiquidityPoolHistory, ShortLiquidityPool } from '@/interfaces/liquidity
 class LiquidityPoolsController {
   public lpsService = new LiquidityPoolService();
 
+  public getLiquidityPoolSummaries = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const pools: ShortLiquidityPool[] = await this.lpsService.findAllLiquiditiyPoolSummaries();
+
+      res.status(200).json(pools);
+    } catch (error) {
+      next(error);
+    }
+  };
+
   public getLiquidityPoolsByDex = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const dex: string = req.params.dex;

@@ -135,6 +135,20 @@ export const main = async (): Promise<any> => {
       },
       { upsert: true, new: true },
     );
+  }
+};
+
+export const dayData = async (): Promise<any> => {
+  const liquidityPoolService = new LiquidityPoolService();
+
+  const network = 'ethereum';
+  const dex = 'uniswap';
+
+  const numberOfDays = 14;
+
+  for (const pool of uniswapPools) {
+    // check pools liquiditypoolhistory in the database by address and network
+    const poolHistory = await liquidityPoolService.findLiquiditiyPoolHistoryByAddressAndNetwork(pool.address, network);
 
     const remotePoolDayDatas = await getUniswapV3PoolDayDatas(network, pool.address, numberOfDays);
     const dbPoolDayDataDates = poolHistory?.poolDayData.map(poolDayData => poolDayData.date.getTime()) ?? [];
@@ -148,6 +162,9 @@ export const main = async (): Promise<any> => {
     await liquidityPoolHistoryModel.findOneAndUpdate(
       { network: network, address: pool.address },
       {
+        dex: dex,
+        network: network,
+        address: pool.address,
         $push: {
           poolDayData: {
             $each: poolDayDataToUpdate.map(dayData => {

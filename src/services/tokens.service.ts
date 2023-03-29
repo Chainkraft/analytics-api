@@ -9,6 +9,7 @@ import TokensPriceService from './tokens-prices.service';
 import { isEmpty } from '@/utils/util';
 import { HttpException } from '@/exceptions/HttpException';
 import slug from 'slug';
+import moment from 'moment';
 
 class TokenService {
   public tokens = tokenModel;
@@ -23,16 +24,16 @@ class TokenService {
   }
 
   public async findAllStablecoins(): Promise<Token[]> {
-    const tokens: Token[] = await this.tokens.find({ pegged: true });
+    let tokens: Token[] = await this.tokens.find({ pegged: true });
 
-    if (tokens.length == 0) {
-      return this.fetchFreshGeckoAndLlamaStablecoins();
-    } else {
-      const refresh = (Date.now() - tokens[0].updatedAt.getTime()) / 1000 > 10 ? true : false;
-      if (refresh) {
-        return this.fetchFreshGeckoAndLlamaStablecoins();
+    if (tokens.length === 0 || moment().diff(tokens[0].updatedAt, 'seconds') > 10) {
+      try {
+        tokens = await this.fetchFreshGeckoAndLlamaStablecoins();
+      } catch (error) {
+        console.error(`Error fetching fresh Gecko and Llama stablecoins: ${error}`);
       }
     }
+
     return tokens;
   }
 
@@ -42,42 +43,48 @@ class TokenService {
   }
 
   public async fetchFreshGeckoAndLlamaStablecoins(): Promise<Token[]> {
+    // Get stablecoins from DefiLlama
     const llamaStables = await this.tokenApiService.getStablecoinsFromDefiLlama();
     const llamaStablesPeggedUSD = llamaStables.filter((token: any) => token.pegType.includes('peggedUSD') && token.price);
 
-    const geckoTokens = await this.tokenApiService.getGeckoTokens(
-      'usd',
-      llamaStablesPeggedUSD.map(token => token.gecko_id),
-    );
+    // Get tokens from Gecko
+    let geckoTokens = { data: [] };
+    try {
+      geckoTokens = await this.tokenApiService.getGeckoTokens(
+        'usd',
+        llamaStablesPeggedUSD.map(token => token.gecko_id),
+      );
+    } catch (error) {
+      console.error(`Error fetching Gecko tokens: ${error}`);
+    }
 
-    const tokens: Token[] = [];
-
-    llamaStablesPeggedUSD.map((llamaToken: any) => {
+    // Update tokens with data from Gecko if available
+    const tokens: Token[] = llamaStablesPeggedUSD.map((llamaToken: any) => {
       const updatedToken: Token = llamaStablesListParser(llamaToken);
-      const geckoToken = geckoTokens.data.find(gecko => gecko.id == updatedToken.gecko_id);
-      if (geckoToken !== undefined) {
-        updatedToken.image = geckoToken.image;
-        updatedToken.current_price = geckoToken.current_price;
-        updatedToken.volume_24h = geckoToken.total_volume;
-        updatedToken.price_change_24h = geckoToken.price_change_24h;
-        updatedToken.current_market_cap = geckoToken.market_cap;
-      } else {
-        updatedToken.current_price = llamaToken.price;
+      updatedToken.current_price = llamaToken.price;
+
+      if (geckoTokens.data.length > 0) {
+        const geckoToken = geckoTokens.data.find(gecko => gecko.id == updatedToken.gecko_id);
+        if (geckoToken !== undefined) {
+          updatedToken.image = geckoToken.image;
+          updatedToken.current_price = geckoToken.current_price;
+          updatedToken.volume_24h = geckoToken.total_volume;
+          updatedToken.price_change_24h = geckoToken.price_change_24h;
+          updatedToken.current_market_cap = geckoToken.market_cap;
+        }
       }
-      tokens.push(updatedToken);
+
+      return updatedToken;
     });
 
-    return Promise.all(
-      tokens.map(async (token: Token) => {
-        token.pegged = true;
-        token.slug = slug(token.name);
+    // Update tokens in database
+    const updatedTokens = tokens.map(async (token: Token) => {
+      token.pegged = true;
+      token.slug = slug(token.name);
+      return this.tokens.findOneAndUpdate({ slug: token.slug }, token, { new: true, upsert: true });
+    });
 
-        return this.tokens.findOneAndUpdate({ slug: token.slug }, token, {
-          new: true,
-          upsert: true,
-        });
-      }),
-    );
+    return Promise.all(updatedTokens);
   }
 
   public async findStablecoinDetailsBySlug(slug: string): Promise<{ token: Token; marketCapHistory: MarketCapHistory; priceHistory: PriceHistory }> {

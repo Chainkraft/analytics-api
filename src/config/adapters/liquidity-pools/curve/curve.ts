@@ -1,18 +1,17 @@
-import axios from 'axios';
-import memoize from 'memoizee';
-import liquidityPoolHistoryModel from '@/models/liquidity-pool-history.model';
 import {
-  LiquidityPoolHistory,
+  ICoinFromPoolDataApi,
   IExtendedPoolDataFromApi,
   INetworkName,
   ISubgraphPoolData,
+  LiquidityPoolHistory,
   LiquidityPoolPricingType,
-  IPoolDataFromApi,
-  ICoinFromPoolDataApi,
-  StablecoinLiquidityPoolSummary,
   ShortLiquidityPool,
+  StablecoinLiquidityPoolSummary,
 } from '@/interfaces/liquidity-pool-history.interface';
+import liquidityPoolHistoryModel from '@/models/liquidity-pool-history.model';
 import TokenService from '@/services/tokens.service';
+import axios from 'axios';
+import memoize from 'memoizee';
 
 export const _getPoolsFromApi = memoize(
   async (network: INetworkName, poolType: 'main' | 'crypto' | 'factory' | 'factory-crypto'): Promise<IExtendedPoolDataFromApi> => {
@@ -53,7 +52,7 @@ export const groupPoolAddressesFromApiByCoinSymbol = async (
       if (!groupedPools[coin.symbol]) {
         groupedPools[coin.symbol] = [];
       }
-      groupedPools[coin.symbol].push({ name: pool.name, address: pool.address, dex: 'curve' });
+      groupedPools[coin.symbol].push({ name: pool.name, network: network, address: pool.address, dex: 'curve' });
     });
   });
   const returnObj = Object.entries(groupedPools).map(([tokenSymbol, pools]) => ({
@@ -68,12 +67,14 @@ export const main = async (): Promise<LiquidityPoolHistory[]> => {
   const network = 'ethereum';
   const dex = 'curve';
 
-  const remotePools = await _getPoolsFromApi(network, 'main');
+  console.log(`Curve ${network} pools synchronization.`);
 
-  const subgraphData = await _getSubgraphData(network);
+  const remotePools = await _getPoolsFromApi(network, 'main');
 
   return Promise.all(
     remotePools.poolData.map(remotePool => {
+      if (remotePool.usdTotal < 1000) return;
+
       return liquidityPoolHistoryModel.findOneAndUpdate(
         { network: network, address: remotePool.address },
         {
@@ -97,6 +98,32 @@ export const main = async (): Promise<LiquidityPoolHistory[]> => {
               coins: calculateCoinsWeights(remotePool.underlyingCoins, remotePool.usdTotal),
               date: new Date(),
             },
+          },
+        },
+        { upsert: true, new: true },
+      );
+    }),
+  );
+};
+
+export const volumeData = async (): Promise<LiquidityPoolHistory[]> => {
+  const network = 'ethereum';
+  const dex = 'curve';
+
+  const subgraphData = await _getSubgraphData(network);
+
+  return Promise.all(
+    subgraphData.map(remotePool => {
+      if (remotePool.volumeUSD < 1000) return;
+
+      return liquidityPoolHistoryModel.findOneAndUpdate(
+        { network: network, address: remotePool.address },
+        {
+          dex: dex,
+          network: network,
+          address: remotePool.address,
+          pricingType: LiquidityPoolPricingType.USD,
+          $push: {
             poolDayData: {
               volumeUSD: subgraphData.find(pool => pool.address === remotePool.address)?.volumeUSD,
               date: new Date(),

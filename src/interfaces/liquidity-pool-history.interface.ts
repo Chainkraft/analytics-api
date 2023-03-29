@@ -52,10 +52,12 @@ export interface StablecoinLiquidityPoolSummary {
 
 export interface ShortLiquidityPool {
   name: string;
-  symbol?: string;
   address: string;
   dex: string;
+  symbol?: string;
+  network?: string;
   tvl?: number;
+  tokens?: string[];
 }
 
 // Everything below this comment is taken from curve-js lib

@@ -35,6 +35,22 @@ class LiquidityPoolService {
     return lp;
   }
 
+  public async findAllLiquiditiyPoolSummaries(): Promise<ShortLiquidityPool[]> {
+    const savedPools = await this.liquidityPoolHistory.find();
+
+    return savedPools.map(pool => {
+      return {
+        name: pool.name,
+        symbol: pool.symbol,
+        network: pool.network,
+        address: pool.address,
+        dex: pool.dex,
+        tvl: pool.usdTotal,
+        tokens: pool.balances[0].coins.map(coin => coin.symbol),
+      };
+    });
+  }
+
   public async findLiquidityPoolForToken(token: string): Promise<ShortLiquidityPool[]> {
     const poolsSummary = stablePools.find(pool => pool.tokenSlug === token);
 
@@ -50,9 +66,11 @@ class LiquidityPoolService {
       return {
         name: pool.name || poolsName || pool.balances[0].coins.map(coin => coin.symbol).join('/'),
         symbol: pool.symbol || poolsSymbol,
+        network: pool.network,
         address: pool.address,
         dex: pool.dex,
         tvl: pool.usdTotal,
+        tokens: pool.balances[0].coins.map(coin => coin.symbol),
       };
     });
   }
