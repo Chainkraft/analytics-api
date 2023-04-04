@@ -32,6 +32,11 @@ const notificationSchema: Schema = new Schema(
       ref: 'Contract',
       required: false,
     },
+    liquidityPool: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'LiquidityPoolHistory',
+      required: false,
+    },
   },
   {
     timestamps: true,

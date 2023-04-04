@@ -22,6 +22,7 @@ class NotificationService {
       })
       .populate('token')
       .populate('contract')
+      .populate('liquidityPool')
       .skip(currentPage * limit)
       .limit(limit);
 
