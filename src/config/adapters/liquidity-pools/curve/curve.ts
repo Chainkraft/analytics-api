@@ -130,7 +130,7 @@ export const volumeData = async (): Promise<LiquidityPoolHistory[]> => {
             },
           },
         },
-        { upsert: true, new: true },
+        { new: true },
       );
     }),
   );

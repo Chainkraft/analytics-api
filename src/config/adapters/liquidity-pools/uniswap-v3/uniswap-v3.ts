@@ -138,6 +138,14 @@ export const main = async (): Promise<any> => {
   }
 };
 
+export const refreshAllPools = async (network = 'ethereum'): Promise<LiquidityPoolHistory[]> => {
+  return Promise.all(
+    uniswapPools.map(pool => {
+      return refreshUniswapPool(network, pool.address);
+    }),
+  );
+};
+
 export const dayData = async (): Promise<any> => {
   const liquidityPoolService = new LiquidityPoolService();
 
@@ -205,7 +213,6 @@ export function calculateTokenWeightsAndPricesFromLp(lp: UniswapPoolResponse): {
 }
 
 export async function refreshUniswapPool(network: string, poolId: string): Promise<LiquidityPoolHistory> {
-  // browse for the past days and save to the db
   const lp = await getUniswapV3PoolCurrentState(network, poolId);
 
   const calculations = calculateTokenWeightsAndPricesFromLp(lp);
@@ -213,6 +220,12 @@ export async function refreshUniswapPool(network: string, poolId: string): Promi
   return liquidityPoolHistoryModel.findOneAndUpdate(
     { network: network, address: lp.id },
     {
+      dex: 'uniswap',
+      network: network,
+      name: '',
+      symbol: '',
+      assetTypeName: '',
+      isMetaPool: false,
       usdTotal: lp.totalValueLockedUSD,
       tvlUSD: lp.totalValueLockedUSD,
       volumeUSD: lp.volumeUSD,
@@ -244,7 +257,7 @@ export async function refreshUniswapPool(network: string, poolId: string): Promi
         },
       },
     },
-    { new: true },
+    { upsert: true, new: true },
   );
 }
 

@@ -5,7 +5,14 @@ import { isEmpty } from '@/utils/util';
 import TokenApiService from '@/services/token-apis.service';
 import { Token } from '@interfaces/tokens.inteface';
 import * as schedule from 'node-schedule';
-import { Notification, NotificationSeverity, NotificationStablecoinDepegDataSchema, NotificationType } from '@interfaces/notifications.interface';
+import {
+  Notification,
+  NotificationSeverity,
+  NotificationStablecoinDepegDataSchema,
+  NotificationType,
+  TokenDepeg,
+} from '@interfaces/notifications.interface';
+import moment from 'moment';
 
 export class StablecoinAnomaliesJob implements RecurringJob {
   public tokenService = new tokenService();
@@ -18,16 +25,29 @@ export class StablecoinAnomaliesJob implements RecurringJob {
   }
 
   async generateNotifications() {
-    const excludedTokens = [''];
     const numberOfDays = 14;
 
     const latestNotifications: Notification[] = await this.notificationService.notifications.find({
       type: NotificationType.STABLECOIN_DEPEG,
       createdAt: {
-        $gt: new Date(Date.now() - 86_400_000),
+        $gt: moment().subtract(48, 'hours').toDate(),
       },
     });
-    const depegTokens = (await this.getStablecoinsForPriceAlert(numberOfDays))
+
+    const depeggedtokens = await this.getDepeggedTokens(numberOfDays);
+    const newNotifications: Notification[] = this.genererateDepegNotifications(depeggedtokens, latestNotifications);
+
+    newNotifications.forEach(notification => {
+      this.notificationService.createNotification(notification);
+    });
+  }
+
+  genererateDepegNotifications(depeggedTokens: TokenDepeg[], latestNotifications: Notification[]): Notification[] {
+    const newNotifications: Notification[] = [];
+    const excludedTokens = [''];
+
+    // Filtering does produce new array!
+    const filteredDepeggedTokens = depeggedTokens
       .filter(depeg => !excludedTokens.includes(depeg.token.symbol))
       .filter(depeg => {
         const prevNotification = latestNotifications.find(notification => notification.token._id.equals(depeg.token._id));
@@ -37,19 +57,16 @@ export class StablecoinAnomaliesJob implements RecurringJob {
         return true;
       });
 
-    console.log('StablecoinAnomaliesJob anomalies found', depegTokens);
+    console.log('StablecoinAnomaliesJob anomalies found', filteredDepeggedTokens);
 
-    if (depegTokens.length > 0) {
-      depegTokens.forEach(depeg => {
-        this.notificationService.createNotification({
+    if (filteredDepeggedTokens.length > 0) {
+      filteredDepeggedTokens.forEach(depeg => {
+        newNotifications.push({
           type: NotificationType.STABLECOIN_DEPEG,
           severity: NotificationSeverity.CRITICAL,
           token: depeg.token,
           data: <NotificationStablecoinDepegDataSchema>{
-            price:
-              depegTokens.find(tweetedToken => tweetedToken.token._id.equals(depeg.token._id))?.price ??
-              latestNotifications.find(notification => notification.token._id.equals(depeg.token._id))?.data?.price ??
-              depeg.price,
+            price: depeg.price ?? latestNotifications.find(notification => notification.token._id.equals(depeg.token._id))?.data?.price,
             avgPrice: depeg.avgPrice,
             prices: depeg.prices,
             chains: depeg.chains,
@@ -57,9 +74,11 @@ export class StablecoinAnomaliesJob implements RecurringJob {
         });
       });
     }
+
+    return newNotifications;
   }
 
-  public async getStablecoinsForPriceAlert(numberOfDays = 14, excludeTokens: string[] = []): Promise<TokenDepeg[]> {
+  public async getDepeggedTokens(numberOfDays = 14, excludeTokens: string[] = []): Promise<TokenDepeg[]> {
     const stablecoins = await this.tokenService.findAllStablecoins();
     const llamaTokens = await this.tokenApiService.getStablecoinsFromDefiLlama();
     const llamaPrices = await this.tokenApiService.getStablecoinsPricesFromDefiLlama();
@@ -115,8 +134,4 @@ export class StablecoinAnomaliesJob implements RecurringJob {
 
     return depegged;
   }
-}
-
-interface TokenDepeg extends NotificationStablecoinDepegDataSchema {
-  token: Token;
 }

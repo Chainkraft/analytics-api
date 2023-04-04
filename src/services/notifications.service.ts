@@ -36,7 +36,7 @@ class NotificationService {
 
   public async createNotification(notification: Notification): Promise<Notification> {
     if (isEmpty(notification)) throw new HttpException(400, 'Notification is empty');
-    if (isEmpty(notification.user) && isEmpty(notification.token) && isEmpty(notification.contract)) {
+    if (isEmpty(notification.user) && isEmpty(notification.token) && isEmpty(notification.contract) && isEmpty(notification.liquidityPool)) {
       throw new HttpException(400, 'Notification subject is empty');
     }
     return await this.notifications.create(notification);

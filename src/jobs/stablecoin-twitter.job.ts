@@ -152,11 +152,11 @@ export class StablecoinTwitterJob implements RecurringJob {
         elements: {
           point: {
             radius: 0,
-            backgroundColor: '#F9A822',
+            backgroundColor: '#FFB83C',
           },
           line: {
             borderWidth: 4,
-            borderColor: '#F9A822',
+            borderColor: '#FFB83C',
           },
         },
         scales: {
@@ -206,7 +206,7 @@ export class StablecoinTwitterJob implements RecurringJob {
     chart.setWidth(width);
     chart.setHeight(height);
     chart.setChartJsVersion('3.9.1');
-    chart.setBackgroundColor('#1A1A2E');
+    chart.setBackgroundColor('#2D2D2F');
 
     return await chart.toBinary();
   }

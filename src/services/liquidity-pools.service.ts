@@ -39,6 +39,8 @@ class LiquidityPoolService {
     const savedPools = await this.liquidityPoolHistory.find();
 
     return savedPools.map(pool => {
+      const tokens = pool.balances[0]?.coins?.map(coin => coin.symbol) || [];
+
       return {
         name: pool.name,
         symbol: pool.symbol,
@@ -46,7 +48,7 @@ class LiquidityPoolService {
         address: pool.address,
         dex: pool.dex,
         tvl: pool.usdTotal,
-        tokens: pool.balances[0].coins.map(coin => coin.symbol),
+        tokens,
       };
     });
   }
@@ -77,18 +79,24 @@ class LiquidityPoolService {
 
   // some helper functions
   private shouldRefreshUniswap(lp: LiquidityPoolHistory): boolean {
+    // Check if the liquidity pool is supported by Uniswap
     if (lp?.dex !== SupportedDexes.UNISWAP) {
       return false;
     }
 
+    // Get the latest balance by sorting the balances array by date
     const latestBalance = lp.balances?.sort((a, b) => {
-      return new Date(b.date).getTime() - new Date(a.date).getTime();
+      return moment(b.date).valueOf() - moment(a.date).valueOf();
     })[0];
 
+    // If there is no latest balance, return true to refresh Uniswap
     if (!latestBalance) {
       return true;
     }
-    return moment().diff(moment(latestBalance.date), 'minutes') > 60;
+
+    // Check if the time difference between the latest balance date and the current time is greater than 60 minutes
+    const timeDifferenceInMinutes = moment().diff(moment(latestBalance.date), 'minutes');
+    return timeDifferenceInMinutes > 60;
   }
 }
 

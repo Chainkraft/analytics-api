@@ -1,5 +1,4 @@
 import { Contract, ethers } from 'ethers';
-import { Contract as MulticallContract, Provider as MulticallProvider } from 'ethcall';
 
 export interface LiquidityPoolHistory {
   dex: string;
@@ -101,29 +100,29 @@ export interface IPoolData {
   sCurveRewards_abi?: any;
 }
 
-export interface ICurve {
-  provider: ethers.providers.Web3Provider | ethers.providers.JsonRpcProvider;
-  multicallProvider: MulticallProvider;
-  signer: ethers.Signer | null;
-  signerAddress: string;
-  chainId: number;
-  contracts: { [index: string]: { contract: Contract; multicallContract: MulticallContract } };
-  feeData: { gasPrice?: number; maxFeePerGas?: number; maxPriorityFeePerGas?: number };
-  constantOptions: { gasLimit: number };
-  options: { gasPrice?: number | ethers.BigNumber; maxFeePerGas?: number | ethers.BigNumber; maxPriorityFeePerGas?: number | ethers.BigNumber };
-  constants: {
-    NATIVE_TOKEN: { symbol: string; wrappedSymbol: string; address: string; wrappedAddress: string };
-    NETWORK_NAME: INetworkName;
-    ALIASES: IDict<string>;
-    POOLS_DATA: IDict<IPoolData>;
-    FACTORY_POOLS_DATA: IDict<IPoolData>;
-    CRYPTO_FACTORY_POOLS_DATA: IDict<IPoolData>;
-    COINS: IDict<string>;
-    DECIMALS: IDict<number>;
-    GAUGES: string[];
-  };
-  setContract: (address: string, abi: any) => void;
-}
+// export interface ICurve {
+//   provider: ethers.providers.Web3Provider | ethers.providers.JsonRpcProvider;
+//   multicallProvider: MulticallProvider;
+//   signer: ethers.Signer | null;
+//   signerAddress: string;
+//   chainId: number;
+//   contracts: { [index: string]: { contract: Contract; multicallContract: MulticallContract } };
+//   feeData: { gasPrice?: number; maxFeePerGas?: number; maxPriorityFeePerGas?: number };
+//   constantOptions: { gasLimit: number };
+//   options: { gasPrice?: number | ethers.BigNumber; maxFeePerGas?: number | ethers.BigNumber; maxPriorityFeePerGas?: number | ethers.BigNumber };
+//   constants: {
+//     NATIVE_TOKEN: { symbol: string; wrappedSymbol: string; address: string; wrappedAddress: string };
+//     NETWORK_NAME: INetworkName;
+//     ALIASES: IDict<string>;
+//     POOLS_DATA: IDict<IPoolData>;
+//     FACTORY_POOLS_DATA: IDict<IPoolData>;
+//     CRYPTO_FACTORY_POOLS_DATA: IDict<IPoolData>;
+//     COINS: IDict<string>;
+//     DECIMALS: IDict<number>;
+//     GAUGES: string[];
+//   };
+//   setContract: (address: string, abi: any) => void;
+// }
 
 export interface ICoinFromPoolDataApi {
   address: string;
