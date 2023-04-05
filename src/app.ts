@@ -10,6 +10,7 @@ import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 import hpp from 'hpp';
+import promBundle from 'express-prom-bundle';
 import { connect, set } from 'mongoose';
 import morgan from 'morgan';
 import swaggerJSDoc from 'swagger-jsdoc';
@@ -61,6 +62,18 @@ class App {
   }
 
   private initializeMiddlewares() {
+    const metricsMiddleware = promBundle({
+      includeMethod: true,
+      includePath: true,
+      includeStatusCode: true,
+      includeUp: true,
+      customLabels: { project_name: 'analytics-api' },
+      promClient: {
+        collectDefaultMetrics: {},
+      },
+    });
+
+    this.app.use(metricsMiddleware);
     this.app.use(morgan(LOG_FORMAT, { stream }));
     this.app.use(cors({ origin: ORIGIN, credentials: CREDENTIALS }));
     this.app.use(hpp());
