@@ -11,7 +11,7 @@ class SubscriberService {
   public async saveAccessRequest(accessRequest: AccessRequestDto, ip: string): Promise<AccessRequest> {
     if (isEmpty(accessRequest)) throw new HttpException(400, 'Request data is empty');
     const counter = new promClient.Counter({
-      name: 'request_access_count',
+      name: 'api_request_access_count',
       help: 'number of user request access',
     });
     counter.inc();
