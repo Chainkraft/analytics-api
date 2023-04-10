@@ -139,9 +139,10 @@ export const volumeData = async (): Promise<LiquidityPoolHistory[]> => {
 export function calculateCoinsWeights(coins: ICoinFromPoolDataApi[], totalBalance: number): ICoinFromPoolDataApi[] {
   return coins?.map(coin => {
     const shiftedBalance = Number(coin.poolBalance) * Math.pow(10, -Number(coin.decimals));
+    const balanceInUsd = shiftedBalance * Number(coin.usdPrice);
     return {
       ...coin,
-      weight: Number(shiftedBalance) / totalBalance,
+      weight: balanceInUsd / totalBalance,
     };
   });
 }
