@@ -6,6 +6,7 @@ import { LOG_DIR } from '@config';
 
 // logs dir
 const logDir: string = join(__dirname, LOG_DIR);
+const skipLogForUrls = ['/', '/metrics'];
 
 if (!existsSync(logDir)) {
   mkdirSync(logDir);
@@ -62,4 +63,6 @@ const stream = {
   },
 };
 
-export { logger, stream };
+const skip = (req, res) => skipLogForUrls.includes(req.url);
+
+export { logger, stream, skip };
