@@ -128,11 +128,11 @@ export interface ICoinFromPoolDataApi {
   address: string;
   symbol: string;
   decimals: string;
-  usdPrice: number | string;
-  price: string;
+  usdPrice?: number | string;
+  price?: string;
   // added by us
   poolBalance: string;
-  weight: number;
+  weight?: number;
 }
 
 export interface IReward {

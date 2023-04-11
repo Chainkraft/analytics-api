@@ -35,6 +35,8 @@ export class PoolsCompositionNotificationsJob implements RecurringJob {
       newNotifications.push(...poolNotifications);
     }
 
+    console.log('PoolsCompositionNotificationsJob generated notifications:', newNotifications);
+
     return Promise.all(
       newNotifications.map(notification => {
         this.notificationService.createNotification(notification);
@@ -93,7 +95,7 @@ export class PoolsCompositionNotificationsJob implements RecurringJob {
                 token: coin.symbol,
                 weight: coin.weight,
                 weightChange: weightChangeValue,
-                balance: Number(coin.poolBalance),
+                balance: Number(coin.poolBalance) * Math.pow(10, -Number(coin.decimals)),
                 date: latestBalance.date,
               },
             });

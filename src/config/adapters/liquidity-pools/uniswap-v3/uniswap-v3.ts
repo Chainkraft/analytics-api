@@ -195,14 +195,18 @@ export function calculateTokenWeightsAndPricesFromLp(lp: UniswapPoolResponse): {
   token0UsdPrice: number;
   token1UsdPrice: number;
 } {
+  // sometimes subgraph is tricky and returns wrong values
+  const tvlToken0 = Number(lp.totalValueLockedToken0) < 0 ? 0 : Number(lp.totalValueLockedToken0);
+  const tvlToken1 = Number(lp.totalValueLockedToken1) < 0 ? 0 : Number(lp.totalValueLockedToken1);
+
   // Calculate token weights
   const tvlUSD = Number(lp.totalValueLockedUSD);
-  const token0Weight = Number(lp.totalValueLockedToken0) / tvlUSD;
-  const token1Weight = (Number(lp.totalValueLockedToken1) * Number(lp.token0Price)) / tvlUSD;
+  const token0Weight = tvlToken0 / tvlUSD;
+  const token1Weight = (tvlToken1 * Number(lp.token0Price)) / tvlUSD;
 
   // Calculate token USD prices
-  const token0UsdPrice = (tvlUSD * token0Weight) / Number(lp.totalValueLockedToken0);
-  const token1UsdPrice = (tvlUSD * token1Weight) / Number(lp.totalValueLockedToken1);
+  const token0UsdPrice = tvlToken0 > 0 ? (tvlUSD * token0Weight) / tvlToken0 : 0;
+  const token1UsdPrice = tvlToken1 > 0 ? (tvlUSD * token1Weight) / tvlToken1 : 0;
 
   return {
     token0Weight,
@@ -239,7 +243,7 @@ export async function refreshUniswapPool(network: string, poolId: string): Promi
               usdPrice: calculations.token0UsdPrice,
               price: lp.token0Price,
               // added by us
-              poolBalance: lp.totalValueLockedToken0,
+              poolBalance: Number(lp.totalValueLockedToken0) < 0 ? 0 : lp.totalValueLockedToken0,
               weight: calculations.token0Weight,
             },
             {
@@ -249,7 +253,7 @@ export async function refreshUniswapPool(network: string, poolId: string): Promi
               usdPrice: calculations.token1UsdPrice,
               price: lp.token1Price,
               // added by us
-              poolBalance: lp.totalValueLockedToken1,
+              poolBalance: Number(lp.totalValueLockedToken1) < 0 ? 0 : lp.totalValueLockedToken1,
               weight: calculations.token1Weight,
             },
           ],
@@ -317,7 +321,7 @@ interface PoolDayData {
   token1Price: number;
 }
 
-interface UniswapPoolResponse {
+export interface UniswapPoolResponse {
   id: string;
   volumeToken0: string;
   volumeToken1: string;
