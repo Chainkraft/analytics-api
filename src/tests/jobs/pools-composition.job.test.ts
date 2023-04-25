@@ -104,7 +104,7 @@ describe('detectWeightChangeInPool', () => {
     underlyingBalances: [],
     poolDayData: [],
     isMetaPool: false,
-    tvlUSD: 0,
+    tvlUSD: 25_000_000,
     volumeUSD: 0,
     usdTotal: 0,
     usdtotalExcludingBasePool: 0,
@@ -167,6 +167,31 @@ describe('detectWeightChangeInPool', () => {
       block: 100,
     });
     const newNotifications = poolsJob.detectWeightChangeInPool(extendedPoolHistory, notifications);
+
+    expect(newNotifications.length).toBe(0);
+  });
+
+  it('does not create a new notification if pool tvlUSD is less than 1000000', () => {
+    const lowTvlPoolHistory = { ...poolHistory, tvlUSD: 900_000 };
+    const newNotifications = poolsJob.detectWeightChangeInPool(lowTvlPoolHistory, notifications);
+
+    expect(newNotifications.length).toBe(0);
+  });
+
+  it('creates a new notification when pool tvlUSD is between 1000000 and 10000000 and weight change is at least 0.3', () => {
+    const midTvlPoolHistory = { ...poolHistory, address: '0xtest', tvlUSD: 5_000_000 };
+    const newNotifications = poolsJob.detectWeightChangeInPool(midTvlPoolHistory, notifications);
+
+    expect(newNotifications.length).toBeGreaterThan(0);
+    expect(newNotifications[0].data.weightChange).toBeGreaterThanOrEqual(0.3);
+  });
+
+  it('does not create a new notification if pool tvlUSD is more than 10000000 and weight change is less than 0.1', () => {
+    const highTvlPoolHistory = { ...poolHistory, tvlUSD: 12_000_000 };
+    highTvlPoolHistory.balances[1].coins[0].weight = 0.84;
+    highTvlPoolHistory.balances[1].coins[1].weight = 0.08;
+    highTvlPoolHistory.balances[1].coins[2].weight = 0.08;
+    const newNotifications = poolsJob.detectWeightChangeInPool(highTvlPoolHistory, notifications);
 
     expect(newNotifications.length).toBe(0);
   });

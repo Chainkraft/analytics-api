@@ -32,10 +32,24 @@ export class RefreshScoreJob implements RecurringJob {
         return;
       }
     }
-
     const tokens: Token[] = await this.tokenService.findAllToken();
     const priceHistories: PriceHistory[] = await this.pricesService.findAllPriceHistories();
 
+    return this.score.create(this.calculateNewScores(tokens, priceHistories));
+  }
+
+  calculateStandardDeviationBelowPeg(arr: number[]): number {
+    const mean = 1;
+    const normalizedArray = arr.map(val => (val > mean ? mean : val));
+    const usePopulation = false;
+    const deviation = Math.sqrt(
+      normalizedArray.reduce((acc, val) => acc.concat((val - mean) ** 2), [] as number[]).reduce((acc, val) => acc + val, 0) /
+        (normalizedArray.length - (usePopulation ? 0 : 1)),
+    );
+    return deviation;
+  }
+
+  calculateNewScores(tokens: Token[], priceHistories: PriceHistory[]): Score {
     const chains: number[] = tokens
       .filter(token => !isEmpty(token.chains))
       .map(token => {
@@ -63,26 +77,19 @@ export class RefreshScoreJob implements RecurringJob {
         const sortedPrices = priceHistory.prices
           .sort((objA, objB) => objB.date.getTime() - objA.date.getTime())
           .map(value => value.price)
-          .slice(0, 30);
-        const meanValue = 1;
-        const usePopulation = false;
+          .slice(0, 60);
 
-        const standardDeviation = Math.sqrt(
-          sortedPrices.reduce((acc, val) => acc.concat((val - meanValue) ** 2), []).reduce((acc, val) => acc + val, 0) /
-            (sortedPrices.length - (usePopulation ? 0 : 1)),
-        );
-
-        return standardDeviation;
+        return this.calculateStandardDeviationBelowPeg(sortedPrices);
       })
       .sort((a, b) => a - b);
 
-    console.log('Stablecoin score has been refreshed.');
+    console.log('Stablecoins score has been refreshed.');
 
-    return this.score.create({
+    return {
       chains: chains,
       volumes: volumes,
       marketCaps: marketCaps,
       priceDeviations: priceDeviations,
-    });
+    };
   }
 }

@@ -45,7 +45,6 @@ export class PoolsCompositionNotificationsJob implements RecurringJob {
   }
 
   detectWeightChangeInPool(poolHistory: LiquidityPoolHistory, notifications: Notification[]): Notification[] {
-    const weightChangeThreshold = 0.1;
     const timeWindowHours = 48;
     const newNotifications: Notification[] = [];
 
@@ -61,6 +60,13 @@ export class PoolsCompositionNotificationsJob implements RecurringJob {
       const balanceTime = moment(b.date);
       return balanceTime.isBetween(startWindowTime, currentTime);
     });
+
+    let weightChangeThreshold = 0.1;
+    if (poolHistory.tvlUSD < 1_000_000) {
+      return newNotifications;
+    } else if (poolHistory.tvlUSD >= 1_000_000 && poolHistory.tvlUSD < 10_000_000) {
+      weightChangeThreshold = 0.3;
+    }
 
     balancesInWindow.forEach(prevBalance => {
       latestBalance.coins.forEach(coin => {
