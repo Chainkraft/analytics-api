@@ -6,6 +6,7 @@ import { providers } from '@config';
 import { getFulfilled, isRejected } from '@utils/typeguard';
 import BlockchainService from '@services/blockchain.service';
 import { Contract } from '@interfaces/contracts.interface';
+import * as schedule from 'node-schedule';
 import promClient from 'prom-client';
 
 const anomaliesCounter = new promClient.Counter({
@@ -20,8 +21,7 @@ export class ContractAnomaliesJob implements RecurringJob {
 
   doIt(): any {
     console.log('Scheduling ContractAnomaliesJob');
-    this.generateNotifications();
-    //schedule.scheduleJob('0 */5 * * *', () => this.generateNotifications());
+    schedule.scheduleJob('0 */5 * * *', () => this.generateNotifications());
   }
 
   async generateNotifications() {
