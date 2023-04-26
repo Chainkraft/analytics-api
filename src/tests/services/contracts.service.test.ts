@@ -2,7 +2,7 @@ import { Contract, ContractNetwork, ContractProxyType } from '../../interfaces/c
 import ContractService from '../../services/contracts.service';
 import R from 'ramda';
 
-describe('Testing ContractService', () => {
+describe('ContractService', () => {
   const service = new ContractService();
 
   test('is a proxy contract', async () => {
@@ -59,6 +59,7 @@ describe('Testing ContractService', () => {
 
     createdByArgs: '',
     createdByBlock: 0,
+    createdByBlockAt: new Date(),
     createdByTxHash: '',
     createdByAddress: '',
 

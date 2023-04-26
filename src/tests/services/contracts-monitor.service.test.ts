@@ -2,7 +2,7 @@ import ContractMonitorService from '../../services/contracts-monitor.service';
 import { ContractNetwork } from '../../interfaces/contracts.interface';
 import { WebhookType } from '../../interfaces/alchemy-webhook.interface';
 
-describe('Testing ContractMonitorService', () => {
+describe('ContractMonitorService', () => {
   const service = new ContractMonitorService();
 
   test('create new webhook', async () => {

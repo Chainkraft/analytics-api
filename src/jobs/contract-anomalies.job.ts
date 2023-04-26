@@ -1,11 +1,17 @@
 import { RecurringJob } from './recurring.job';
 import NotificationService from '@services/notifications.service';
-import * as schedule from 'node-schedule';
 import { NotificationContractChangeDataSchema, NotificationSeverity, NotificationType } from '@interfaces/notifications.interface';
 import ContractService from '@services/contracts.service';
 import { providers } from '@config';
-import { getFulfilled } from '@utils/typeguard';
+import { getFulfilled, isRejected } from '@utils/typeguard';
 import BlockchainService from '@services/blockchain.service';
+import { Contract } from '@interfaces/contracts.interface';
+import promClient from 'prom-client';
+
+const anomaliesCounter = new promClient.Counter({
+  name: 'api_contract_anomalies_job_count',
+  help: 'number of modified smart contracts',
+});
 
 export class ContractAnomaliesJob implements RecurringJob {
   public contractService = new ContractService();
@@ -14,7 +20,8 @@ export class ContractAnomaliesJob implements RecurringJob {
 
   doIt(): any {
     console.log('Scheduling ContractAnomaliesJob');
-    schedule.scheduleJob('0 */5 * * *', () => this.generateNotifications());
+    this.generateNotifications();
+    //schedule.scheduleJob('0 */5 * * *', () => this.generateNotifications());
   }
 
   async generateNotifications() {
@@ -29,61 +36,59 @@ export class ContractAnomaliesJob implements RecurringJob {
       const getProxyImpl = provider.core.getStorageAt(contract.address, contract.proxy.implSlot);
       const getProxyAdmin = provider.core.getStorageAt(contract.address, contract.proxy.adminSlot);
       const [proxyImpl, proxyAdmin] = await Promise.allSettled([getProxyImpl, getProxyAdmin]);
-      const newProxyImpl = getFulfilled(proxyImpl).value;
-      const newProxyAdmin = getFulfilled(proxyAdmin).value;
 
-      const currentProxyImpl = contract.proxy.implHistory.at(-1);
-      const currentProxyAdmin = contract.proxy.adminHistory.at(-1);
+      const hasImplChanged = await this.updateHistory(contract, proxyImpl, 'impl');
+      const hasAdminChanged = await this.updateHistory(contract, proxyAdmin, 'admin');
 
-      if (currentProxyImpl?.address != newProxyImpl) {
-        console.log('Proxy=%s (%s) implementation changed %s => %s', contract.address, contract.network, currentProxyImpl.address, newProxyImpl);
-
-        contract.proxy.implHistory.push({
-          createdByBlock: await this.blockchainService.getBlockNumber(contract.network),
-          createdByBlockAt: new Date(),
-          address: newProxyImpl,
-        });
-      }
-      if (currentProxyAdmin?.address != newProxyAdmin) {
-        console.log('Proxy=%s (%s) admin changed %s => %s', contract.address, contract.network, currentProxyAdmin.address, newProxyAdmin);
-
-        contract.proxy.adminHistory.push({
-          createdByBlock: await this.blockchainService.getBlockNumber(contract.network),
-          createdByBlockAt: new Date(),
-          address: newProxyAdmin,
-        });
+      if (hasImplChanged) {
+        await this.sendNotification(contract, 'impl');
       }
 
-      if (currentProxyImpl.address != newProxyImpl || currentProxyAdmin.address != newProxyAdmin) {
-        detectedChanges++;
+      if (hasAdminChanged) {
+        await this.sendNotification(contract, 'admin');
+      }
+
+      if (hasImplChanged || hasAdminChanged) {
         await this.contractService.contracts.updateOne(contract);
-
-        if (currentProxyImpl.address != newProxyImpl) {
-          await this.notificationService.createNotification({
-            type: NotificationType.CONTRACT_PROXY_IMPL_CHANGE,
-            severity: NotificationSeverity.CRITICAL,
-            contract: contract,
-            data: <NotificationContractChangeDataSchema>{
-              oldAddress: currentProxyImpl.address,
-              newAddress: newProxyImpl,
-            },
-          });
-        }
-
-        if (currentProxyAdmin?.address != newProxyAdmin) {
-          await this.notificationService.createNotification({
-            type: NotificationType.CONTRACT_PROXY_ADMIN_CHANGE,
-            severity: NotificationSeverity.CRITICAL,
-            contract: contract,
-            data: <NotificationContractChangeDataSchema>{
-              oldAddress: currentProxyAdmin.address,
-              newAddress: newProxyAdmin,
-            },
-          });
-        }
+        detectedChanges++;
       }
     }
 
-    console.log('ContractAnomaliesJob finished. Changes detected: %d', detectedChanges);
+    anomaliesCounter.inc(detectedChanges);
+    console.log('ContractAnomaliesJob finished. Smart contracts modified: %d', detectedChanges);
+  }
+
+  private async updateHistory(contract: Contract, request: PromiseSettledResult<string>, type: 'impl' | 'admin'): Promise<boolean> {
+    if (isRejected(request)) {
+      console.log('Could not retrieve %s details of proxy=%s (%s)', type, contract.address, contract.network);
+      return false;
+    }
+
+    const newAddress = getFulfilled(request).value;
+    const currentAddress = type === 'impl' ? contract.proxy.implHistory.at(-1) : contract.proxy.adminHistory.at(-1);
+
+    if (currentAddress?.address !== newAddress) {
+      contract.proxy[type + 'History'].push({
+        createdByBlock: await this.blockchainService.getBlockNumber(contract.network),
+        createdByBlockAt: new Date(),
+        address: newAddress,
+      });
+
+      console.log('Proxy=%s %s changed %s => %s', contract.address, type, currentAddress.address, newAddress);
+      return true;
+    }
+    return false;
+  }
+
+  private async sendNotification(contract: Contract, type: 'impl' | 'admin') {
+    await this.notificationService.createNotification({
+      type: type === 'impl' ? NotificationType.CONTRACT_PROXY_IMPL_CHANGE : NotificationType.CONTRACT_PROXY_ADMIN_CHANGE,
+      severity: NotificationSeverity.CRITICAL,
+      contract: contract,
+      data: <NotificationContractChangeDataSchema>{
+        oldAddress: contract.proxy[type + 'History'].at(-2)?.address,
+        newAddress: contract.proxy[type + 'History'].at(-1).address,
+      },
+    });
   }
 }
