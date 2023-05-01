@@ -1,5 +1,5 @@
 import { Token } from '@interfaces/tokens.inteface';
-import { Contract } from '@interfaces/contracts.interface';
+import { Contract, ContractNetwork } from '@interfaces/contracts.interface';
 import { User } from '@interfaces/users.interface';
 import { LiquidityPoolHistory } from './liquidity-pool-history.interface';
 
@@ -46,6 +46,7 @@ export interface NotificationStablecoinDepegDataSchema {
 }
 
 export interface NotificationContractChangeDataSchema {
+  network: ContractNetwork;
   oldAddress: string;
   newAddress: string;
 }

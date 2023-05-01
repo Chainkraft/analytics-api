@@ -10,6 +10,7 @@ import { isEmpty } from '@/utils/util';
 import { HttpException } from '@/exceptions/HttpException';
 import slug from 'slug';
 import moment from 'moment';
+import { Contract } from '@interfaces/contracts.interface';
 
 class TokenService {
   public tokens = tokenModel;
@@ -40,6 +41,11 @@ class TokenService {
   public async findTokenBySlug(slug: string): Promise<Token> {
     if (slug === undefined) throw new HttpException(400, 'Slug is empty');
     return this.tokens.findOne({ slug: slug }).populate('contracts');
+  }
+
+  public async findTokenByContract(contract: Contract): Promise<Token> {
+    if (contract === undefined) throw new HttpException(400, 'Contract is empty');
+    return this.tokens.findOne({ contracts: contract._id });
   }
 
   public async fetchFreshGeckoAndLlamaStablecoins(): Promise<Token[]> {
@@ -87,7 +93,11 @@ class TokenService {
     return Promise.all(updatedTokens);
   }
 
-  public async findStablecoinDetailsBySlug(slug: string): Promise<{ token: Token; marketCapHistory: MarketCapHistory; priceHistory: PriceHistory }> {
+  public async findStablecoinDetailsBySlug(slug: string): Promise<{
+    token: Token;
+    marketCapHistory: MarketCapHistory;
+    priceHistory: PriceHistory;
+  }> {
     const token: Token = await this.tokens.findOne({ slug: slug });
     const marketCapHistory: MarketCapHistory = await this.marketCapHistory.findOne({ slug: slug });
 
@@ -107,7 +117,11 @@ class TokenService {
     };
   }
 
-  public async findStablecoinDetails(tokenSymbol: string): Promise<{ token: Token; marketCapHistory: MarketCapHistory; priceHistory: PriceHistory }> {
+  public async findStablecoinDetails(tokenSymbol: string): Promise<{
+    token: Token;
+    marketCapHistory: MarketCapHistory;
+    priceHistory: PriceHistory;
+  }> {
     const token: Token = await this.tokens.findOne({ symbol: tokenSymbol });
     const marketCapHistory: MarketCapHistory = await this.marketCapHistory.findOne({ symbol: tokenSymbol });
 
@@ -138,7 +152,11 @@ class TokenService {
     });
   }
 
-  private async fetchFreshTokenDetails(token: Token): Promise<{ token: Token; marketCapHistory: MarketCapHistory; priceHistory: PriceHistory }> {
+  private async fetchFreshTokenDetails(token: Token): Promise<{
+    token: Token;
+    marketCapHistory: MarketCapHistory;
+    priceHistory: PriceHistory;
+  }> {
     const llamaToken = await this.tokenApiService.getStablecoinDetailsFromDefiLlama(token.llama_id);
     const newToken = llamaStablecoinDetailsParser(llamaToken);
 

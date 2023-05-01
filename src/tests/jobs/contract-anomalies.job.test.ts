@@ -9,14 +9,19 @@ describe('ContractAnomaliesJob', () => {
   const getStorageAtMock = jest.fn();
   const findAllContractsMock = jest.fn();
   const createNotificationMock = jest.fn();
+  const findTokenByContractMock = jest.fn();
 
   beforeEach(() => {
     contractAnomaliesJob = new ContractAnomaliesJob();
     contractAnomaliesJob.contractService.findAllContracts = findAllContractsMock;
-    contractAnomaliesJob.contractService.contracts.updateOne = jest.fn();
+    contractAnomaliesJob.contractService.contracts.findByIdAndUpdate = jest.fn();
     contractAnomaliesJob.blockchainService.getBlockNumber = jest.fn();
     contractAnomaliesJob.notificationService.createNotification = createNotificationMock;
+    contractAnomaliesJob.tokenService.findTokenByContract = findTokenByContractMock;
     providers.get(ContractNetwork.ETH_MAINNET).core.getStorageAt = getStorageAtMock;
+
+    findTokenByContractMock.mockResolvedValue({});
+    createNotificationMock.mockResolvedValue({});
 
     contract = {
       address: '0x1',
@@ -46,16 +51,19 @@ describe('ContractAnomaliesJob', () => {
     expect(contract.proxy.implHistory.at(-1).address).toBe('0xLOGIC_ADDR_NEW');
     expect(contract.proxy.adminHistory.at(-1).address).toBe('0xADMIN_ADDR_NEW');
 
-    expect(contractAnomaliesJob.contractService.contracts.updateOne).toHaveBeenCalled();
+    expect(contractAnomaliesJob.contractService.contracts.findByIdAndUpdate).toHaveBeenCalled();
     expect(contractAnomaliesJob.blockchainService.getBlockNumber).toHaveBeenCalledTimes(2);
     expect(contractAnomaliesJob.notificationService.createNotification).toHaveBeenCalledTimes(2);
+    expect(contractAnomaliesJob.tokenService.findTokenByContract).toHaveBeenCalledTimes(2);
     expect(createNotificationMock.mock.calls).toEqual([
       [
         {
           type: NotificationType.CONTRACT_PROXY_IMPL_CHANGE,
           severity: NotificationSeverity.CRITICAL,
           contract: contract,
+          token: {},
           data: <NotificationContractChangeDataSchema>{
+            network: 'eth-mainnet',
             oldAddress: '0xLOGIC_ADDR',
             newAddress: '0xLOGIC_ADDR_NEW',
           },
@@ -66,7 +74,9 @@ describe('ContractAnomaliesJob', () => {
           type: NotificationType.CONTRACT_PROXY_ADMIN_CHANGE,
           severity: NotificationSeverity.CRITICAL,
           contract: contract,
+          token: {},
           data: <NotificationContractChangeDataSchema>{
+            network: 'eth-mainnet',
             oldAddress: '0xADMIN_ADDR',
             newAddress: '0xADMIN_ADDR_NEW',
           },
@@ -86,16 +96,19 @@ describe('ContractAnomaliesJob', () => {
     expect(contract.proxy.implHistory.at(-1).address).toBe('0xLOGIC_ADDR_NEW');
     expect(contract.proxy.adminHistory.at(-1).address).toBe('0xADMIN_ADDR');
 
-    expect(contractAnomaliesJob.contractService.contracts.updateOne).toHaveBeenCalled();
+    expect(contractAnomaliesJob.contractService.contracts.findByIdAndUpdate).toHaveBeenCalled();
     expect(contractAnomaliesJob.blockchainService.getBlockNumber).toHaveBeenCalledTimes(1);
     expect(contractAnomaliesJob.notificationService.createNotification).toHaveBeenCalledTimes(1);
+    expect(contractAnomaliesJob.tokenService.findTokenByContract).toHaveBeenCalledTimes(1);
     expect(createNotificationMock.mock.calls).toEqual([
       [
         {
           type: NotificationType.CONTRACT_PROXY_IMPL_CHANGE,
           severity: NotificationSeverity.CRITICAL,
           contract: contract,
+          token: {},
           data: <NotificationContractChangeDataSchema>{
+            network: 'eth-mainnet',
             oldAddress: '0xLOGIC_ADDR',
             newAddress: '0xLOGIC_ADDR_NEW',
           },
@@ -115,16 +128,19 @@ describe('ContractAnomaliesJob', () => {
     expect(contract.proxy.implHistory.at(-1).address).toBe('0xLOGIC_ADDR');
     expect(contract.proxy.adminHistory.at(-1).address).toBe('0xADMIN_ADDR_NEW');
 
-    expect(contractAnomaliesJob.contractService.contracts.updateOne).toHaveBeenCalled();
+    expect(contractAnomaliesJob.contractService.contracts.findByIdAndUpdate).toHaveBeenCalled();
     expect(contractAnomaliesJob.blockchainService.getBlockNumber).toHaveBeenCalledTimes(1);
     expect(contractAnomaliesJob.notificationService.createNotification).toHaveBeenCalledTimes(1);
+    expect(contractAnomaliesJob.tokenService.findTokenByContract).toHaveBeenCalledTimes(1);
     expect(createNotificationMock.mock.calls).toEqual([
       [
         {
           type: NotificationType.CONTRACT_PROXY_ADMIN_CHANGE,
           severity: NotificationSeverity.CRITICAL,
           contract: contract,
+          token: {},
           data: <NotificationContractChangeDataSchema>{
+            network: 'eth-mainnet',
             oldAddress: '0xADMIN_ADDR',
             newAddress: '0xADMIN_ADDR_NEW',
           },

@@ -6,8 +6,9 @@ import { providers } from '@config';
 import { getFulfilled, isRejected } from '@utils/typeguard';
 import BlockchainService from '@services/blockchain.service';
 import { Contract } from '@interfaces/contracts.interface';
-import * as schedule from 'node-schedule';
 import promClient from 'prom-client';
+import TokenService from '@services/tokens.service';
+import * as schedule from 'node-schedule';
 
 const anomaliesCounter = new promClient.Counter({
   name: 'api_contract_anomalies_job_count',
@@ -15,6 +16,7 @@ const anomaliesCounter = new promClient.Counter({
 });
 
 export class ContractAnomaliesJob implements RecurringJob {
+  public tokenService = new TokenService();
   public contractService = new ContractService();
   public blockchainService = new BlockchainService();
   public notificationService = new NotificationService();
@@ -49,13 +51,13 @@ export class ContractAnomaliesJob implements RecurringJob {
       }
 
       if (hasImplChanged || hasAdminChanged) {
-        await this.contractService.contracts.updateOne(contract);
+        await this.contractService.contracts.findByIdAndUpdate(contract._id, { proxy: contract.proxy });
         detectedChanges++;
       }
     }
 
     anomaliesCounter.inc(detectedChanges);
-    console.log('ContractAnomaliesJob finished. Smart contracts modified: %d', detectedChanges);
+    console.log('ContractAnomaliesJob finished. Smart contracts modified: %d of %d', detectedChanges, contracts.length);
   }
 
   private async updateHistory(contract: Contract, request: PromiseSettledResult<string>, type: 'impl' | 'admin'): Promise<boolean> {
@@ -81,11 +83,14 @@ export class ContractAnomaliesJob implements RecurringJob {
   }
 
   private async sendNotification(contract: Contract, type: 'impl' | 'admin') {
+    const token = await this.tokenService.findTokenByContract(contract);
     await this.notificationService.createNotification({
       type: type === 'impl' ? NotificationType.CONTRACT_PROXY_IMPL_CHANGE : NotificationType.CONTRACT_PROXY_ADMIN_CHANGE,
       severity: NotificationSeverity.CRITICAL,
       contract: contract,
+      token: token,
       data: <NotificationContractChangeDataSchema>{
+        network: contract.network,
         oldAddress: contract.proxy[type + 'History'].at(-2)?.address,
         newAddress: contract.proxy[type + 'History'].at(-1).address,
       },

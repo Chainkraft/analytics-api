@@ -1,6 +1,8 @@
 import { Project } from '@interfaces/projects.interface';
+import { Types } from 'mongoose';
 
 export interface Contract {
+  _id?: Types.ObjectId;
   createdAt?: Date;
   updatedAt?: Date;
 
