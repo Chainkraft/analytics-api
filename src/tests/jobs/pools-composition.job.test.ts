@@ -23,9 +23,8 @@ jest.mock('../../services/notifications.service', () => {
 });
 
 const poolsJob = new PoolsCompositionNotificationsJob();
-
-describe('detectWeightChangeInPool', () => {
-  const poolHistory: LiquidityPoolHistory = {
+function create3PoolHistory(): LiquidityPoolHistory {
+  return {
     dex: 'curve',
     network: 'ethereum',
     name: '',
@@ -109,16 +108,86 @@ describe('detectWeightChangeInPool', () => {
     usdTotal: 0,
     usdtotalExcludingBasePool: 0,
   };
+}
 
-  const notifications: Notification[] = [
-    // Your existing notifications here
-  ];
+function createWethDaiPoolHistory(): LiquidityPoolHistory {
+  return {
+    dex: 'uniswap',
+    network: 'ethereum',
+    name: '',
+    symbol: '',
+    assetTypeName: '',
+    address: '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f',
+    pricingType: LiquidityPoolPricingType.USD,
+    balances: [
+      {
+        coins: [
+          {
+            address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+            symbol: 'WETH',
+            decimals: '18',
+            usdPrice: 3200,
+            price: '1',
+            weight: 0.8,
+            poolBalance: '4800000000000000000000',
+          },
+          {
+            address: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
+            symbol: 'DAI',
+            decimals: '18',
+            usdPrice: 1.001,
+            price: '1',
+            weight: 0.4,
+            poolBalance: '11000000000000000000000',
+          },
+        ],
+        date: moment().utc().subtract(12, 'hours').toDate(),
+        block: 200,
+      },
+      {
+        coins: [
+          {
+            address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+            symbol: 'WETH',
+            decimals: '18',
+            usdPrice: 3200,
+            price: '1',
+            weight: 0.45,
+            poolBalance: '4800000000000000000000',
+          },
+          {
+            address: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
+            symbol: 'DAI',
+            decimals: '18',
+            usdPrice: 1.001,
+            price: '1',
+            weight: 0.4,
+            poolBalance: '11000000000000000000000',
+          },
+        ],
+        date: moment().utc().subtract(8, 'hours').toDate(),
+        block: 200,
+      },
+    ],
+    underlyingBalances: [],
+    poolDayData: [],
+    isMetaPool: false,
+    tvlUSD: 25_000_000,
+    volumeUSD: 0,
+    usdTotal: 0,
+    usdtotalExcludingBasePool: 0,
+  };
+}
+
+describe('detectWeightChangeInPool', () => {
+  const notifications: Notification[] = [];
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
   it('detects weight change and creates a new notification if not exists', () => {
+    const poolHistory = create3PoolHistory();
     const newNotifications = poolsJob.detectWeightChangeInPool(poolHistory, notifications);
     notifications.push(...newNotifications);
 
@@ -126,14 +195,14 @@ describe('detectWeightChangeInPool', () => {
   });
 
   it('does not create a new notification if it already exists', () => {
-    const newNotifications = poolsJob.detectWeightChangeInPool(poolHistory, notifications);
+    const newNotifications = poolsJob.detectWeightChangeInPool(create3PoolHistory(), notifications);
 
     expect(newNotifications.length).toBe(0);
   });
 
   it('does not create a new notification if weight change is too small', () => {
-    const extendedPoolHistory = poolHistory;
-    extendedPoolHistory.balances.push({
+    const poolHistory = create3PoolHistory();
+    poolHistory.balances.push({
       coins: [
         {
           address: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
@@ -166,28 +235,29 @@ describe('detectWeightChangeInPool', () => {
       date: moment().utc().subtract(1, 'hours').toDate(),
       block: 100,
     });
-    const newNotifications = poolsJob.detectWeightChangeInPool(extendedPoolHistory, notifications);
-
+    const newNotifications = poolsJob.detectWeightChangeInPool(poolHistory, notifications);
     expect(newNotifications.length).toBe(0);
+
+    poolHistory.balances.pop();
   });
 
   it('does not create a new notification if pool tvlUSD is less than 1000000', () => {
-    const lowTvlPoolHistory = { ...poolHistory, tvlUSD: 900_000 };
+    const lowTvlPoolHistory = { ...create3PoolHistory(), tvlUSD: 900_000 };
     const newNotifications = poolsJob.detectWeightChangeInPool(lowTvlPoolHistory, notifications);
 
     expect(newNotifications.length).toBe(0);
   });
 
   it('creates a new notification when pool tvlUSD is between 1000000 and 10000000 and weight change is at least 0.3', () => {
-    const midTvlPoolHistory = { ...poolHistory, address: '0xtest', tvlUSD: 5_000_000 };
-    const newNotifications = poolsJob.detectWeightChangeInPool(midTvlPoolHistory, notifications);
+    const midTvlPoolHistory = { ...create3PoolHistory(), address: '0xtest', tvlUSD: 5_000_000 };
+    const newNotifications = poolsJob.detectWeightChangeInPool(midTvlPoolHistory, []);
 
     expect(newNotifications.length).toBeGreaterThan(0);
     expect(newNotifications[0].data.weightChange).toBeGreaterThanOrEqual(0.3);
   });
 
   it('does not create a new notification if pool tvlUSD is more than 10000000 and weight change is less than 0.1', () => {
-    const highTvlPoolHistory = { ...poolHistory, tvlUSD: 12_000_000 };
+    const highTvlPoolHistory = { ...create3PoolHistory(), tvlUSD: 12_000_000 };
     highTvlPoolHistory.balances[1].coins[0].weight = 0.84;
     highTvlPoolHistory.balances[1].coins[1].weight = 0.08;
     highTvlPoolHistory.balances[1].coins[2].weight = 0.08;
@@ -195,5 +265,122 @@ describe('detectWeightChangeInPool', () => {
 
     expect(newNotifications.length).toBe(0);
   });
-  // Add more test cases as needed
+
+  it('creates notifcations based on the last created notification', () => {
+    const poolHistoryWethDai = createWethDaiPoolHistory();
+    const newNotifications = poolsJob.detectWeightChangeInPool(poolHistoryWethDai, []);
+    poolHistoryWethDai.balances.push({
+      coins: [
+        {
+          address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+          symbol: 'WETH',
+          decimals: '18',
+          usdPrice: 3200,
+          price: '1',
+          weight: 0.15,
+          poolBalance: '4800000000000000000000',
+        },
+        {
+          address: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
+          symbol: 'DAI',
+          decimals: '18',
+          usdPrice: 1.001,
+          price: '1',
+          weight: 0.4,
+          poolBalance: '11000000000000000000000',
+        },
+      ],
+      date: moment().utc().subtract(2, 'hours').toDate(),
+      block: 100,
+    });
+
+    expect(newNotifications.length).toBeGreaterThan(0);
+
+    const newerNotifications = poolsJob.detectWeightChangeInPool(poolHistoryWethDai, newNotifications);
+    expect(newerNotifications.length).toBeGreaterThan(0);
+  });
+
+  it('Create a notification and create the next one based on this one v2', () => {
+    const poolHistory = create3PoolHistory();
+    const newNotifications = poolsJob.detectWeightChangeInPool(poolHistory, []);
+
+    expect(newNotifications.length).toBeGreaterThan(0);
+
+    poolHistory.balances.push({
+      coins: [
+        {
+          address: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
+          symbol: 'DAI',
+          decimals: '18',
+          usdPrice: 1.001,
+          price: '1',
+          weight: 0.48,
+          poolBalance: '165380350622839514039437569',
+        },
+        {
+          address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+          symbol: 'USDC',
+          decimals: '6',
+          usdPrice: 1,
+          price: '1',
+          weight: 0.1,
+          poolBalance: '162414327217796',
+        },
+        {
+          address: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+          symbol: 'USDT',
+          decimals: '6',
+          usdPrice: 1,
+          price: '1',
+          weight: 0.1,
+          poolBalance: '281096827003352',
+        },
+      ],
+      date: moment().utc().subtract(2, 'hours').toDate(),
+      block: 100,
+    });
+
+    const newerNotifications = poolsJob.detectWeightChangeInPool(poolHistory, newNotifications);
+    expect(newerNotifications.length).toBeGreaterThan(0);
+  });
+
+  it('Should create a single notification per coin when two anomalies detected', () => {
+    const poolHistory = create3PoolHistory();
+    poolHistory.balances.push({
+      coins: [
+        {
+          address: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
+          symbol: 'DAI',
+          decimals: '18',
+          usdPrice: 1.001,
+          price: '1',
+          weight: 0.5,
+          poolBalance: '165380350622839514039437569',
+        },
+        {
+          address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+          symbol: 'USDC',
+          decimals: '6',
+          usdPrice: 1,
+          price: '1',
+          weight: 0.1,
+          poolBalance: '162414327217796',
+        },
+        {
+          address: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+          symbol: 'USDT',
+          decimals: '6',
+          usdPrice: 1,
+          price: '1',
+          weight: 0.1,
+          poolBalance: '281096827003352',
+        },
+      ],
+      date: moment().utc().subtract(2, 'hours').toDate(),
+      block: 100,
+    });
+
+    const newNotifications = poolsJob.detectWeightChangeInPool(poolHistory, []);
+    expect(newNotifications.length).toBe(3);
+  });
 });

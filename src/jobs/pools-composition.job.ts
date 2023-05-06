@@ -68,30 +68,29 @@ export class PoolsCompositionNotificationsJob implements RecurringJob {
       weightChangeThreshold = 0.3;
     }
 
-    balancesInWindow.forEach(prevBalance => {
-      latestBalance.coins.forEach(coin => {
-        const prevCoin = prevBalance.coins.find(prevCoin => prevCoin.symbol === coin.symbol);
+    latestBalance.coins.forEach(coin => {
+      const lastNotificationForCoin = notifications.filter(notification => notification.data && notification.data.token === coin.symbol).pop();
 
-        const weightChange = Math.abs(coin.weight - prevCoin.weight);
-        const weightChangeValue = coin.weight - prevCoin.weight;
-        const hoursDifference = currentTime.diff(moment(prevBalance.date), 'hours', true);
+      let lastNotificationWeight: number | null = null;
 
-        if (hoursDifference <= timeWindowHours && weightChange > weightChangeThreshold) {
-          const existingNotification = notifications.find(
+      if (lastNotificationForCoin) {
+        lastNotificationWeight = lastNotificationForCoin.data.weight;
+      }
+
+      if (lastNotificationWeight !== null) {
+        const weightChange = coin.weight - lastNotificationWeight;
+
+        if (Math.abs(weightChange) > weightChangeThreshold) {
+          const existingNotification = newNotifications.find(
             n =>
               n.data &&
               n.liquidityPool.address === poolHistory.address &&
               n.data.token === coin.symbol &&
               Math.abs(n.data.weight - coin.weight) < 0.1,
-            // moment(n.data.date).isSame(currentTime, 'minute'),
           );
 
           if (!existingNotification) {
-            console.log(
-              `[${poolHistory.address}] Coin ${coin.symbol} has changed its weight by ${(weightChangeValue * 100).toFixed(2)}% between ${
-                prevBalance.date
-              } and ${latestBalance.date}`,
-            );
+            console.log(`[${poolHistory.address}] Coin ${coin.symbol} has changed its weight by ${(weightChange * 100).toFixed(2)}%`);
 
             newNotifications.push({
               type: NotificationType.LP_COMPOSITION_CHANGE,
@@ -100,14 +99,51 @@ export class PoolsCompositionNotificationsJob implements RecurringJob {
               data: <NotificationLiquidityPoolCompositionChange>{
                 token: coin.symbol,
                 weight: coin.weight,
-                weightChange: weightChangeValue,
+                weightChange: weightChange,
                 balance: Number(coin.poolBalance) * Math.pow(10, -Number(coin.decimals)),
                 date: latestBalance.date,
               },
             });
           }
         }
-      });
+      } else {
+        for (let i = 0; i < balancesInWindow.length; i++) {
+          const prevBalance = balancesInWindow[i];
+          const prevCoin = prevBalance.coins.find(prevCoin => prevCoin.symbol === coin.symbol);
+          const weightChange = coin.weight - prevCoin.weight;
+
+          if (Math.abs(weightChange) > weightChangeThreshold) {
+            const existingNotification = newNotifications.find(
+              n =>
+                n.data &&
+                n.liquidityPool.address === poolHistory.address &&
+                n.data.token === coin.symbol &&
+                Math.abs(n.data.weight - coin.weight) < 0.1,
+            );
+
+            if (!existingNotification) {
+              console.log(
+                `[${poolHistory.address}] Coin ${coin.symbol} has changed its weight by ${(weightChange * 100).toFixed(2)}% between ${
+                  prevBalance.date
+                } and ${latestBalance.date}`,
+              );
+
+              newNotifications.push({
+                type: NotificationType.LP_COMPOSITION_CHANGE,
+                severity: NotificationSeverity.CRITICAL,
+                liquidityPool: poolHistory,
+                data: <NotificationLiquidityPoolCompositionChange>{
+                  token: coin.symbol,
+                  weight: coin.weight,
+                  weightChange: weightChange,
+                  balance: Number(coin.poolBalance) * Math.pow(10, -Number(coin.decimals)),
+                  date: latestBalance.date,
+                },
+              });
+            }
+          }
+        }
+      }
     });
 
     return newNotifications;
