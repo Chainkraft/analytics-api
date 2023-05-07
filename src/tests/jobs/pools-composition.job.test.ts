@@ -256,12 +256,12 @@ describe('detectWeightChangeInPool', () => {
     expect(newNotifications[0].data.weightChange).toBeGreaterThanOrEqual(0.3);
   });
 
-  it('does not create a new notification if pool tvlUSD is more than 10000000 and weight change is less than 0.1', () => {
+  it('does not create a new notification if pool tvlUSD is more than 10000000 and weight change is less than 0.2', () => {
     const highTvlPoolHistory = { ...create3PoolHistory(), tvlUSD: 12_000_000 };
-    highTvlPoolHistory.balances[1].coins[0].weight = 0.84;
-    highTvlPoolHistory.balances[1].coins[1].weight = 0.08;
-    highTvlPoolHistory.balances[1].coins[2].weight = 0.08;
-    const newNotifications = poolsJob.detectWeightChangeInPool(highTvlPoolHistory, notifications);
+    highTvlPoolHistory.balances[1].coins[0].weight = 0.4;
+    highTvlPoolHistory.balances[1].coins[1].weight = 0.4;
+    highTvlPoolHistory.balances[1].coins[2].weight = 0.4;
+    const newNotifications = poolsJob.detectWeightChangeInPool(highTvlPoolHistory, []);
 
     expect(newNotifications.length).toBe(0);
   });
@@ -363,7 +363,7 @@ describe('detectWeightChangeInPool', () => {
           decimals: '6',
           usdPrice: 1,
           price: '1',
-          weight: 0.1,
+          weight: 0.7,
           poolBalance: '162414327217796',
         },
         {
@@ -381,6 +381,16 @@ describe('detectWeightChangeInPool', () => {
     });
 
     const newNotifications = poolsJob.detectWeightChangeInPool(poolHistory, []);
-    expect(newNotifications.length).toBe(3);
+    expect(newNotifications.length).toBe(2);
+  });
+
+  it('Should create a notification when the one from other pool has been created', () => {
+    const triPoolHistory = create3PoolHistory();
+    const notifications3Pool = poolsJob.detectWeightChangeInPool(triPoolHistory, []);
+
+    const poolHistoryWethDai = createWethDaiPoolHistory();
+    const notificationsWethDai = poolsJob.detectWeightChangeInPool(poolHistoryWethDai, notifications3Pool);
+
+    expect(notificationsWethDai.length).toBe(1);
   });
 });

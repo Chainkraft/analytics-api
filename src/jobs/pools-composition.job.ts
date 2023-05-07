@@ -22,12 +22,16 @@ export class PoolsCompositionNotificationsJob implements RecurringJob {
 
   async generateNotifications() {
     const liquidityPools: LiquidityPoolHistory[] = await this.liquidityPoolsService.findAllLiquiditiyPoolHistories();
-    const latestNotifications: Notification[] = await this.notificationService.notifications.find({
-      type: NotificationType.LP_COMPOSITION_CHANGE,
-      createdAt: {
-        $gt: moment().subtract(48, 'hours').toDate(),
-      },
-    });
+    const latestNotifications: Notification[] = await this.notificationService.notifications
+      .find({
+        type: NotificationType.LP_COMPOSITION_CHANGE,
+        createdAt: {
+          $gt: moment().subtract(48, 'hours').toDate(),
+        },
+      })
+      .sort({
+        createdAt: 'asc',
+      });
 
     const newNotifications: Notification[] = [];
     for (const pool of liquidityPools) {
@@ -48,6 +52,9 @@ export class PoolsCompositionNotificationsJob implements RecurringJob {
     const timeWindowHours = 48;
     const newNotifications: Notification[] = [];
 
+    //filter notifications for particular pool
+    notifications = notifications.filter(notification => notification.liquidityPool?.address == poolHistory.address);
+
     // Sort balances by date
     poolHistory.balances.sort((a, b) => moment(a.date).valueOf() - moment(b.date).valueOf());
 
@@ -61,7 +68,7 @@ export class PoolsCompositionNotificationsJob implements RecurringJob {
       return balanceTime.isBetween(startWindowTime, currentTime);
     });
 
-    let weightChangeThreshold = 0.1;
+    let weightChangeThreshold = 0.2;
     if (poolHistory.tvlUSD < 1_000_000) {
       return newNotifications;
     } else if (poolHistory.tvlUSD >= 1_000_000 && poolHistory.tvlUSD < 10_000_000) {
@@ -82,15 +89,15 @@ export class PoolsCompositionNotificationsJob implements RecurringJob {
 
         if (Math.abs(weightChange) > weightChangeThreshold) {
           const existingNotification = newNotifications.find(
-            n =>
-              n.data &&
-              n.liquidityPool.address === poolHistory.address &&
-              n.data.token === coin.symbol &&
-              Math.abs(n.data.weight - coin.weight) < 0.1,
+            n => n.data && n.data.token === coin.symbol && Math.abs(n.data.weight - coin.weight) < weightChangeThreshold,
           );
 
           if (!existingNotification) {
-            console.log(`[${poolHistory.address}] Coin ${coin.symbol} has changed its weight by ${(weightChange * 100).toFixed(2)}%`);
+            console.log(
+              `[${poolHistory.address}] Coin ${coin.symbol} has changed its weight by ${(weightChange * 100).toFixed(2)}% between ${
+                lastNotificationForCoin?.createdAt
+              } and ${latestBalance.date}`,
+            );
 
             newNotifications.push({
               type: NotificationType.LP_COMPOSITION_CHANGE,
@@ -114,11 +121,7 @@ export class PoolsCompositionNotificationsJob implements RecurringJob {
 
           if (Math.abs(weightChange) > weightChangeThreshold) {
             const existingNotification = newNotifications.find(
-              n =>
-                n.data &&
-                n.liquidityPool.address === poolHistory.address &&
-                n.data.token === coin.symbol &&
-                Math.abs(n.data.weight - coin.weight) < 0.1,
+              n => n.data && n.data.token === coin.symbol && Math.abs(n.data.weight - coin.weight) < weightChangeThreshold,
             );
 
             if (!existingNotification) {
