@@ -63,6 +63,7 @@ export class PoolsCompositionNotificationsJob implements RecurringJob {
     const currentTime = moment(latestBalance.date);
     const startWindowTime = currentTime.clone().subtract(timeWindowHours, 'hours');
 
+    // Get balances from time window
     const balancesInWindow = poolHistory.balances.filter(b => {
       const balanceTime = moment(b.date);
       return balanceTime.isBetween(startWindowTime, currentTime);
@@ -94,6 +95,7 @@ export class PoolsCompositionNotificationsJob implements RecurringJob {
 
           if (!existingNotification) {
             console.log(
+              'PoolsCompositionNotificationsJob',
               `[${poolHistory.address}] Coin ${coin.symbol} has changed its weight by ${(weightChange * 100).toFixed(2)}% between ${
                 lastNotificationForCoin?.createdAt
               } and ${latestBalance.date}`,
@@ -126,6 +128,7 @@ export class PoolsCompositionNotificationsJob implements RecurringJob {
 
             if (!existingNotification) {
               console.log(
+                'PoolsCompositionNotificationsJob',
                 `[${poolHistory.address}] Coin ${coin.symbol} has changed its weight by ${(weightChange * 100).toFixed(2)}% between ${
                   prevBalance.date
                 } and ${latestBalance.date}`,

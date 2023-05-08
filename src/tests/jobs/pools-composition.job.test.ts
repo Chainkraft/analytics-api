@@ -179,6 +179,75 @@ function createWethDaiPoolHistory(): LiquidityPoolHistory {
   };
 }
 
+function createDaiUSDCPoolHistory(): LiquidityPoolHistory {
+  return {
+    dex: 'uniswap',
+    network: 'ethereum',
+    name: '',
+    symbol: '',
+    assetTypeName: '',
+    address: '0x6c6bc977e13df9b0de53b251522280bb72383700',
+    pricingType: LiquidityPoolPricingType.USD,
+    balances: [
+      {
+        coins: [
+          {
+            address: '0x6b175474e89094c44da98b954eedeac495271d0f',
+            symbol: 'DAI',
+            decimals: '0',
+            usdPrice: 0.9999999999999999,
+            price: '0.9996044099753641',
+            poolBalance: '33291227.008911564692562425',
+            weight: 0.50351649757579,
+          },
+          {
+            address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+            symbol: 'USDC',
+            decimals: '0',
+            usdPrice: 0.9996044099753641,
+            price: '1.0003957465780344',
+            poolBalance: '32826223.301444',
+            weight: 0.49628709850325475,
+          },
+        ],
+        block: 100,
+        date: moment().utc().subtract(12, 'hours').toDate(),
+      },
+      {
+        coins: [
+          {
+            address: '0x6b175474e89094c44da98b954eedeac495271d0f',
+            symbol: 'DAI',
+            decimals: '0',
+            usdPrice: 1,
+            price: '0.9996135418212994',
+            poolBalance: '33575337.103591904168077788',
+            weight: 0.5078130090150986,
+          },
+          {
+            address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+            symbol: 'USDC',
+            decimals: '0',
+            usdPrice: 0.9996135418212994,
+            price: '1.0003866075863643',
+            poolBalance: '32542183.533997',
+            weight: 0.49199678129678515,
+          },
+        ],
+        block: 110,
+        date: moment().utc().subtract(4, 'hours').toDate(),
+      },
+    ],
+    underlyingBalances: [],
+    poolDayData: [],
+    isMetaPool: false,
+    tvlUSD: 25_000_000,
+    volumeUSD: 0,
+    usdTotal: 0,
+    usdtotalExcludingBasePool: 0,
+  };
+}
+
 describe('detectWeightChangeInPool', () => {
   const notifications: Notification[] = [];
 
@@ -392,5 +461,27 @@ describe('detectWeightChangeInPool', () => {
     const notificationsWethDai = poolsJob.detectWeightChangeInPool(poolHistoryWethDai, notifications3Pool);
 
     expect(notificationsWethDai.length).toBe(1);
+  });
+
+  it('Should not create a notification when the one has been created before', () => {
+    const daiUsdcHistory = createDaiUSDCPoolHistory();
+
+    const usdcNotification: Notification = {
+      type: NotificationType.LP_COMPOSITION_CHANGE,
+      severity: NotificationSeverity.CRITICAL,
+      data: {
+        token: 'USDC',
+        weight: 0.49628709850325475,
+        weightChange: -0.23535780008057766,
+        balance: 32826223.301444,
+        date: moment().utc().subtract(12, 'hours').toDate(),
+      },
+      liquidityPool: daiUsdcHistory,
+      createdAt: moment().utc().subtract(12, 'hours').add(10, 'minutes').toDate(),
+      updatedAt: moment().utc().subtract(12, 'hours').add(10, 'minutes').toDate(),
+    };
+
+    const newNotifications = poolsJob.detectWeightChangeInPool(daiUsdcHistory, [usdcNotification]);
+    expect(newNotifications.length).toBe(0);
   });
 });
