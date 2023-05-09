@@ -31,7 +31,8 @@ export class PoolsCompositionNotificationsJob implements RecurringJob {
       })
       .sort({
         createdAt: 'asc',
-      });
+      })
+      .populate('liquidityPool');
 
     const newNotifications: Notification[] = [];
     for (const pool of liquidityPools) {
@@ -53,7 +54,7 @@ export class PoolsCompositionNotificationsJob implements RecurringJob {
     const newNotifications: Notification[] = [];
 
     //filter notifications for particular pool
-    notifications = notifications.filter(notification => notification.liquidityPool?.address == poolHistory.address);
+    notifications = notifications.filter(notification => notification.liquidityPool?.address === poolHistory.address);
 
     // Sort balances by date
     poolHistory.balances.sort((a, b) => moment(a.date).valueOf() - moment(b.date).valueOf());
