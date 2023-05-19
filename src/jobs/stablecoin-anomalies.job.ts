@@ -1,9 +1,7 @@
 import { RecurringJob } from './recurring.job';
-import tokenService from '@services/tokens.service';
 import NotificationService from '@services/notifications.service';
 import { isEmpty } from '@/utils/util';
 import TokenApiService from '@/services/token-apis.service';
-import { Token } from '@interfaces/tokens.inteface';
 import * as schedule from 'node-schedule';
 import {
   Notification,
@@ -13,9 +11,10 @@ import {
   TokenDepeg,
 } from '@interfaces/notifications.interface';
 import moment from 'moment';
+import TokenService from '@services/tokens.service';
 
 export class StablecoinAnomaliesJob implements RecurringJob {
-  public tokenService = new tokenService();
+  public tokenService = new TokenService();
   public notificationService = new NotificationService();
   public tokenApiService = new TokenApiService();
 

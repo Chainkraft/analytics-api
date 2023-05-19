@@ -1,5 +1,5 @@
 import mongoose, { Document, model, Schema } from 'mongoose';
-import { Notification, NotificationSeverity, NotificationType } from '@interfaces/notifications.interface';
+import { Notification, NotificationSeverity, NotificationSubscription, NotificationType } from '@interfaces/notifications.interface';
 
 const notificationSchema: Schema = new Schema(
   {
@@ -43,6 +43,23 @@ const notificationSchema: Schema = new Schema(
   },
 );
 
-const notificationsModel = model<Notification & Document>('Notification', notificationSchema);
+const notificationSubscriptionSchema: Schema = new Schema(
+  {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    token: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Token',
+      required: true,
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
 
-export default notificationsModel;
+export const notificationsModel = model<Notification & Document>('Notification', notificationSchema);
+export const notificationSubscriptionsModel = model<NotificationSubscription & Document>('NotificationSubscription', notificationSubscriptionSchema);

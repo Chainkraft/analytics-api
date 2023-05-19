@@ -1,18 +1,28 @@
 import { Notification } from '@interfaces/notifications.interface';
-import notificationsModel from '@models/notifications.model';
 import { isEmpty } from '@utils/util';
 import { HttpException } from '@/exceptions/HttpException';
-import { NotificationPageDto } from '@dtos/notifications.dto';
+import { NotificationPageDto, NotificationSubscribeDto } from '@dtos/notifications.dto';
 import { User } from '@interfaces/users.interface';
+import { notificationsModel, notificationSubscriptionsModel } from '@models/notifications.model';
+import tokensModel from '@models/tokens.model';
+import { Types } from 'mongoose';
 
 class NotificationService {
   public notifications = notificationsModel;
+  public notificationSubscriptions = notificationSubscriptionsModel;
+  public tokens = tokensModel;
 
   public async findNotifications(user: User, page: number, limit = 100): Promise<NotificationPageDto> {
     const currentPage = page < 0 ? 0 : page;
+    const tokens = await this.findUserSubscriptions(user);
     const where = {
       createdAt: { $gt: user.createdAt },
-      $or: [{ user: { $eq: null } }, { user: { $eq: user._id } }],
+      $or: [
+        {
+          $and: [{ user: { $eq: null } }, { token: { $in: tokens } }],
+        },
+        { user: { $eq: user._id } },
+      ],
     };
 
     const notifications = await this.notifications
@@ -41,6 +51,27 @@ class NotificationService {
       throw new HttpException(400, 'Notification subject is empty');
     }
     return await this.notifications.create(notification);
+  }
+
+  public async findUserSubscriptions(user: User): Promise<Types.ObjectId[]> {
+    const subs = await this.notificationSubscriptions.find({ user: user._id });
+    return subs.map(sub => sub.token._id);
+  }
+
+  public async subscribeUser(user: User, subscribeDto: NotificationSubscribeDto): Promise<void> {
+    if (!(await notificationSubscriptionsModel.exists({ user: user._id, token: subscribeDto.token }))) {
+      const token = await tokensModel.findById(subscribeDto.token);
+      if (!token) throw new HttpException(400, 'Token does not exists');
+
+      await notificationSubscriptionsModel.create({
+        user,
+        token,
+      });
+    }
+  }
+
+  public async unsubscribeUser(user: User, subscribeDto: NotificationSubscribeDto): Promise<void> {
+    await notificationSubscriptionsModel.deleteOne({ user: user._id, token: subscribeDto.token });
   }
 }
 

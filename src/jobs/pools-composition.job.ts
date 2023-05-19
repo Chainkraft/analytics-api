@@ -4,14 +4,16 @@ import NotificationService from '@services/notifications.service';
 import {
   Notification,
   NotificationSeverity,
-  NotificationLiquidityPoolCompositionChange,
+  NotificationLiquidityPoolCompositionChangeDataSchema,
   NotificationType,
 } from '@interfaces/notifications.interface';
 import { LiquidityPoolHistory } from '@/interfaces/liquidity-pool-history.interface';
 import moment from 'moment';
 import LiquidityPoolService from '@/services/liquidity-pools.service';
+import TokenService from '@services/tokens.service';
 
 export class PoolsCompositionNotificationsJob implements RecurringJob {
+  public tokenService = new TokenService();
   public notificationService = new NotificationService();
   public liquidityPoolsService = new LiquidityPoolService();
 
@@ -36,7 +38,7 @@ export class PoolsCompositionNotificationsJob implements RecurringJob {
 
     const newNotifications: Notification[] = [];
     for (const pool of liquidityPools) {
-      const poolNotifications = this.detectWeightChangeInPool(pool, latestNotifications);
+      const poolNotifications = await this.detectWeightChangeInPool(pool, latestNotifications);
       newNotifications.push(...poolNotifications);
     }
 
@@ -49,7 +51,7 @@ export class PoolsCompositionNotificationsJob implements RecurringJob {
     );
   }
 
-  detectWeightChangeInPool(poolHistory: LiquidityPoolHistory, notifications: Notification[]): Notification[] {
+  async detectWeightChangeInPool(poolHistory: LiquidityPoolHistory, notifications: Notification[]): Promise<Notification[]> {
     const timeWindowHours = 48;
     const newNotifications: Notification[] = [];
 
@@ -77,8 +79,9 @@ export class PoolsCompositionNotificationsJob implements RecurringJob {
       weightChangeThreshold = 0.3;
     }
 
-    latestBalance.coins.forEach(coin => {
+    for (const coin of latestBalance.coins) {
       const lastNotificationForCoin = notifications.filter(notification => notification.data && notification.data.token === coin.symbol).pop();
+      const token = await this.tokenService.tokens.findOne({ symbol: coin.symbol });
 
       let lastNotificationWeight: number | null = null;
 
@@ -106,7 +109,8 @@ export class PoolsCompositionNotificationsJob implements RecurringJob {
               type: NotificationType.LP_COMPOSITION_CHANGE,
               severity: NotificationSeverity.CRITICAL,
               liquidityPool: poolHistory,
-              data: <NotificationLiquidityPoolCompositionChange>{
+              token: token,
+              data: <NotificationLiquidityPoolCompositionChangeDataSchema>{
                 token: coin.symbol,
                 weight: coin.weight,
                 weightChange: weightChange,
@@ -139,7 +143,8 @@ export class PoolsCompositionNotificationsJob implements RecurringJob {
                 type: NotificationType.LP_COMPOSITION_CHANGE,
                 severity: NotificationSeverity.CRITICAL,
                 liquidityPool: poolHistory,
-                data: <NotificationLiquidityPoolCompositionChange>{
+                token: token,
+                data: <NotificationLiquidityPoolCompositionChangeDataSchema>{
                   token: coin.symbol,
                   weight: coin.weight,
                   weightChange: weightChange,
@@ -151,7 +156,7 @@ export class PoolsCompositionNotificationsJob implements RecurringJob {
           }
         }
       }
-    });
+    }
 
     return newNotifications;
   }

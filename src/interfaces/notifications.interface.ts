@@ -6,7 +6,7 @@ import { LiquidityPoolHistory } from './liquidity-pool-history.interface';
 export interface Notification {
   type: NotificationType;
   severity: NotificationSeverity;
-  data?: NotificationStablecoinDepegDataSchema | NotificationContractChangeDataSchema | NotificationLiquidityPoolCompositionChange | any;
+  data?: NotificationStablecoinDepegDataSchema | NotificationContractChangeDataSchema | NotificationLiquidityPoolCompositionChangeDataSchema | any;
 
   user?: User;
   token?: Token;
@@ -15,6 +15,11 @@ export interface Notification {
 
   updatedAt?: Date;
   createdAt?: Date;
+}
+
+export interface NotificationSubscription {
+  user: User;
+  token: Token;
 }
 
 export enum NotificationSeverity {
@@ -30,7 +35,7 @@ export enum NotificationType {
   LP_COMPOSITION_CHANGE = 'LP_COMPOSITION_CHANGE',
 }
 
-export interface NotificationLiquidityPoolCompositionChange {
+export interface NotificationLiquidityPoolCompositionChangeDataSchema {
   token: string;
   weight: number;
   weightChange: number;

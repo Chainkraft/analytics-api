@@ -23,6 +23,8 @@ jest.mock('../../services/notifications.service', () => {
 });
 
 const poolsJob = new PoolsCompositionNotificationsJob();
+poolsJob.tokenService.tokens.findOne = jest.fn();
+
 function create3PoolHistory(): LiquidityPoolHistory {
   return {
     dex: 'curve',
@@ -255,21 +257,21 @@ describe('detectWeightChangeInPool', () => {
     jest.clearAllMocks();
   });
 
-  it('detects weight change and creates a new notification if not exists', () => {
+  it('detects weight change and creates a new notification if not exists', async () => {
     const poolHistory = create3PoolHistory();
-    const newNotifications = poolsJob.detectWeightChangeInPool(poolHistory, notifications);
+    const newNotifications = await poolsJob.detectWeightChangeInPool(poolHistory, notifications);
     notifications.push(...newNotifications);
 
     expect(newNotifications.length).toBeGreaterThan(0);
   });
 
-  it('does not create a new notification if it already exists', () => {
-    const newNotifications = poolsJob.detectWeightChangeInPool(create3PoolHistory(), notifications);
+  it('does not create a new notification if it already exists', async () => {
+    const newNotifications = await poolsJob.detectWeightChangeInPool(create3PoolHistory(), notifications);
 
     expect(newNotifications.length).toBe(0);
   });
 
-  it('does not create a new notification if weight change is too small', () => {
+  it('does not create a new notification if weight change is too small', async () => {
     const poolHistory = create3PoolHistory();
     poolHistory.balances.push({
       coins: [
@@ -304,40 +306,40 @@ describe('detectWeightChangeInPool', () => {
       date: moment().utc().subtract(1, 'hours').toDate(),
       block: 100,
     });
-    const newNotifications = poolsJob.detectWeightChangeInPool(poolHistory, notifications);
+    const newNotifications = await poolsJob.detectWeightChangeInPool(poolHistory, notifications);
     expect(newNotifications.length).toBe(0);
 
     poolHistory.balances.pop();
   });
 
-  it('does not create a new notification if pool tvlUSD is less than 1000000', () => {
+  it('does not create a new notification if pool tvlUSD is less than 1000000', async () => {
     const lowTvlPoolHistory = { ...create3PoolHistory(), tvlUSD: 900_000 };
-    const newNotifications = poolsJob.detectWeightChangeInPool(lowTvlPoolHistory, notifications);
+    const newNotifications = await poolsJob.detectWeightChangeInPool(lowTvlPoolHistory, notifications);
 
     expect(newNotifications.length).toBe(0);
   });
 
-  it('creates a new notification when pool tvlUSD is between 1000000 and 10000000 and weight change is at least 0.3', () => {
+  it('creates a new notification when pool tvlUSD is between 1000000 and 10000000 and weight change is at least 0.3', async () => {
     const midTvlPoolHistory = { ...create3PoolHistory(), address: '0xtest', tvlUSD: 5_000_000 };
-    const newNotifications = poolsJob.detectWeightChangeInPool(midTvlPoolHistory, []);
+    const newNotifications = await poolsJob.detectWeightChangeInPool(midTvlPoolHistory, []);
 
     expect(newNotifications.length).toBeGreaterThan(0);
     expect(newNotifications[0].data.weightChange).toBeGreaterThanOrEqual(0.3);
   });
 
-  it('does not create a new notification if pool tvlUSD is more than 10000000 and weight change is less than 0.2', () => {
+  it('does not create a new notification if pool tvlUSD is more than 10000000 and weight change is less than 0.2', async () => {
     const highTvlPoolHistory = { ...create3PoolHistory(), tvlUSD: 12_000_000 };
     highTvlPoolHistory.balances[1].coins[0].weight = 0.4;
     highTvlPoolHistory.balances[1].coins[1].weight = 0.4;
     highTvlPoolHistory.balances[1].coins[2].weight = 0.4;
-    const newNotifications = poolsJob.detectWeightChangeInPool(highTvlPoolHistory, []);
+    const newNotifications = await poolsJob.detectWeightChangeInPool(highTvlPoolHistory, []);
 
     expect(newNotifications.length).toBe(0);
   });
 
-  it('creates notifcations based on the last created notification', () => {
+  it('creates notifcations based on the last created notification', async () => {
     const poolHistoryWethDai = createWethDaiPoolHistory();
-    const newNotifications = poolsJob.detectWeightChangeInPool(poolHistoryWethDai, []);
+    const newNotifications = await poolsJob.detectWeightChangeInPool(poolHistoryWethDai, []);
     poolHistoryWethDai.balances.push({
       coins: [
         {
@@ -365,13 +367,13 @@ describe('detectWeightChangeInPool', () => {
 
     expect(newNotifications.length).toBeGreaterThan(0);
 
-    const newerNotifications = poolsJob.detectWeightChangeInPool(poolHistoryWethDai, newNotifications);
+    const newerNotifications = await poolsJob.detectWeightChangeInPool(poolHistoryWethDai, newNotifications);
     expect(newerNotifications.length).toBeGreaterThan(0);
   });
 
-  it('Create a notification and create the next one based on this one v2', () => {
+  it('Create a notification and create the next one based on this one v2', async () => {
     const poolHistory = create3PoolHistory();
-    const newNotifications = poolsJob.detectWeightChangeInPool(poolHistory, []);
+    const newNotifications = await poolsJob.detectWeightChangeInPool(poolHistory, []);
 
     expect(newNotifications.length).toBeGreaterThan(0);
 
@@ -409,11 +411,11 @@ describe('detectWeightChangeInPool', () => {
       block: 100,
     });
 
-    const newerNotifications = poolsJob.detectWeightChangeInPool(poolHistory, newNotifications);
+    const newerNotifications = await poolsJob.detectWeightChangeInPool(poolHistory, newNotifications);
     expect(newerNotifications.length).toBeGreaterThan(0);
   });
 
-  it('Should create a single notification per coin when two anomalies detected', () => {
+  it('Should create a single notification per coin when two anomalies detected', async () => {
     const poolHistory = create3PoolHistory();
     poolHistory.balances.push({
       coins: [
@@ -449,21 +451,21 @@ describe('detectWeightChangeInPool', () => {
       block: 100,
     });
 
-    const newNotifications = poolsJob.detectWeightChangeInPool(poolHistory, []);
+    const newNotifications = await poolsJob.detectWeightChangeInPool(poolHistory, []);
     expect(newNotifications.length).toBe(2);
   });
 
-  it('Should create a notification when the one from other pool has been created', () => {
+  it('Should create a notification when the one from other pool has been created', async () => {
     const triPoolHistory = create3PoolHistory();
-    const notifications3Pool = poolsJob.detectWeightChangeInPool(triPoolHistory, []);
+    const notifications3Pool = await poolsJob.detectWeightChangeInPool(triPoolHistory, []);
 
     const poolHistoryWethDai = createWethDaiPoolHistory();
-    const notificationsWethDai = poolsJob.detectWeightChangeInPool(poolHistoryWethDai, notifications3Pool);
+    const notificationsWethDai = await poolsJob.detectWeightChangeInPool(poolHistoryWethDai, notifications3Pool);
 
     expect(notificationsWethDai.length).toBe(1);
   });
 
-  it('Should not create a notification when the one has been created before', () => {
+  it('Should not create a notification when the one has been created before', async () => {
     const daiUsdcHistory = createDaiUSDCPoolHistory();
 
     const usdcNotification: Notification = {
@@ -481,7 +483,7 @@ describe('detectWeightChangeInPool', () => {
       updatedAt: moment().utc().subtract(12, 'hours').add(10, 'minutes').toDate(),
     };
 
-    const newNotifications = poolsJob.detectWeightChangeInPool(daiUsdcHistory, [usdcNotification]);
+    const newNotifications = await poolsJob.detectWeightChangeInPool(daiUsdcHistory, [usdcNotification]);
     expect(newNotifications.length).toBe(0);
   });
 });
