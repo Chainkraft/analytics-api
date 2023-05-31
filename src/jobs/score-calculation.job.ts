@@ -81,6 +81,7 @@ export class RefreshScoreJob implements RecurringJob {
 
         return this.calculateStandardDeviationBelowPeg(sortedPrices);
       })
+      .filter(value => !Number.isNaN(value))
       .sort((a, b) => a - b);
 
     console.log('Stablecoins score has been refreshed.');
