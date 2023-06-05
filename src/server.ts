@@ -8,7 +8,7 @@ import TokensRoute from './routes/token.route';
 import ContractsRoute from '@routes/contracts.route';
 import StablecoinsRoute from '@routes/stablecoins.route';
 import ScoresRoute from './routes/scores.route';
-import ProjectsRoute from '@routes/projects.route';
+import ProtocolsRoute from '@routes/protocols.route';
 import LiquidityPoolsRoute from './routes/pools.route';
 import BlockchainsRoute from '@routes/blockchains.route';
 import NotificationsRoute from '@routes/notifications.route';
@@ -19,7 +19,7 @@ const app = new App([
   new AuthRoute(),
   new BlockchainsRoute(),
   new ContractsRoute(),
-  new ProjectsRoute(),
+  new ProtocolsRoute(),
   new IndexRoute(),
   new NotificationsRoute(),
   new SubscribersRoute(),

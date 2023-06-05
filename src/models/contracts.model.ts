@@ -29,7 +29,6 @@ const contractSchema: Schema = new Schema(
     address: { type: String, required: true, lowercase: true },
     network: { type: String, required: true, enum: ContractNetwork },
     byteCode: { type: String, required: true },
-    project: { type: mongoose.Schema.Types.ObjectId, ref: 'Project' },
 
     createdByArgs: { type: String },
     createdByBlock: { type: Number, required: true },

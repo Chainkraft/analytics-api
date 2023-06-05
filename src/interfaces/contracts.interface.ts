@@ -1,4 +1,3 @@
-import { Project } from '@interfaces/projects.interface';
 import { Types } from 'mongoose';
 
 export interface Contract {
@@ -9,7 +8,6 @@ export interface Contract {
   address: string;
   network: ContractNetwork;
   byteCode: string;
-  project?: Project;
 
   createdByArgs: string;
   createdByBlock: number;

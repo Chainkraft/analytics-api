@@ -27,7 +27,8 @@ describe('ContractService', () => {
 
   test('proxy contract impl has changed', async () => {
     const contract = R.clone(testContract);
-    contract.proxy.implHistory[0].createdAt = getSubtractedDate(10);
+    contract.proxy.implHistory[0].createdByBlock = 1;
+    contract.proxy.implHistory[0].createdByBlockAt = getSubtractedDate(10);
 
     const result = service.hasProxyContractChanged(contract);
 
@@ -36,7 +37,8 @@ describe('ContractService', () => {
 
   test('proxy contract admin has changed', async () => {
     const contract = R.clone(testContract);
-    contract.proxy.adminHistory[0].createdAt = getSubtractedDate(10);
+    contract.proxy.adminHistory[0].createdByBlock = 1;
+    contract.proxy.adminHistory[0].createdByBlockAt = getSubtractedDate(10);
 
     const result = service.hasProxyContractChanged(contract);
 
@@ -45,7 +47,8 @@ describe('ContractService', () => {
 
   test('has proxy contract impl changed in the last TWO months', async () => {
     const contract = R.clone(testContract);
-    contract.proxy.implHistory[0].createdAt = getSubtractedDate(60);
+    contract.proxy.implHistory[0].createdByBlock = 1;
+    contract.proxy.implHistory[0].createdByBlockAt = getSubtractedDate(60);
 
     const result = service.hasProxyContractChanged(contract);
 
@@ -75,11 +78,13 @@ describe('ContractService', () => {
       adminSlot: '',
       implHistory: [
         {
+          createdByBlock: 0,
           address: '',
         },
       ],
       adminHistory: [
         {
+          createdByBlock: 0,
           address: '',
         },
       ],

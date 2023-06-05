@@ -4,8 +4,7 @@ import contractsModel from '@models/contracts.model';
 import { Contract, ContractNetwork, ContractProxyHistory, ContractProxyType } from '@interfaces/contracts.interface';
 import ProxyOpcode from '@services/opcode/proxy.opcode';
 import { etherscans, providers } from '@config';
-import { getFulfilled, isFulfilled, isRejected } from '@utils/typeguard';
-import { ObjectId } from 'mongoose';
+import { getFulfilled, isRejected } from '@utils/typeguard';
 
 class ContractService {
   public contracts = contractsModel;
@@ -22,11 +21,6 @@ class ContractService {
   public async findContractsByNetwork(addresses: string[], network: ContractNetwork): Promise<Contract[]> {
     if (isEmpty(network)) throw new HttpException(400, 'Network is empty');
     return this.contracts.find({ address: { $in: addresses }, network });
-  }
-
-  public async findContractsByProject(projectId: ObjectId): Promise<Contract[]> {
-    if (projectId === undefined) throw new HttpException(400, 'Project is empty');
-    return this.contracts.find({ project: projectId });
   }
 
   public async findContract(address: string, network: ContractNetwork): Promise<Contract> {

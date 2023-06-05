@@ -4,7 +4,7 @@ import { RefreshScoreJob } from './score-calculation.job';
 import { StablecoinContractsImport } from '@/jobs/stablecoin-contracts.job';
 import { CurvePoolsJob } from './curve-pools.job';
 import { StablecoinAnomaliesJob } from './stablecoin-anomalies.job';
-import { DefiContractsImport } from '@/jobs/defi-contracts.job';
+import { ProtocolsImport } from '@/jobs/protocols.job';
 import { StablecoinTwitterJob } from '@/jobs/stablecoin-twitter.job';
 import { ContractAnomaliesJob } from '@/jobs/contract-anomalies.job';
 import { UniswapPoolsJob } from './uniswap-pools.job';
@@ -23,7 +23,7 @@ export class JobManager {
     this.addJob(new StablecoinAnomaliesJob());
     this.addJob(new StablecoinTwitterJob());
     this.addJob(new StablecoinContractsImport());
-    this.addJob(new DefiContractsImport());
+    this.addJob(new ProtocolsImport());
   }
 
   addJob(...jobs: RecurringJob[]): boolean {

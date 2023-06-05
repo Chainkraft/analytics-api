@@ -2,7 +2,6 @@ import { NextFunction, Request, Response } from 'express';
 import ContractService from '@services/contracts.service';
 import { Contract, ContractNetwork } from '@interfaces/contracts.interface';
 import ContractMonitorService from '@services/contracts-monitor.service';
-import ProjectService from '@services/project.service';
 import { TokenContractSummary, TokenContractSummaryStatus } from '@dtos/token-contract.summary';
 import TokenService from '@services/tokens.service';
 import { HttpException } from '@exceptions/HttpException';
@@ -11,13 +10,11 @@ import { RequestWithUser } from '@interfaces/auth.interface';
 class ContractsController {
   public contractMonitorService = new ContractMonitorService();
   public contractService = new ContractService();
-  public projectService = new ProjectService();
   public tokenService = new TokenService();
 
   public getContracts = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const project = await this.projectService.findProjectBySlug(<string>req.query.project);
-      const contracts = await this.contractService.findContractsByProject(project._id);
+      const contracts = await this.contractService.findAllContracts();
       res.json({ data: contracts });
     } catch (error) {
       next(error);

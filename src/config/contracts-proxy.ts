@@ -1,15 +1,16 @@
 import { ContractNetwork } from '@interfaces/contracts.interface';
-import { Project } from '@interfaces/projects.interface';
+import { Protocol } from '@interfaces/protocols.interface';
 
 export const PROXY_CONTRACTS = [
   {
-    project: {
+    protocol: {
       _id: undefined,
       slug: undefined,
       name: 'Chainkraft Proxy',
       description: 'Chainkraft test contract.',
-      url: 'https://chainkraft.com',
-      logo: '',
+      image: '',
+      homeUrl: 'https://chainkraft.com',
+      repositoryUrl: '',
       contracts: [],
     },
     contracts: [
@@ -173,7 +174,7 @@ export const PROXY_CONTRACTS = [
 ];
 
 export interface ProjectContracts {
-  project: Project;
+  project: Protocol;
   contracts: ProjectContract[];
 }
 
