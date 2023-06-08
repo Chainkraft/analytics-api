@@ -1,4 +1,4 @@
-import { Contract, ContractNetwork, ContractProxyType } from '../../interfaces/contracts.interface';
+import { Contract, ContractMonitorType, ContractNetwork, ContractProxyType } from '../../interfaces/contracts.interface';
 import ContractService from '../../services/contracts.service';
 import R from 'ramda';
 
@@ -28,7 +28,7 @@ describe('ContractService', () => {
   test('proxy contract impl has changed', async () => {
     const contract = R.clone(testContract);
     contract.proxy.implHistory[0].createdByBlock = 1;
-    contract.proxy.implHistory[0].createdByBlockAt = getSubtractedDate(10);
+    contract.proxy.implHistory[0].createdByBlockAt = getSubtractedDate(ContractService.PROXY_CONTRACT_CHANGE_DAY_SPAN - 10);
 
     const result = service.hasProxyContractChanged(contract);
 
@@ -38,17 +38,17 @@ describe('ContractService', () => {
   test('proxy contract admin has changed', async () => {
     const contract = R.clone(testContract);
     contract.proxy.adminHistory[0].createdByBlock = 1;
-    contract.proxy.adminHistory[0].createdByBlockAt = getSubtractedDate(10);
+    contract.proxy.adminHistory[0].createdByBlockAt = getSubtractedDate(ContractService.PROXY_CONTRACT_CHANGE_DAY_SPAN - 10);
 
     const result = service.hasProxyContractChanged(contract);
 
     expect(result).toBeTruthy();
   });
 
-  test('has proxy contract impl changed in the last TWO months', async () => {
+  test('has proxy contract impl changed in the last THREE months', async () => {
     const contract = R.clone(testContract);
     contract.proxy.implHistory[0].createdByBlock = 1;
-    contract.proxy.implHistory[0].createdByBlockAt = getSubtractedDate(60);
+    contract.proxy.implHistory[0].createdByBlockAt = getSubtractedDate(ContractService.PROXY_CONTRACT_CHANGE_DAY_SPAN);
 
     const result = service.hasProxyContractChanged(contract);
 
@@ -56,6 +56,8 @@ describe('ContractService', () => {
   });
 
   const testContract: Contract = {
+    monitorType: ContractMonitorType.PULL,
+
     address: '',
     network: ContractNetwork.ETH_GOERLI,
     byteCode: '',

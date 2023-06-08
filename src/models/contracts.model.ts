@@ -1,5 +1,5 @@
-import mongoose, { Document, model, Schema } from 'mongoose';
-import { Contract, ContractNetwork, ContractProxyType } from '@interfaces/contracts.interface';
+import { Document, model, Schema } from 'mongoose';
+import { Contract, ContractMonitorType, ContractNetwork, ContractProxyType } from '@interfaces/contracts.interface';
 
 const contractProxyHistorySchema: Schema = new Schema(
   {
@@ -26,6 +26,8 @@ const contractProxySchema: Schema = new Schema(
 
 const contractSchema: Schema = new Schema(
   {
+    monitorType: { type: String, enum: ContractMonitorType, default: ContractMonitorType.PULL },
+
     address: { type: String, required: true, lowercase: true },
     network: { type: String, required: true, enum: ContractNetwork },
     byteCode: { type: String, required: true },

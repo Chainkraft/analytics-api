@@ -4,6 +4,7 @@ export interface Contract {
   _id?: Types.ObjectId;
   createdAt?: Date;
   updatedAt?: Date;
+  monitorType: ContractMonitorType;
 
   address: string;
   network: ContractNetwork;
@@ -44,11 +45,11 @@ export interface ContractProxyHistory {
 export enum ContractNetwork {
   ETH_MAINNET = 'eth-mainnet',
   ETH_GOERLI = 'eth-goerli',
-  // OPT_MAINNET = 'opt-mainnet',
+  OPT_MAINNET = 'opt-mainnet',
   // OPT_GOERLI = "opt-goerli",
-  // ARB_MAINNET = "arb-mainnet",
+  ARB_MAINNET = 'arb-mainnet',
   // ARB_GOERLI = "arb-goerli",
-  // MATIC_MAINNET = "polygon-mainnet",
+  MATIC_MAINNET = 'polygon-mainnet',
   // MATIC_MUMBAI = "polygon-mumbai",
 }
 
@@ -58,6 +59,11 @@ export enum ContractProxyType {
   EIP1822 = 'eip1822.uups.proxable',
   Zeppelin = 'org.zeppelinos.proxy.implementation',
   Unknown = '',
+}
+
+export enum ContractMonitorType {
+  WEBHOOK = 'WEBHOOK',
+  PULL = 'PULL',
 }
 
 export const mapGeckoNetwork = (network: string) => {

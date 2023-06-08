@@ -9,6 +9,7 @@ import { Contract } from '@interfaces/contracts.interface';
 import promClient from 'prom-client';
 import TokenService from '@services/tokens.service';
 import * as schedule from 'node-schedule';
+import ProtocolService from '@services/protocols.service';
 
 const anomaliesCounter = new promClient.Counter({
   name: 'api_contract_anomalies_job_count',
@@ -18,6 +19,7 @@ const anomaliesCounter = new promClient.Counter({
 export class ContractAnomaliesJob implements RecurringJob {
   public tokenService = new TokenService();
   public contractService = new ContractService();
+  public protocolService = new ProtocolService();
   public blockchainService = new BlockchainService();
   public notificationService = new NotificationService();
 
@@ -84,11 +86,13 @@ export class ContractAnomaliesJob implements RecurringJob {
 
   private async sendNotification(contract: Contract, type: 'impl' | 'admin') {
     const token = await this.tokenService.findTokenByContract(contract);
+    const protocol = await this.protocolService.findProtocolByContract(contract);
     await this.notificationService.createNotification({
       type: type === 'impl' ? NotificationType.CONTRACT_PROXY_IMPL_CHANGE : NotificationType.CONTRACT_PROXY_ADMIN_CHANGE,
       severity: NotificationSeverity.CRITICAL,
       contract: contract,
       token: token,
+      protocol: protocol,
       data: <NotificationContractChangeDataSchema>{
         network: contract.network,
         oldAddress: contract.proxy[type + 'History'].at(-2)?.address,

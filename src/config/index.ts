@@ -31,7 +31,43 @@ export const etherscans = new Map<ContractNetwork, any>([
       null,
       10000,
       axios.create({
-        baseURL: 'https://api-goerli.etherscan.io/',
+        baseURL: 'https://api-goerli.etherscan.io',
+        timeout: 10000,
+      }),
+    ),
+  ],
+  [
+    ContractNetwork.OPT_MAINNET,
+    new init(
+      process.env.OPTSCAN_API_KEY,
+      null,
+      10000,
+      axios.create({
+        baseURL: 'https://api-optimistic.etherscan.io',
+        timeout: 10000,
+      }),
+    ),
+  ],
+  [
+    ContractNetwork.ARB_MAINNET,
+    new init(
+      process.env.ARBSCAN_API_KEY,
+      null,
+      10000,
+      axios.create({
+        baseURL: 'https://api.arbiscan.io',
+        timeout: 10000,
+      }),
+    ),
+  ],
+  [
+    ContractNetwork.MATIC_MAINNET,
+    new init(
+      process.env.MATICSCAN_API_KEY,
+      null,
+      10000,
+      axios.create({
+        baseURL: 'https://api.polygonscan.com',
         timeout: 10000,
       }),
     ),
@@ -51,6 +87,27 @@ export const providers = new Map<ContractNetwork, Alchemy>([
     new Alchemy({
       network: Network.ETH_GOERLI,
       apiKey: process.env.ALCHEMY_ETH_MAINNET_API_KEY,
+    }),
+  ],
+  [
+    ContractNetwork.OPT_MAINNET,
+    new Alchemy({
+      network: Network.OPT_MAINNET,
+      apiKey: process.env.ALCHEMY_OPT_MAINNET_API_KEY,
+    }),
+  ],
+  [
+    ContractNetwork.ARB_MAINNET,
+    new Alchemy({
+      network: Network.ARB_MAINNET,
+      apiKey: process.env.ALCHEMY_ARB_MAINNET_API_KEY,
+    }),
+  ],
+  [
+    ContractNetwork.MATIC_MAINNET,
+    new Alchemy({
+      network: Network.MATIC_MAINNET,
+      apiKey: process.env.ALCHEMY_MATIC_MAINNET_API_KEY,
     }),
   ],
 ]);

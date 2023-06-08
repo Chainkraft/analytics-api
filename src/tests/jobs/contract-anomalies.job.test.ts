@@ -10,6 +10,7 @@ describe('ContractAnomaliesJob', () => {
   const findAllContractsMock = jest.fn();
   const createNotificationMock = jest.fn();
   const findTokenByContractMock = jest.fn();
+  const findProtocolByContractMock = jest.fn();
 
   beforeEach(() => {
     contractAnomaliesJob = new ContractAnomaliesJob();
@@ -18,6 +19,7 @@ describe('ContractAnomaliesJob', () => {
     contractAnomaliesJob.blockchainService.getBlockNumber = jest.fn();
     contractAnomaliesJob.notificationService.createNotification = createNotificationMock;
     contractAnomaliesJob.tokenService.findTokenByContract = findTokenByContractMock;
+    contractAnomaliesJob.protocolService.findProtocolByContract = findProtocolByContractMock;
     providers.get(ContractNetwork.ETH_MAINNET).core.getStorageAt = getStorageAtMock;
 
     findTokenByContractMock.mockResolvedValue({});

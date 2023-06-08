@@ -21,21 +21,24 @@ export class ProtocolsImport implements RecurringJob {
 
   private async importData() {
     for await (const pc of PROXY_CONTRACTS) {
-      const protocol = await this.protocolService.createOrUpdateProtocol(pc.protocol);
+      const protocol = pc.protocol;
       for await (const contractAddress of pc.contracts) {
         try {
-          const contract = await this.contractService.findContract(contractAddress.address, contractAddress.network);
+          let contract = await this.contractService.findContract(contractAddress.address, contractAddress.network);
           if (!contract) {
-            const contract = await this.contractService.fetchContractDetails(contractAddress.address, contractAddress.network);
-            await this.contractService.createContract(contract);
+            contract = await this.contractService.fetchContractDetails(contractAddress.address, contractAddress.network);
+            contract.monitorType = contractAddress.monitorType;
+            contract = await this.contractService.createContract(contract);
 
             console.log('Imported protocol contract %s (%s)', contract.address, contract.network);
             await this.sleep(2000);
           }
+          protocol.contracts.push(contract);
         } catch (error) {
           console.error(error);
         }
       }
+      await this.protocolService.createOrUpdateProtocol(protocol);
       console.log('Imported protocol %s', protocol.name);
     }
   }

@@ -1,7 +1,7 @@
 import { NextFunction, Response } from 'express';
 import NotificationService from '@services/notifications.service';
 import { RequestWithUser } from '@interfaces/auth.interface';
-import { NotificationSubscribeDto, NotificationSubscriptionsDto } from '@dtos/notifications.dto';
+import { NotificationSubscribeDto } from '@dtos/notifications.dto';
 import { isEmpty } from '@utils/util';
 import { HttpException } from '@exceptions/HttpException';
 
@@ -21,10 +21,7 @@ class NotificationsController {
 
   public getUserSubscriptions = async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
-      const user = req.user;
-      const data: NotificationSubscriptionsDto = {
-        tokens: await this.notificationService.findUserSubscriptions(user),
-      };
+      const data = await this.notificationService.findUserSubscriptions(req.user);
       res.json(data);
     } catch (error) {
       next(error);
@@ -34,9 +31,10 @@ class NotificationsController {
   public subscribeUser = async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
       const subscribeDto: NotificationSubscribeDto = req.body;
-      if (isEmpty(subscribeDto)) throw new HttpException(400, 'Subscription is empty');
+      if (!isEmpty(subscribeDto)) {
+        await this.notificationService.subscribeUser(req.user, subscribeDto);
+      }
 
-      await this.notificationService.subscribeUser(req.user, subscribeDto);
       res.status(201).end();
     } catch (error) {
       next(error);
@@ -46,9 +44,10 @@ class NotificationsController {
   public unsubscribeUser = async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
       const subscribeDto: NotificationSubscribeDto = req.body;
-      if (isEmpty(subscribeDto)) throw new HttpException(400, 'Subscription is empty');
+      if (!isEmpty(subscribeDto)) {
+        await this.notificationService.unsubscribeUser(req.user, subscribeDto);
+      }
 
-      await this.notificationService.unsubscribeUser(req.user, subscribeDto);
       res.status(200).end();
     } catch (error) {
       next(error);

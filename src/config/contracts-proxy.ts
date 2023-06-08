@@ -1,7 +1,7 @@
-import { ContractNetwork } from '@interfaces/contracts.interface';
+import { ContractMonitorType, ContractNetwork } from '@interfaces/contracts.interface';
 import { Protocol } from '@interfaces/protocols.interface';
 
-export const PROXY_CONTRACTS = [
+export const PROXY_CONTRACTS: ProtocolContracts[] = [
   {
     protocol: {
       _id: undefined,
@@ -17,27 +17,41 @@ export const PROXY_CONTRACTS = [
       {
         address: '0xCE89E0DA2740e640cfe374C20CF0f3928cb6d265',
         network: ContractNetwork.ETH_GOERLI,
+        monitorType: ContractMonitorType.WEBHOOK,
       },
     ],
   },
-  // {
-  //   project: {
-  //     _id: undefined,
-  //     slug: undefined,
-  //     name: 'Paxos Gold',
-  //     description:
-  //       'Pax Gold (PAXG) is a digital asset. Each token is backed by one fine troy ounce (t oz) of a 400 oz London Good Delivery gold bar, stored in Brink’s vaults. If you own PAXG, you own the underlying physical gold, held in custody by Paxos Trust Company.',
-  //     url: 'https://paxos.com/paxgold/',
-  //     logo: '',
-  //     contracts: [],
-  //   },
-  //   contracts: [
-  //     {
-  //       address: '0x45804880de22913dafe09f4980848ece6ecbaf78',
-  //       network: ContractNetwork.ETH_MAINNET,
-  //     },
-  //   ],
-  // },
+  {
+    protocol: {
+      _id: undefined,
+      slug: undefined,
+      name: 'Paxos Gold',
+      description:
+        'Paxos Gold (PAXG) is a blockchain-based stablecoin that is fully backed and redeemable for physical gold, ' +
+        'providing users with the benefits of real gold ownership and the speed and mobility of a digital asset.',
+      image: '',
+      homeUrl: 'https://paxos.com/paxgold/',
+      repositoryUrl: '',
+      contracts: [],
+    },
+    contracts: [
+      {
+        address: '0x45804880de22913dafe09f4980848ece6ecbaf78',
+        network: ContractNetwork.ETH_MAINNET,
+        monitorType: ContractMonitorType.PULL,
+      },
+      {
+        address: '0x553d3d295e0f695b9228246232edf400ed3560b5',
+        network: ContractNetwork.MATIC_MAINNET,
+        monitorType: ContractMonitorType.WEBHOOK,
+      },
+      {
+        address: '0xfeb4dfc8c4cf7ed305bb08065d08ec6ee6728429',
+        network: ContractNetwork.ARB_MAINNET,
+        monitorType: ContractMonitorType.WEBHOOK,
+      },
+    ],
+  },
   // {
   //   project: {
   //     _id: undefined,
@@ -173,12 +187,13 @@ export const PROXY_CONTRACTS = [
   // },
 ];
 
-export interface ProjectContracts {
-  project: Protocol;
+export interface ProtocolContracts {
+  protocol: Protocol;
   contracts: ProjectContract[];
 }
 
 export interface ProjectContract {
   address: string;
   network: ContractNetwork;
+  monitorType: ContractMonitorType;
 }

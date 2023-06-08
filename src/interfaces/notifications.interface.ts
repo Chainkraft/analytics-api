@@ -2,6 +2,7 @@ import { Token } from '@interfaces/tokens.inteface';
 import { Contract, ContractNetwork } from '@interfaces/contracts.interface';
 import { User } from '@interfaces/users.interface';
 import { LiquidityPoolHistory } from './liquidity-pool-history.interface';
+import { Protocol } from '@interfaces/protocols.interface';
 
 export interface Notification {
   type: NotificationType;
@@ -10,6 +11,7 @@ export interface Notification {
 
   user?: User;
   token?: Token;
+  protocol?: Protocol;
   contract?: Contract;
   liquidityPool?: LiquidityPoolHistory;
 
@@ -19,7 +21,8 @@ export interface Notification {
 
 export interface NotificationSubscription {
   user: User;
-  token: Token;
+  token?: Token;
+  protocol?: Protocol;
 }
 
 export enum NotificationSeverity {
@@ -52,6 +55,8 @@ export interface NotificationStablecoinDepegDataSchema {
 
 export interface NotificationContractChangeDataSchema {
   network: ContractNetwork;
+  block?: number;
+  txHash?: string;
   oldAddress: string;
   newAddress: string;
 }

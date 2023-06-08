@@ -27,6 +27,11 @@ const notificationSchema: Schema = new Schema(
       ref: 'Token',
       required: false,
     },
+    protocol: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Protocol',
+      required: false,
+    },
     contract: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Contract',
@@ -53,7 +58,12 @@ const notificationSubscriptionSchema: Schema = new Schema(
     token: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Token',
-      required: true,
+      required: false,
+    },
+    protocol: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Protocol',
+      required: false,
     },
   },
   {

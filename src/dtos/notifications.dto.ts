@@ -1,5 +1,4 @@
 import { Notification } from '@interfaces/notifications.interface';
-import { IsNotEmpty } from 'class-validator';
 import { Types } from 'mongoose';
 
 export class NotificationPageDto {
@@ -9,10 +8,11 @@ export class NotificationPageDto {
 }
 
 export class NotificationSubscribeDto {
-  @IsNotEmpty()
-  token: Types.ObjectId;
+  token?: Types.ObjectId;
+  protocol?: Types.ObjectId;
 }
 
 export class NotificationSubscriptionsDto {
   tokens: Types.ObjectId[];
+  protocols: Types.ObjectId[];
 }

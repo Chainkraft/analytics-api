@@ -7,6 +7,7 @@ describe('Create proxy full flow', () => {
   const PRIVATE_KEY = '75c533c41230de328a82e4233c66f28fd2361df0576e5ca9e01acd029ee079f8';
   const USER_PRIVATE_KEY = '9d24b1743d5092f395b61a60d368db65590c92841e548f142da2e2b5c7f885fe';
   const IMPL_ADDRESS = '0x06878dA8c2fcC4Bf9d40B48b542E0cBbbD04EaC2';
+  const IMPL_ADDRESS_V3 = '0x3d92b49649C1DAE6715e981f365f575B9e4c2043';
   const PROXY_ADDRESS = '0xCE89E0DA2740e640cfe374C20CF0f3928cb6d265';
 
   let implFactory: ContractFactory;
@@ -31,7 +32,7 @@ describe('Create proxy full flow', () => {
   });
 
   it('deploy implementation contract', async () => {
-    const implContract = await implFactory.deploy(2);
+    const implContract = await implFactory.deploy(3);
     await implContract.deployed();
 
     console.log('Implementation contract', implContract.address);
@@ -46,7 +47,7 @@ describe('Create proxy full flow', () => {
 
   it('change proxy impl slot', async () => {
     const proxyContract = new ethers.Contract(PROXY_ADDRESS, proxyFactory.interface, adminWallet);
-    await proxyContract.upgradeTo(IMPL_ADDRESS);
+    await proxyContract.upgradeTo(IMPL_ADDRESS_V3);
 
     console.log('Proxy contract impl slot updated', IMPL_ADDRESS);
   }, 50000);

@@ -28,24 +28,24 @@ export interface WebhookAddressActivity {
   type: string;
   event: {
     network: string;
-    activity: [
-      {
-        fromAddress: string;
-        toAddress: string;
-        blockNum: string;
-        hash: string;
-        category: string;
-        value: string;
-        typeTraceAddress: string;
-        rawContract: {
-          rawValue: string;
-          address: string;
-          decimal;
-        };
-        log: any;
-      },
-    ];
+    activity: WebhookAddressActivityTx[];
   };
+}
+
+export interface WebhookAddressActivityTx {
+  fromAddress: string;
+  toAddress: string;
+  blockNum: string;
+  hash: string;
+  category: string;
+  value: string;
+  typeTraceAddress: string;
+  rawContract: {
+    rawValue: string;
+    address: string;
+    decimal;
+  };
+  log: any;
 }
 
 export enum WebhookType {

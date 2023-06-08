@@ -1,13 +1,14 @@
 import { HttpException } from '@exceptions/HttpException';
 import { isEmpty } from '@utils/util';
 import contractsModel from '@models/contracts.model';
-import { Contract, ContractNetwork, ContractProxyHistory, ContractProxyType } from '@interfaces/contracts.interface';
+import { Contract, ContractMonitorType, ContractNetwork, ContractProxyHistory, ContractProxyType } from '@interfaces/contracts.interface';
 import ProxyOpcode from '@services/opcode/proxy.opcode';
 import { etherscans, providers } from '@config';
 import { getFulfilled, isRejected } from '@utils/typeguard';
 
 class ContractService {
   public contracts = contractsModel;
+  public static readonly PROXY_CONTRACT_CHANGE_DAY_SPAN = 90;
 
   public async findAllContracts(): Promise<Contract[]> {
     return this.contracts.find();
@@ -58,6 +59,8 @@ class ContractService {
     const [proxyImpl, proxyAdmin] = await Promise.allSettled([getProxyImpl, getProxyAdmin]);
 
     const contract: Contract = {
+      monitorType: ContractMonitorType.PULL,
+
       address,
       network,
       byteCode: byteCode.value,
@@ -104,7 +107,7 @@ class ContractService {
     return contract.proxy !== undefined;
   }
 
-  public hasProxyContractChanged(contract: Contract, days = 90): boolean {
+  public hasProxyContractChanged(contract: Contract, days = ContractService.PROXY_CONTRACT_CHANGE_DAY_SPAN): boolean {
     if (this.isProxyContract(contract)) {
       const lastChange = this.getProxyContractChangedRecord(contract);
       if (lastChange !== undefined && lastChange.createdByBlockAt !== undefined) {
