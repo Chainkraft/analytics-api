@@ -18,6 +18,7 @@ import swaggerUi from 'swagger-ui-express';
 import { JobManager } from './jobs/job.manager';
 import { RefreshStablecoinPricesJob } from './jobs/refresh-stablecoin-prices.job';
 import { RefreshScoreJob } from './jobs/score-calculation.job';
+import slug from 'slug';
 
 class App {
   public app: express.Application;
@@ -87,7 +88,13 @@ class App {
     // static resources
     this.app.use('/static', express.static('static'));
 
+    this.loadExtraConfiguration();
     this.loadInitialData();
+  }
+
+  private loadExtraConfiguration() {
+    slug.extend({ '+': 'plus' });
+    slug.extend({ '-': 'minus' });
   }
 
   private loadInitialData() {

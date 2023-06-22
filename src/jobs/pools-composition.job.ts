@@ -79,6 +79,9 @@ export class PoolsCompositionNotificationsJob implements RecurringJob {
       weightChangeThreshold = 0.3;
     }
 
+    const numberOfTokens = latestBalance.coins.length > 0 ? latestBalance.coins.length : 1;
+    const equilibriumWeight = 1 / numberOfTokens;
+
     for (const coin of latestBalance.coins) {
       const lastNotificationForCoin = notifications.filter(notification => notification.data && notification.data.token === coin.symbol).pop();
       const token = await this.tokenService.tokens.findOne({ symbol: coin.symbol });
@@ -92,40 +95,12 @@ export class PoolsCompositionNotificationsJob implements RecurringJob {
       if (lastNotificationWeight !== null) {
         const weightChange = coin.weight - lastNotificationWeight;
 
-        if (Math.abs(weightChange) > weightChangeThreshold) {
-          const existingNotification = newNotifications.find(
-            n => n.data && n.data.token === coin.symbol && Math.abs(n.data.weight - coin.weight) < weightChangeThreshold,
-          );
-
-          if (!existingNotification) {
-            console.log(
-              'PoolsCompositionNotificationsJob',
-              `[${poolHistory.address}] Coin ${coin.symbol} has changed its weight by ${(weightChange * 100).toFixed(2)}% between ${
-                lastNotificationForCoin?.createdAt
-              } and ${latestBalance.date}`,
-            );
-
-            newNotifications.push({
-              type: NotificationType.LP_COMPOSITION_CHANGE,
-              severity: NotificationSeverity.CRITICAL,
-              liquidityPool: poolHistory,
-              token: token,
-              data: <NotificationLiquidityPoolCompositionChangeDataSchema>{
-                token: coin.symbol,
-                weight: coin.weight,
-                weightChange: weightChange,
-                balance: Number(coin.poolBalance) * Math.pow(10, -Number(coin.decimals)),
-                date: latestBalance.date,
-              },
-            });
-          }
-        }
-      } else {
-        for (let i = 0; i < balancesInWindow.length; i++) {
-          const prevBalance = balancesInWindow[i];
-          const prevCoin = prevBalance.coins.find(prevCoin => prevCoin.symbol === coin.symbol);
-          const weightChange = coin.weight - prevCoin.weight;
-
+        // Check if moving away from equilibrium
+        if (
+          (lastNotificationWeight < equilibriumWeight && coin.weight < lastNotificationWeight) ||
+          (lastNotificationWeight > equilibriumWeight && coin.weight > lastNotificationWeight) ||
+          (lastNotificationWeight === equilibriumWeight && coin.weight !== equilibriumWeight)
+        ) {
           if (Math.abs(weightChange) > weightChangeThreshold) {
             const existingNotification = newNotifications.find(
               n => n.data && n.data.token === coin.symbol && Math.abs(n.data.weight - coin.weight) < weightChangeThreshold,
@@ -135,7 +110,7 @@ export class PoolsCompositionNotificationsJob implements RecurringJob {
               console.log(
                 'PoolsCompositionNotificationsJob',
                 `[${poolHistory.address}] Coin ${coin.symbol} has changed its weight by ${(weightChange * 100).toFixed(2)}% between ${
-                  prevBalance.date
+                  lastNotificationForCoin?.createdAt
                 } and ${latestBalance.date}`,
               );
 
@@ -152,6 +127,47 @@ export class PoolsCompositionNotificationsJob implements RecurringJob {
                   date: latestBalance.date,
                 },
               });
+            }
+          }
+        }
+      } else {
+        for (let i = 0; i < balancesInWindow.length; i++) {
+          const prevBalance = balancesInWindow[i];
+          const prevCoin = prevBalance.coins.find(prevCoin => prevCoin.symbol === coin.symbol);
+          const weightChange = coin.weight - prevCoin.weight;
+
+          if (
+            (prevCoin.weight < equilibriumWeight && coin.weight < prevCoin.weight) ||
+            (prevCoin.weight > equilibriumWeight && coin.weight > prevCoin.weight) ||
+            (prevCoin.weight === equilibriumWeight && coin.weight !== equilibriumWeight)
+          ) {
+            if (Math.abs(weightChange) > weightChangeThreshold) {
+              const existingNotification = newNotifications.find(
+                n => n.data && n.data.token === coin.symbol && Math.abs(n.data.weight - coin.weight) < weightChangeThreshold,
+              );
+
+              if (!existingNotification) {
+                console.log(
+                  'PoolsCompositionNotificationsJob',
+                  `[${poolHistory.address}] Coin ${coin.symbol} has changed its weight by ${(weightChange * 100).toFixed(2)}% between ${
+                    prevBalance.date
+                  } and ${latestBalance.date}`,
+                );
+
+                newNotifications.push({
+                  type: NotificationType.LP_COMPOSITION_CHANGE,
+                  severity: NotificationSeverity.CRITICAL,
+                  liquidityPool: poolHistory,
+                  token: token,
+                  data: <NotificationLiquidityPoolCompositionChangeDataSchema>{
+                    token: coin.symbol,
+                    weight: coin.weight,
+                    weightChange: weightChange,
+                    balance: Number(coin.poolBalance) * Math.pow(10, -Number(coin.decimals)),
+                    date: latestBalance.date,
+                  },
+                });
+              }
             }
           }
         }

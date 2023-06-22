@@ -130,7 +130,7 @@ function createWethDaiPoolHistory(): LiquidityPoolHistory {
             decimals: '18',
             usdPrice: 3200,
             price: '1',
-            weight: 0.8,
+            weight: 0.5,
             poolBalance: '4800000000000000000000',
           },
           {
@@ -139,7 +139,7 @@ function createWethDaiPoolHistory(): LiquidityPoolHistory {
             decimals: '18',
             usdPrice: 1.001,
             price: '1',
-            weight: 0.4,
+            weight: 0.5,
             poolBalance: '11000000000000000000000',
           },
         ],
@@ -154,7 +154,7 @@ function createWethDaiPoolHistory(): LiquidityPoolHistory {
             decimals: '18',
             usdPrice: 3200,
             price: '1',
-            weight: 0.45,
+            weight: 0.71,
             poolBalance: '4800000000000000000000',
           },
           {
@@ -163,7 +163,7 @@ function createWethDaiPoolHistory(): LiquidityPoolHistory {
             decimals: '18',
             usdPrice: 1.001,
             price: '1',
-            weight: 0.4,
+            weight: 0.29,
             poolBalance: '11000000000000000000000',
           },
         ],
@@ -348,7 +348,7 @@ describe('detectWeightChangeInPool', () => {
           decimals: '18',
           usdPrice: 3200,
           price: '1',
-          weight: 0.15,
+          weight: 0.95,
           poolBalance: '4800000000000000000000',
         },
         {
@@ -357,7 +357,7 @@ describe('detectWeightChangeInPool', () => {
           decimals: '18',
           usdPrice: 1.001,
           price: '1',
-          weight: 0.4,
+          weight: 0.05,
           poolBalance: '11000000000000000000000',
         },
       ],
@@ -371,7 +371,7 @@ describe('detectWeightChangeInPool', () => {
     expect(newerNotifications.length).toBeGreaterThan(0);
   });
 
-  it('Create a notification and create the next one based on this one v2', async () => {
+  it('Create a notification and dont create the next one, because pool is stabilizing', async () => {
     const poolHistory = create3PoolHistory();
     const newNotifications = await poolsJob.detectWeightChangeInPool(poolHistory, []);
 
@@ -385,7 +385,7 @@ describe('detectWeightChangeInPool', () => {
           decimals: '18',
           usdPrice: 1.001,
           price: '1',
-          weight: 0.48,
+          weight: 0.6,
           poolBalance: '165380350622839514039437569',
         },
         {
@@ -394,7 +394,7 @@ describe('detectWeightChangeInPool', () => {
           decimals: '6',
           usdPrice: 1,
           price: '1',
-          weight: 0.1,
+          weight: 0.2,
           poolBalance: '162414327217796',
         },
         {
@@ -403,7 +403,7 @@ describe('detectWeightChangeInPool', () => {
           decimals: '6',
           usdPrice: 1,
           price: '1',
-          weight: 0.1,
+          weight: 0.2,
           poolBalance: '281096827003352',
         },
       ],
@@ -412,47 +412,7 @@ describe('detectWeightChangeInPool', () => {
     });
 
     const newerNotifications = await poolsJob.detectWeightChangeInPool(poolHistory, newNotifications);
-    expect(newerNotifications.length).toBeGreaterThan(0);
-  });
-
-  it('Should create a single notification per coin when two anomalies detected', async () => {
-    const poolHistory = create3PoolHistory();
-    poolHistory.balances.push({
-      coins: [
-        {
-          address: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
-          symbol: 'DAI',
-          decimals: '18',
-          usdPrice: 1.001,
-          price: '1',
-          weight: 0.5,
-          poolBalance: '165380350622839514039437569',
-        },
-        {
-          address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-          symbol: 'USDC',
-          decimals: '6',
-          usdPrice: 1,
-          price: '1',
-          weight: 0.7,
-          poolBalance: '162414327217796',
-        },
-        {
-          address: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
-          symbol: 'USDT',
-          decimals: '6',
-          usdPrice: 1,
-          price: '1',
-          weight: 0.1,
-          poolBalance: '281096827003352',
-        },
-      ],
-      date: moment().utc().subtract(2, 'hours').toDate(),
-      block: 100,
-    });
-
-    const newNotifications = await poolsJob.detectWeightChangeInPool(poolHistory, []);
-    expect(newNotifications.length).toBe(2);
+    expect(newerNotifications.length).toBe(0);
   });
 
   it('Should create a notification when the one from other pool has been created', async () => {
@@ -462,7 +422,7 @@ describe('detectWeightChangeInPool', () => {
     const poolHistoryWethDai = createWethDaiPoolHistory();
     const notificationsWethDai = await poolsJob.detectWeightChangeInPool(poolHistoryWethDai, notifications3Pool);
 
-    expect(notificationsWethDai.length).toBe(1);
+    expect(notificationsWethDai.length).toBe(2);
   });
 
   it('Should not create a notification when the one has been created before', async () => {
