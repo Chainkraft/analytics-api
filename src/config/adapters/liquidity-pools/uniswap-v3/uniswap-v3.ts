@@ -13,25 +13,20 @@ const chains = {
   arbitrum: `${baseUrl}/ianlapham/arbitrum-dev`,
   optimism: `${baseUrl}/ianlapham/optimism-post-regenesis`,
 };
+const blockchainService = new BlockchainService();
 
 export const main = async (): Promise<any> => {
-  const blockchainService = new BlockchainService();
   const liquidityPoolService = new LiquidityPoolService();
 
   const network = 'ethereum';
   const dex = 'uniswap';
 
-  const numberOfDays = 14;
+  const numberOfDays = 45;
   // get timestamps of the last 14 days using Moment library in GMT timezone
-  const timestamps = [];
+  const timestamps: number[] = [];
   for (let i = 0; i < numberOfDays; i++) {
     timestamps.push(moment().utc().subtract(i, 'days').startOf('day').valueOf());
   }
-
-  const lastDaysBlocks = await blockchainService.getBlocksByTime(
-    timestamps.map(value => value / 1000),
-    network,
-  );
 
   for (const pool of uniswapPools) {
     // check pools liquiditypoolhistory in the database by address and network
@@ -44,97 +39,9 @@ export const main = async (): Promise<any> => {
     //filter timestamps to get only the ones that are later than the latestTimestamp if latestTimestamp exists
     const missingTimestamps = latestTimestamp ? timestamps.filter(timestamp => timestamp > latestTimestamp) : timestamps;
 
-    // get blocks for missing timestamps based on indexes from timestamps array
-    const blocks = missingTimestamps.map(timestamp => lastDaysBlocks[timestamps.indexOf(timestamp)]);
-
-    // browse for the past days and save to the db
-    const remotePoolData = await getUniswapV3PoolForBlocks(network, pool.address, blocks);
-
-    const balancesToUpdate = remotePoolData.map((lp, index) => {
-      const calculations = calculateTokenWeightsAndPricesFromLp(lp);
-
-      return {
-        coins: [
-          {
-            // Token 0
-            address: lp.token0.id,
-            symbol: lp.token0.symbol,
-            decimals: 0, //remotePool.token0.decimals,
-            usdPrice: calculations.token0UsdPrice,
-            price: lp.token0Price,
-            poolBalance: lp.totalValueLockedToken0,
-            weight: calculations.token0Weight,
-          },
-          {
-            // Token 1
-            address: lp.token1.id,
-            symbol: lp.token1.symbol,
-            decimals: 0, //remotePool.token1.decimals,
-            usdPrice: calculations.token1UsdPrice,
-            price: lp.token1Price,
-            poolBalance: lp.totalValueLockedToken1,
-            weight: calculations.token1Weight,
-          },
-        ],
-        date: new Date(missingTimestamps[index]),
-        block: blocks[index],
-      };
-    });
-
-    if (remotePoolData.length === 0) {
-      continue;
+    for (const ts of missingTimestamps) {
+      refreshUniswapPool(network, pool.address, ts);
     }
-
-    const remotePool = remotePoolData[0];
-
-    await liquidityPoolHistoryModel.findOneAndUpdate(
-      { network: network, address: remotePool.id },
-      {
-        dex: dex,
-        network: network,
-        name: '',
-        symbol: '',
-        assetTypeName: '',
-        address: remotePool.id,
-        isMetaPool: false,
-        usdTotal: remotePool?.totalValueLockedUSD ?? 0,
-        $push: {
-          balances: {
-            $each: balancesToUpdate.map(balance => {
-              return {
-                coins: [
-                  {
-                    address: balance.coins[0].address,
-                    symbol: balance.coins[0].symbol,
-                    decimals: 0, //remotePool.token0.decimals,
-                    usdPrice: balance.coins[0].usdPrice,
-                    price: balance.coins[0].price,
-                    // added by us
-                    poolBalance: balance.coins[0].poolBalance,
-                    weight: balance.coins[0].weight,
-                  },
-                  {
-                    address: balance.coins[1].address,
-                    symbol: balance.coins[1].symbol,
-                    decimals: 0, //remotePool.token0.decimals,
-                    usdPrice: remotePool.token0Price,
-                    price: balance.coins[1].price,
-                    // added by us
-                    poolBalance: balance.coins[1].poolBalance,
-                    weight: balance.coins[1].weight,
-                  },
-                ],
-                date: balance.date,
-                block: balance.block,
-              };
-            }),
-          },
-        },
-        tvlUSD: remotePool.totalValueLockedUSD,
-        volumeUSD: remotePool.volumeUSD,
-      },
-      { upsert: true, new: true },
-    );
   }
 };
 
@@ -195,16 +102,26 @@ export function calculateTokenWeightsAndPricesFromLp(lp: UniswapPoolResponse): {
   token0UsdPrice: number;
   token1UsdPrice: number;
 } {
+  //bear in mind below:
+  // # token0 per token1
+  // token0Price: BigDecimal!
+  // # token1 per token0
+  // token1Price: BigDecimal!
+
   // sometimes subgraph is tricky and returns wrong values
   const tvlToken0 = Number(lp.totalValueLockedToken0) < 0 ? 0 : Number(lp.totalValueLockedToken0);
   const tvlToken1 = Number(lp.totalValueLockedToken1) < 0 ? 0 : Number(lp.totalValueLockedToken1);
 
   // Calculate token weights
   const tvlUSD = Number(lp.totalValueLockedUSD);
-  const token0Weight = tvlToken0 / tvlUSD;
-  const token1Weight = (tvlToken1 * Number(lp.token0Price)) / tvlUSD;
 
-  // Calculate token USD prices
+  const token0Amount = tvlToken0;
+  const token1Amount = Number(lp.token0Price) * tvlToken1;
+
+  const tvlNormalized = token0Amount + token1Amount;
+  const token0Weight = token0Amount / tvlNormalized;
+  const token1Weight = token1Amount / tvlNormalized;
+
   const token0UsdPrice = tvlToken0 > 0 ? (tvlUSD * token0Weight) / tvlToken0 : 0;
   const token1UsdPrice = tvlToken1 > 0 ? (tvlUSD * token1Weight) / tvlToken1 : 0;
 
@@ -216,8 +133,19 @@ export function calculateTokenWeightsAndPricesFromLp(lp: UniswapPoolResponse): {
   };
 }
 
-export async function refreshUniswapPool(network: string, poolId: string): Promise<LiquidityPoolHistory> {
-  const lp = await getUniswapV3PoolCurrentState(network, poolId);
+export async function refreshUniswapPool(network: string, poolId: string, timestamp?: number): Promise<LiquidityPoolHistory> {
+  let lp;
+  let block;
+
+  if (timestamp) {
+    const blocks = await blockchainService.getBlocksByTime([timestamp / 1000], network);
+    block = blocks[0];
+    lp = await getUniswapV3Pool(network, poolId, block);
+  } else {
+    lp = await getUniswapV3PoolCurrentState(network, poolId);
+  }
+
+  if (lp === null) return;
 
   const calculations = calculateTokenWeightsAndPricesFromLp(lp);
 
@@ -257,7 +185,61 @@ export async function refreshUniswapPool(network: string, poolId: string): Promi
               weight: calculations.token1Weight,
             },
           ],
-          date: new Date(),
+          date: timestamp ? new Date(timestamp) : new Date(),
+          block: timestamp ? block : undefined,
+        },
+      },
+    },
+    { upsert: true, new: true },
+  );
+}
+
+export async function refreshUniswapPoolForTimestamp(network: string, poolId: string, timestamp: number): Promise<LiquidityPoolHistory> {
+  const blocks = await blockchainService.getBlocksByTime([timestamp / 1000], network);
+
+  const lp = await getUniswapV3Pool(network, poolId, blocks[0]);
+  if (lp === null) return;
+
+  const calculations = calculateTokenWeightsAndPricesFromLp(lp);
+
+  return liquidityPoolHistoryModel.findOneAndUpdate(
+    { network: network, address: lp.id },
+    {
+      dex: 'uniswap',
+      network: network,
+      name: '',
+      symbol: '',
+      assetTypeName: '',
+      isMetaPool: false,
+      usdTotal: lp.totalValueLockedUSD,
+      tvlUSD: lp.totalValueLockedUSD,
+      volumeUSD: lp.volumeUSD,
+      $push: {
+        balances: {
+          coins: [
+            {
+              address: lp.token0.id,
+              symbol: lp.token0.symbol,
+              decimals: 0, //remotePool.token0.decimals,
+              usdPrice: calculations.token0UsdPrice,
+              price: lp.token0Price,
+              // added by us
+              poolBalance: Number(lp.totalValueLockedToken0) < 0 ? 0 : lp.totalValueLockedToken0,
+              weight: calculations.token0Weight,
+            },
+            {
+              address: lp.token1.id,
+              symbol: lp.token1.symbol,
+              decimals: 0, //remotePool.token1.decimals,
+              usdPrice: calculations.token1UsdPrice,
+              price: lp.token1Price,
+              // added by us
+              poolBalance: Number(lp.totalValueLockedToken1) < 0 ? 0 : lp.totalValueLockedToken1,
+              weight: calculations.token1Weight,
+            },
+          ],
+          date: new Date(timestamp),
+          block: blocks[0],
         },
       },
     },

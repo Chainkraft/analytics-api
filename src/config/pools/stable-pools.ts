@@ -709,6 +709,11 @@ export const stablePools: StablecoinLiquidityPoolSummary[] = [
     tokenSlug: 'pax-dollar',
     pools: [
       {
+        name: 'Curve.fi FRAX/USDP',
+        address: '0xae34574ac03a15cd58a92dc79de7b1a0800f1ce3',
+        dex: 'curve',
+      },
+      {
         name: 'Curve.fi DAI/USDC/USDT/PAX',
         address: '0x06364f10B501e868329afBc005b3492902d6C763',
         dex: 'curve',
@@ -908,6 +913,11 @@ export const stablePools: StablecoinLiquidityPoolSummary[] = [
     tokenSymbol: 'FRAX',
     tokenSlug: 'frax',
     pools: [
+      {
+        name: 'Curve.fi FRAX/USDP',
+        address: '0xae34574ac03a15cd58a92dc79de7b1a0800f1ce3',
+        dex: 'curve',
+      },
       {
         name: undefined,
         address: '0xd632f22692FaC7611d2AA1C0D552930D43CAEd3B',
