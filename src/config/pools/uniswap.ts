@@ -192,4 +192,11 @@ export const uniswapPools: ShortLiquidityPool[] = [
     address: '0x55bb9904df17f3b07551aa117841b3bbfc66646d',
     dex: 'uniswap',
   },
+
+  // use cases
+  {
+    name: 'Uniswap BORAT/ETH',
+    address: '0xad7002214faa92b240ea46af8ed42aa605920964',
+    dex: 'uniswap',
+  },
 ];

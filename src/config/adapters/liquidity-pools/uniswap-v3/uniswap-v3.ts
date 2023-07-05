@@ -45,6 +45,28 @@ export const main = async (): Promise<any> => {
   }
 };
 
+export const refreshParticularTimestamps = async (): Promise<any> => {
+  const network = 'ethereum';
+
+  let start = moment.utc('2023-05-30T23:00:35Z');
+  const end = moment.utc('2023-06-05T23:49:23Z');
+
+  const timestamps: number[] = [];
+
+  while (start <= end) {
+    timestamps.push(start.valueOf());
+    start = start.add(1, 'hours');
+  }
+
+  console.log(timestamps);
+
+  for (const pool of uniswapPools) {
+    for (const ts of timestamps) {
+      refreshUniswapPool(network, pool.address, ts);
+    }
+  }
+};
+
 export const refreshAllPools = async (network = 'ethereum'): Promise<LiquidityPoolHistory[]> => {
   return Promise.all(
     uniswapPools.map(pool => {
