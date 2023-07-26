@@ -173,10 +173,42 @@ class TokenService {
     // if history is from yesterday, then refresh
     if (isEmpty(marketCapHistory) || marketCapHistory.updatedAt.toDateString() !== new Date().toDateString()) {
       const freshMarketCapHistory = {
-        market_caps: llamaToken.tokens.map((mCapRow: any) => {
-          return { date: mCapRow.date * 1000, market_cap: mCapRow.circulating.peggedUSD };
-        }),
+        market_caps: Array.isArray(llamaToken.tokens)
+          ? llamaToken.tokens
+              .map((mCapRow: any) => {
+                const date = mCapRow?.date ? mCapRow.date * 1000 : null;
+                const market_cap = mCapRow?.circulating?.peggedUSD || null;
+                return { date, market_cap };
+              })
+              .filter((mCapRow: any) => mCapRow.date && mCapRow.market_cap)
+          : [],
       };
+
+      if (freshMarketCapHistory.market_caps.length === 0) {
+        // if there is an existing marketCapHistory, return it, otherwise return an empty object
+        return marketCapHistory || { token: '', gecko_id: '', slug: slug, market_caps: [] };
+      }
+
+      // If marketCapHistory exists, merge it with freshMarketCapHistory
+      if (marketCapHistory) {
+        const cachedMarketCaps = marketCapHistory.market_caps;
+
+        freshMarketCapHistory.market_caps.forEach(newCap => {
+          if (!cachedMarketCaps.some(existingCap => existingCap.date === newCap.date)) {
+            cachedMarketCaps.push(newCap);
+          }
+        });
+
+        // marketCapHistory.market_caps = cachedMarketCaps;
+        return this.marketCapHistory.findOneAndUpdate(
+          { slug: slug },
+          { market_caps: cachedMarketCaps },
+          {
+            new: true,
+            upsert: true,
+          },
+        );
+      }
 
       return this.marketCapHistory.findOneAndUpdate({ slug: slug }, freshMarketCapHistory, {
         new: true,
