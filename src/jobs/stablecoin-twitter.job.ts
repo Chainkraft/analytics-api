@@ -11,7 +11,11 @@ export class StablecoinTwitterJob implements RecurringJob {
 
   doIt(): any {
     console.log('Scheduling StablecoinTwitterJob');
-    schedule.scheduleJob({ hour: 13, minute: 0, tz: 'Etc/UTC' }, () => this.generateTweets());
+    schedule.scheduleJob({ hour: 13, minute: 0, tz: 'Etc/UTC' }, () =>
+      this.generateTweets().catch(e => {
+        console.error('Exception occurred while executing StablecoinTwitterJob', e);
+      }),
+    );
   }
 
   async generateTweets() {

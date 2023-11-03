@@ -10,7 +10,11 @@ export class PoolsCompositionTwitterJob implements RecurringJob {
 
   doIt(): any {
     console.log('Scheduling PoolsCompositionTwitterJob');
-    schedule.scheduleJob({ hour: new schedule.Range(0, 23, 4), minute: 15, tz: 'Etc/UTC' }, () => this.generateTweets());
+    schedule.scheduleJob({ hour: new schedule.Range(0, 23, 4), minute: 15, tz: 'Etc/UTC' }, () =>
+      this.generateTweets().catch(e => {
+        console.error('Exception occurred while executing PoolsCompositionTwitterJob', e);
+      }),
+    );
   }
 
   async generateTweets() {
@@ -23,6 +27,8 @@ export class PoolsCompositionTwitterJob implements RecurringJob {
       })
       .populate('token')
       .populate('liquidityPool');
+
+    console.log('PoolsCompositionTwitterJob notifications', notifications);
 
     if (notifications.length === 0) {
       return;

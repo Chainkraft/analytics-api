@@ -20,7 +20,12 @@ export class StablecoinAnomaliesJob implements RecurringJob {
 
   doIt(): any {
     console.log('Scheduling StablecoinAnomaliesJob');
-    schedule.scheduleJob('0 */4 * * *', () => this.generateNotifications());
+
+    schedule.scheduleJob('0 */4 * * *', () =>
+      this.generateNotifications().catch(e => {
+        console.error('Exception occurred while executing StablecoinAnomaliesJob', e);
+      }),
+    );
   }
 
   async generateNotifications() {
@@ -129,6 +134,63 @@ export class StablecoinAnomaliesJob implements RecurringJob {
           chains: llamaToken.chains,
         });
       }
+    }
+
+    return depegged;
+  }
+
+  // dirty code for manual generation
+  tokenSlugs = ['usdh', 'tor', 'fei-usd', 'coin98-dollar', 'dforce-usd', 'iusd'];
+  tokenGeckoIds = ['tor', 'coin98-dollar', 'token-dforce-usd', 'iusd'];
+
+  public async getDepeggedTokensManually(numberOfDays = 14, excludeTokens: string[] = []): Promise<TokenDepeg[]> {
+    const stablecoins = await this.tokenService.findAllStablecoins();
+    const llamaTokens = await this.tokenApiService.getStablecoinsFromDefiLlama();
+    const llamaPrices = await this.tokenApiService.getStablecoinsPricesFromDefiLlama();
+    llamaPrices.pop();
+
+    const depeggedLlamaTokens = llamaTokens.filter((token: any) => this.tokenGeckoIds.includes(token.gecko_id));
+
+    const lastWeekPrices = [];
+    for (let i = 0; i < numberOfDays; i++) {
+      lastWeekPrices.push(llamaPrices.pop());
+    }
+
+    const averagePrices = new Map<string, number>();
+    for (const day of lastWeekPrices) {
+      for (const key in day.prices) {
+        const dayPrice = day.prices[key];
+        if (averagePrices.has(key)) {
+          averagePrices.set(key, averagePrices.get(key) + dayPrice);
+        } else {
+          averagePrices.set(key, dayPrice);
+        }
+      }
+    }
+
+    for (const [key, value] of averagePrices) {
+      averagePrices.set(key, value / numberOfDays);
+    }
+
+    const depegged: TokenDepeg[] = [];
+    for (const llamaToken of depeggedLlamaTokens) {
+      const averagePrice = averagePrices.get(llamaToken.gecko_id);
+      const weeksPrices = [];
+      for (const day of lastWeekPrices) {
+        for (const key in day.prices) {
+          if (key == llamaToken.gecko_id) {
+            weeksPrices.push(day.prices[key]);
+          }
+        }
+      }
+
+      depegged.push({
+        token: stablecoins.find(token => token.gecko_id == llamaToken.gecko_id),
+        price: llamaToken.price,
+        avgPrice: averagePrice,
+        prices: weeksPrices,
+        chains: llamaToken.chains,
+      });
     }
 
     return depegged;

@@ -19,7 +19,11 @@ export class PoolsCompositionNotificationsJob implements RecurringJob {
 
   doIt(): any {
     console.log('Scheduling PoolsCompositionNotificationsJob');
-    schedule.scheduleJob({ hour: new schedule.Range(0, 23, 4), minute: 10, tz: 'Etc/UTC' }, () => this.generateNotifications());
+    schedule.scheduleJob({ hour: new schedule.Range(0, 23, 4), minute: 10, tz: 'Etc/UTC' }, () =>
+      this.generateNotifications().catch(e => {
+        console.error('Exception occurred while executing PoolsCompositionNotificationsJob', e);
+      }),
+    );
   }
 
   async generateNotifications() {
