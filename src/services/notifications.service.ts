@@ -26,7 +26,7 @@ class NotificationService {
           $and: [{ user: { $eq: null } }, { protocol: { $in: subs.protocols } }],
         },
         {
-          user: { $eq: user._id }
+          user: { $eq: user._id },
         },
       ],
     };

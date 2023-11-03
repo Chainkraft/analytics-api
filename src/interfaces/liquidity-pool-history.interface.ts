@@ -1,6 +1,8 @@
 import { Contract, ethers } from 'ethers';
+import { Types } from 'mongoose';
 
 export interface LiquidityPoolHistory {
+  _id?: Types.ObjectId;
   dex: string;
   network: string;
   name: string;

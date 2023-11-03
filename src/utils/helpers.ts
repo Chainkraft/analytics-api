@@ -48,3 +48,20 @@ export const currencyFormat = (num: string, fraction = 0) =>
     maximumFractionDigits: fraction,
     minimumFractionDigits: fraction,
   }).format(Number.parseFloat(num));
+
+export const dexLpNames: { [key: string]: string } = {
+  curve: 'Curve.fi',
+  uniswap: 'Uniswap',
+};
+
+export const shortCurrencyFormat = (num: number) =>
+  new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    notation: 'compact',
+    compactDisplay: 'long',
+  }).format(num);
+
+export const percentageFormat = (weight: number, multiplier = 1) => {
+  return (weight * multiplier).toFixed(2) + '%';
+};
