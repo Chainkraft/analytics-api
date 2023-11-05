@@ -47,7 +47,7 @@
     "node-cache": "^5.1.2",
     "node-schedule": "^2.1.0",
     "prom-client": "^14.2.0",
-    "puppeteer": "^21.4.1",
+    "puppeteer-core": "^21.5.0",
     "ramda": "^0.28.0",
     "slug": "^8.2.2",
     "swagger-jsdoc": "^6.2.1",

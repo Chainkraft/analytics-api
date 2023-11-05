@@ -1,10 +1,21 @@
-import puppeteer, { Browser, Page, ElementHandle } from 'puppeteer';
+import puppeteer, { Browser, Page, ElementHandle } from 'puppeteer-core';
 import * as fs from 'fs';
 import Jimp from 'jimp';
+import { NODE_ENV } from '@config';
 
 export async function createChart(url: string, viewport: { width: number; height: number }, selector: string): Promise<Buffer> {
   // Launching a new browser
-  const browser: Browser = await puppeteer.launch();
+  const browser: Browser =
+    NODE_ENV === 'production'
+      ? await puppeteer.launch({
+          executablePath: '/usr/bin/chromium-browser',
+          args: ['--no-sandbox', '--disable-dev-shm-usage'],
+        })
+      : await puppeteer.launch({
+          channel: 'chrome',
+          args: ['--no-sandbox', '--disable-dev-shm-usage'],
+        });
+
   // Opening a new page in the browser
   const page: Page = await browser.newPage();
   // Navigating to the specified URL with the notification details

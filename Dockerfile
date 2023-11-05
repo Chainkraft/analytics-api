@@ -1,6 +1,14 @@
 # Common build stage
 FROM node:16.19.0-alpine3.16 as common-build-stage
 
+# Install puppeteer dependencies
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    ttf-freefont
+
 COPY . ./app
 
 WORKDIR /app
