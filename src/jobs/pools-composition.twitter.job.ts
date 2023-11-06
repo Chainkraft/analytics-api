@@ -22,7 +22,7 @@ export class PoolsCompositionTwitterJob implements RecurringJob {
       .find({
         type: NotificationType.LP_COMPOSITION_CHANGE,
         createdAt: {
-          $gt: new Date(Date.now() - 86_400_000),
+          $gt: new Date(Date.now() - 14_400_000), // 4 hours
         },
       })
       .populate('token')

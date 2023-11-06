@@ -18,6 +18,10 @@ export async function createChart(url: string, viewport: { width: number; height
 
   // Opening a new page in the browser
   const page: Page = await browser.newPage();
+
+  // Emulate UTC timezone
+  await page.emulateTimezone('UTC');
+
   // Navigating to the specified URL with the notification details
   await page.goto(url);
 
