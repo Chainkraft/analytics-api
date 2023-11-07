@@ -4,6 +4,7 @@ import * as schedule from 'node-schedule';
 import { dexLpNames, percentageFormat, shortCurrencyFormat } from '../utils/helpers';
 import { createChart, waterMark } from './helpers';
 import { RecurringJob } from './recurring.job';
+import { EUploadMimeType, TwitterApi } from 'twitter-api-v2';
 
 export class PoolsCompositionTwitterJob implements RecurringJob {
   public notificationService = new NotificationService();
@@ -34,25 +35,30 @@ export class PoolsCompositionTwitterJob implements RecurringJob {
       return;
     }
 
+    const twitterClient = new TwitterApi({
+      appKey: process.env.CHAINKRAFTCOM_APP_KEY,
+      appSecret: process.env.CHAINKRAFTCOM_APP_SECRET,
+      accessToken: process.env.CHAINKRAFTCOM_ACCESS_TOKEN,
+      accessSecret: process.env.CHAINKRAFTCOM_ACCESS_SECRET,
+    });
+
     const groupedNotifications = this.groupNotificationsByLp(notifications);
 
     console.log('PoolsCompositionTwitterJob notifications', groupedNotifications);
 
-    const tweetsArray = Array.from(groupedNotifications, ([lpId, notifications]) => this.constructTweet(lpId, notifications));
-
+    console.log('PoolsCompositionTwitterJob tweets: ');
     Array.from(groupedNotifications, async ([lpId, notifications]) => {
-      this.constructTweet(lpId, notifications);
+      const tweetText = this.constructTweet(lpId, notifications);
+
       const chartBuffer = await createChart(
         `https://analytics.chainkraft.com/pools/ethereum/${notifications[0].liquidityPool.address}?chart=hour`,
         { width: 1280, height: 720 },
         '#chart-with-header-container',
       );
       const watermarkedBuffer = await waterMark(chartBuffer);
-    });
 
-    console.log('PoolsCompositionTwitterJob tweets: ');
-    tweetsArray.forEach((tweet, index) => {
-      console.log(`${tweet}`);
+      const mediaId = await twitterClient.v1.uploadMedia(watermarkedBuffer, { mimeType: EUploadMimeType.Png });
+      console.log(await twitterClient.v2.tweet({ text: tweetText, media: { media_ids: [mediaId] } }));
     });
   }
 
