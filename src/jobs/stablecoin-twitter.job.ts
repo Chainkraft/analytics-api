@@ -4,7 +4,7 @@ import { EUploadMimeType, TwitterApi } from 'twitter-api-v2';
 import NotificationService from '@services/notifications.service';
 import * as schedule from 'node-schedule';
 import { Notification, NotificationStablecoinDepegDataSchema, NotificationType } from '@interfaces/notifications.interface';
-import { createChart, waterMark } from './helpers';
+import { createChart, generateNewsletterTweet, waterMark } from './helpers';
 
 export class StablecoinTwitterJob implements RecurringJob {
   public notificationService = new NotificationService();
@@ -74,6 +74,7 @@ export class StablecoinTwitterJob implements RecurringJob {
         const mediaId = await twitterClient.v1.uploadMedia(watermarkedBuffer, { mimeType: EUploadMimeType.Png });
         tweets.push({ text: tweet, media: { media_ids: [mediaId] } });
       }
+      tweets.push({ text: generateNewsletterTweet() });
       console.log(await twitterClient.v2.tweetThread(tweets));
     }
   }

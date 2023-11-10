@@ -2,7 +2,7 @@ import { Notification, NotificationType } from '@interfaces/notifications.interf
 import NotificationService from '@services/notifications.service';
 import * as schedule from 'node-schedule';
 import { dexLpNames, percentageFormat, shortCurrencyFormat } from '../utils/helpers';
-import { createChart, waterMark } from './helpers';
+import { createChart, generateNewsletterTweet, waterMark } from './helpers';
 import { RecurringJob } from './recurring.job';
 import { EUploadMimeType, TwitterApi } from 'twitter-api-v2';
 
@@ -58,7 +58,13 @@ export class PoolsCompositionTwitterJob implements RecurringJob {
       const watermarkedBuffer = await waterMark(chartBuffer);
 
       const mediaId = await twitterClient.v1.uploadMedia(watermarkedBuffer, { mimeType: EUploadMimeType.Png });
-      console.log(await twitterClient.v2.tweet({ text: tweetText, media: { media_ids: [mediaId] } }));
+
+      const tweets = [
+        { text: tweetText, media: { media_ids: [mediaId] } }, // First tweet with chart
+        { text: generateNewsletterTweet() }, // Second tweet for newsletter
+      ];
+
+      console.log(await twitterClient.v2.tweetThread(tweets));
     });
   }
 

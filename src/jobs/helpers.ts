@@ -72,3 +72,12 @@ export async function waterMark(input: Buffer): Promise<Buffer> {
 
   return await chart.getBufferAsync(chart.getMIME());
 }
+
+// Function to generate the newsletter sign-up tweet
+export function generateNewsletterTweet(): string {
+  return (
+    'Stay informed with the latest digital asset research and insights. 📊\n' +
+    'Be the first to know about our new tools.\n' +
+    'Join us: https://chainkraft.com/join ✨'
+  );
+}
