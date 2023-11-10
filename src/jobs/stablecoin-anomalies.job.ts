@@ -1,4 +1,3 @@
-import { RecurringJob } from './recurring.job';
 import NotificationService from '@services/notifications.service';
 import { isEmpty } from '@/utils/util';
 import TokenApiService from '@/services/token-apis.service';
@@ -12,23 +11,26 @@ import {
 } from '@interfaces/notifications.interface';
 import moment from 'moment';
 import TokenService from '@services/tokens.service';
+import { RecurringJob } from '@/jobs/job.manager';
+import { logger } from '@/config/logger';
 
 export class StablecoinAnomaliesJob implements RecurringJob {
+  private readonly job: schedule.Job;
   public tokenService = new TokenService();
   public notificationService = new NotificationService();
   public tokenApiService = new TokenApiService();
 
-  doIt(): any {
-    console.log('Scheduling StablecoinAnomaliesJob');
-
-    schedule.scheduleJob('0 */4 * * *', () =>
-      this.generateNotifications().catch(e => {
-        console.error('Exception occurred while executing StablecoinAnomaliesJob', e);
-      }),
-    );
+  constructor() {
+    logger.info('Scheduling StablecoinAnomaliesJob');
+    this.job = schedule.scheduleJob('0 */4 * * *', () => {
+      logger.info('Executing StablecoinAnomaliesJob');
+      this.executeJob().catch(e => {
+        logger.error('Exception while executing StablecoinAnomaliesJob', e);
+      });
+    });
   }
 
-  async generateNotifications() {
+  public async executeJob(): Promise<void> {
     const numberOfDays = 14;
 
     const latestNotifications: Notification[] = await this.notificationService.notifications.find({
@@ -46,6 +48,12 @@ export class StablecoinAnomaliesJob implements RecurringJob {
     });
   }
 
+  public cancelJob(): void {
+    if (this.job) {
+      this.job.cancel();
+    }
+  }
+
   genererateDepegNotifications(depeggedTokens: TokenDepeg[], latestNotifications: Notification[]): Notification[] {
     const newNotifications: Notification[] = [];
     const excludedTokens = [''];
@@ -61,7 +69,7 @@ export class StablecoinAnomaliesJob implements RecurringJob {
         return true;
       });
 
-    console.log('StablecoinAnomaliesJob anomalies found', filteredDepeggedTokens);
+    logger.info('StablecoinAnomaliesJob anomalies found', filteredDepeggedTokens);
 
     if (filteredDepeggedTokens.length > 0) {
       filteredDepeggedTokens.forEach(depeg => {

@@ -3,7 +3,7 @@ import { dbConnection } from '@databases';
 import { Routes } from '@interfaces/routes.interface';
 import { userContext } from '@middlewares/auth.middleware';
 import errorMiddleware from '@middlewares/error.middleware';
-import { logger, skip, stream } from '@utils/logger';
+import { logger, skip, stream } from '@/config/logger';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
@@ -24,6 +24,7 @@ class App {
   public app: express.Application;
   public env: string;
   public port: string | number;
+  private jobManager: JobManager;
 
   constructor(routes: Routes[]) {
     this.app = express();
@@ -35,10 +36,7 @@ class App {
     this.initializeRoutes(routes);
     this.initializeSwagger();
     this.initializeErrorHandling();
-
-    if (this.env === 'production') {
-      this.initializeJobManager();
-    }
+    this.initializeJobManager();
   }
 
   public listen() {
@@ -78,7 +76,7 @@ class App {
     this.app.use(morgan(LOG_FORMAT, { stream, skip }));
     this.app.use(cors({ origin: ORIGIN, credentials: CREDENTIALS }));
     this.app.use(hpp());
-    this.app.use(helmet());
+    this.app.use(helmet({ crossOriginResourcePolicy: false }));
     this.app.use(compression());
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
@@ -89,18 +87,11 @@ class App {
     this.app.use('/static', express.static('static'));
 
     this.loadExtraConfiguration();
-    this.loadInitialData();
   }
 
   private loadExtraConfiguration() {
     slug.extend({ '+': 'plus' });
     slug.extend({ '-': 'minus' });
-  }
-
-  private loadInitialData() {
-    new RefreshStablecoinPricesJob().refreshStablecoinPrices().then(() => {
-      new RefreshScoreJob().refreshScores();
-    });
   }
 
   private initializeRoutes(routes: Routes[]) {
@@ -130,8 +121,15 @@ class App {
   }
 
   private initializeJobManager() {
-    const jobManager = new JobManager();
-    jobManager.scheduleJobs();
+    this.jobManager = new JobManager();
+
+    // customized initial data fetch
+    this.jobManager
+      .getJob(RefreshStablecoinPricesJob.name)
+      .executeJob()
+      .then(() => {
+        this.jobManager.getJob(RefreshScoreJob.name).executeJob();
+      });
   }
 }
 

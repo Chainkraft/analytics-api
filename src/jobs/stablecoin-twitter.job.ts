@@ -1,24 +1,27 @@
-import { RecurringJob } from './recurring.job';
 import { currencyFormat } from '../utils/helpers';
 import { EUploadMimeType, TwitterApi } from 'twitter-api-v2';
 import NotificationService from '@services/notifications.service';
 import * as schedule from 'node-schedule';
 import { Notification, NotificationStablecoinDepegDataSchema, NotificationType } from '@interfaces/notifications.interface';
 import { createChart, generateNewsletterTweet, waterMark } from './helpers';
+import { RecurringJob } from '@/jobs/job.manager';
+import { logger } from '@/config/logger';
 
 export class StablecoinTwitterJob implements RecurringJob {
+  private readonly job: schedule.Job;
   public notificationService = new NotificationService();
 
-  doIt(): any {
-    console.log('Scheduling StablecoinTwitterJob');
-    schedule.scheduleJob({ hour: 13, minute: 0, tz: 'Etc/UTC' }, () =>
-      this.generateTweets().catch(e => {
-        console.error('Exception occurred while executing StablecoinTwitterJob', e);
-      }),
-    );
+  constructor() {
+    logger.info('Scheduling StablecoinTwitterJob');
+    this.job = schedule.scheduleJob({ hour: 13, minute: 0, tz: 'Etc/UTC' }, () => {
+      logger.info('Executing StablecoinTwitterJob');
+      this.executeJob().catch(e => {
+        logger.error('Exception while executing StablecoinTwitterJob', e);
+      });
+    });
   }
 
-  async generateTweets() {
+  public async executeJob(): Promise<void> {
     const notifications: Notification[] = await this.notificationService.notifications
       .find({
         type: NotificationType.STABLECOIN_DEPEG,
@@ -41,7 +44,7 @@ export class StablecoinTwitterJob implements RecurringJob {
 
     const filteredNotifications = this.filterNotifcationsForTweet(notifications);
 
-    console.log('StablecoinTwitterJob notifications', filteredNotifications);
+    logger.info('StablecoinTwitterJob notifications', filteredNotifications);
 
     for (let i = 0; i < Math.ceil(filteredNotifications.length / 5); i++) {
       const partialNotifications = filteredNotifications.slice(i * 5, i * 5 + 5);
@@ -75,7 +78,14 @@ export class StablecoinTwitterJob implements RecurringJob {
         tweets.push({ text: tweet, media: { media_ids: [mediaId] } });
       }
       tweets.push({ text: generateNewsletterTweet() });
-      console.log(await twitterClient.v2.tweetThread(tweets));
+      const result = await twitterClient.v2.tweetThread(tweets);
+      logger.info(result.map(tweet => tweet.data.text).join('\n'));
+    }
+  }
+
+  public cancelJob(): void {
+    if (this.job) {
+      this.job.cancel();
     }
   }
 

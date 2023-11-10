@@ -1,4 +1,3 @@
-import { RecurringJob } from './recurring.job';
 import { PriceHistory, Token } from '@/interfaces/tokens.inteface';
 import priceHistoryModel from '@/models/prices-history.model';
 import { isEmpty } from '@/utils/util';
@@ -9,8 +8,11 @@ import TokenService from '@/services/tokens.service';
 import TokensPriceService from '@/services/tokens-prices.service';
 import { Score } from '@/interfaces/scores.interface';
 import * as schedule from 'node-schedule';
+import { RecurringJob } from '@/jobs/job.manager';
+import { logger } from '@/config/logger';
 
 export class RefreshScoreJob implements RecurringJob {
+  private readonly job: schedule.Job;
   public scoreService = new TokensScoreService();
   public tokenService = new TokenService();
   public pricesService = new TokensPriceService();
@@ -18,12 +20,17 @@ export class RefreshScoreJob implements RecurringJob {
   public tokens = tokenModel;
   public score = scoreModel;
 
-  doIt(): any {
-    console.log('Scheduling RefreshScoreJob');
-    schedule.scheduleJob({ hour: 0, minute: 10, tz: 'Etc/UTC' }, () => this.refreshScores());
+  constructor() {
+    logger.info('Scheduling RefreshScoreJob');
+    this.job = schedule.scheduleJob({ hour: 0, minute: 10, tz: 'Etc/UTC' }, () => {
+      logger.info('Executing RefreshScoreJob');
+      this.executeJob().catch(e => {
+        logger.error('Exception while executing RefreshScoreJob', e);
+      });
+    });
   }
 
-  async refreshScores(): Promise<Score> {
+  public async executeJob(): Promise<void> {
     const latestScore = await this.scoreService.findLatestScore();
 
     if (!isEmpty(latestScore)) {
@@ -35,7 +42,13 @@ export class RefreshScoreJob implements RecurringJob {
     const tokens: Token[] = await this.tokenService.findAllToken();
     const priceHistories: PriceHistory[] = await this.pricesService.findAllPriceHistories();
 
-    return this.score.create(this.calculateNewScores(tokens, priceHistories));
+    await this.score.create(this.calculateNewScores(tokens, priceHistories));
+  }
+
+  public cancelJob(): void {
+    if (this.job) {
+      this.job.cancel();
+    }
   }
 
   calculateStandardDeviationBelowPeg(arr: number[]): number {
@@ -84,7 +97,7 @@ export class RefreshScoreJob implements RecurringJob {
       .filter(value => !Number.isNaN(value))
       .sort((a, b) => a - b);
 
-    console.log('Stablecoins score has been refreshed.');
+    logger.info('Stablecoins score has been refreshed.');
 
     return {
       chains: chains,

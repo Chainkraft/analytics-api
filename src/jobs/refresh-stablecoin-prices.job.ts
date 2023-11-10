@@ -1,22 +1,29 @@
-import { RecurringJob } from './recurring.job';
 import TokenService from '@services/tokens.service';
 import TokenApiService from '@/services/token-apis.service';
 import { PriceHistory } from '@/interfaces/tokens.inteface';
 import priceHistoryModel from '@/models/prices-history.model';
 import { isEmpty } from '@/utils/util';
 import * as schedule from 'node-schedule';
+import { RecurringJob } from '@/jobs/job.manager';
+import { logger } from '@/config/logger';
 
 export class RefreshStablecoinPricesJob implements RecurringJob {
+  private readonly job: schedule.Job;
   public tokenService = new TokenService();
   public tokenApiService = new TokenApiService();
   public priceHistory = priceHistoryModel;
 
-  doIt(): any {
-    console.log('Scheduling RefreshStablecoinPricesJob');
-    schedule.scheduleJob({ hour: 0, minute: 1, tz: 'Etc/UTC' }, () => this.refreshStablecoinPrices());
+  constructor() {
+    logger.info('Scheduling RefreshStablecoinPricesJob');
+    this.job = schedule.scheduleJob({ hour: 0, minute: 1, tz: 'Etc/UTC' }, () => {
+      logger.info('Executing RefreshStablecoinPricesJob');
+      this.executeJob().catch(e => {
+        logger.error('Exception while executing RefreshStablecoinPricesJob', e);
+      });
+    });
   }
 
-  async refreshStablecoinPrices(): Promise<PriceHistory[]> {
+  public async executeJob(): Promise<void> {
     const usdcPriceHistory = await this.priceHistory.findOne({ slug: 'usd-coin' });
 
     if (!isEmpty(usdcPriceHistory) && Array.isArray(usdcPriceHistory.prices)) {
@@ -56,9 +63,9 @@ export class RefreshStablecoinPricesJob implements RecurringJob {
       }
     }
 
-    console.log('Refreshed stablecoin prices.');
+    logger.info('Refreshed stablecoin prices.');
 
-    return Promise.all(
+    await Promise.all(
       freshTokensPrices.map(async (priceHistory: PriceHistory) => {
         return this.priceHistory.findOneAndUpdate({ gecko_id: priceHistory.gecko_id }, priceHistory, {
           new: true,
@@ -66,5 +73,11 @@ export class RefreshStablecoinPricesJob implements RecurringJob {
         });
       }),
     );
+  }
+
+  public cancelJob(): void {
+    if (this.job) {
+      this.job.cancel();
+    }
   }
 }

@@ -3,7 +3,6 @@ import NotificationService from '@services/notifications.service';
 import { RequestWithUser } from '@interfaces/auth.interface';
 import { NotificationSubscribeDto } from '@dtos/notifications.dto';
 import { isEmpty } from '@utils/util';
-import { HttpException } from '@exceptions/HttpException';
 
 class NotificationsController {
   public notificationService = new NotificationService();

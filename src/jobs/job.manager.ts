@@ -1,43 +1,52 @@
-import { RecurringJob } from './recurring.job';
+import { TopCoinsTwitterJob } from '@/jobs/top-coins-twitter.job';
+import { GlobalStatsTwitterJob } from '@/jobs/global-stats-twitter.job';
 import { RefreshStablecoinPricesJob } from './refresh-stablecoin-prices.job';
-import { RefreshScoreJob } from './score-calculation.job';
-import { StablecoinContractsImport } from '@/jobs/stablecoin-contracts.job';
-import { CurvePoolsJob } from './curve-pools.job';
-import { StablecoinAnomaliesJob } from './stablecoin-anomalies.job';
-import { ProtocolsImport } from '@/jobs/protocols.job';
-import { StablecoinTwitterJob } from '@/jobs/stablecoin-twitter.job';
+import { RefreshScoreJob } from '@/jobs/score-calculation.job';
+import { CurvePoolsJob } from '@/jobs/curve-pools.job';
+import { UniswapPoolsJob } from '@/jobs/uniswap-pools.job';
+import { PoolsCompositionNotificationsJob } from '@/jobs/pools-composition.job';
 import { ContractAnomaliesJob } from '@/jobs/contract-anomalies.job';
-import { UniswapPoolsJob } from './uniswap-pools.job';
-import { PoolsCompositionNotificationsJob } from './pools-composition.job';
+import { StablecoinAnomaliesJob } from '@/jobs/stablecoin-anomalies.job';
+import { StablecoinTwitterJob } from '@/jobs/stablecoin-twitter.job';
+import { StablecoinContractsImport } from '@/jobs/stablecoin-contracts.job';
 import { PoolsCompositionTwitterJob } from './pools-composition.twitter.job';
 
 export class JobManager {
-  jobs: RecurringJob[] = [];
+  private jobs: Job[] = [];
 
   constructor() {
-    this.addJob(new RefreshStablecoinPricesJob());
-    this.addJob(new RefreshScoreJob());
+    this.addJob(new ContractAnomaliesJob());
     this.addJob(new CurvePoolsJob());
     this.addJob(new UniswapPoolsJob());
     this.addJob(new PoolsCompositionNotificationsJob());
-    this.addJob(new PoolsCompositionTwitterJob());
-    this.addJob(new ContractAnomaliesJob());
+    this.addJob(new RefreshScoreJob());
+    this.addJob(new RefreshStablecoinPricesJob());
     this.addJob(new StablecoinAnomaliesJob());
-    this.addJob(new StablecoinTwitterJob());
     this.addJob(new StablecoinContractsImport());
-    this.addJob(new ProtocolsImport());
+
+    if (process.env.NODE_ENV === 'production') {
+      // social posts
+      this.addJob(new GlobalStatsTwitterJob());
+      this.addJob(new PoolsCompositionTwitterJob());
+      this.addJob(new StablecoinTwitterJob());
+      this.addJob(new TopCoinsTwitterJob());
+    }
   }
 
-  addJob(...jobs: RecurringJob[]): boolean {
+  public addJob(...jobs: Job[]): boolean {
     jobs.forEach(c => this.jobs.push(c));
     return true;
   }
 
-  scheduleJobs() {
-    if (this.jobs.length > 0) {
-      this.jobs.forEach(job => {
-        job.doIt();
-      });
-    }
+  public getJob(className: string): Job | undefined {
+    return this.jobs.find(obj => obj.constructor.name === className);
   }
+}
+
+export interface RecurringJob extends Job {
+  cancelJob(): void;
+}
+
+export interface Job {
+  executeJob(): Promise<void>;
 }

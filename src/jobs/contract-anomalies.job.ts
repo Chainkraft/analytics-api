@@ -1,4 +1,3 @@
-import { RecurringJob } from './recurring.job';
 import NotificationService from '@services/notifications.service';
 import { NotificationContractChangeDataSchema, NotificationSeverity, NotificationType } from '@interfaces/notifications.interface';
 import ContractService from '@services/contracts.service';
@@ -10,6 +9,8 @@ import promClient from 'prom-client';
 import TokenService from '@services/tokens.service';
 import * as schedule from 'node-schedule';
 import ProtocolService from '@services/protocols.service';
+import { RecurringJob } from '@/jobs/job.manager';
+import { logger } from '@/config/logger';
 
 const anomaliesCounter = new promClient.Counter({
   name: 'api_contract_anomalies_job_count',
@@ -17,20 +18,32 @@ const anomaliesCounter = new promClient.Counter({
 });
 
 export class ContractAnomaliesJob implements RecurringJob {
+  private readonly job: schedule.Job;
   public tokenService = new TokenService();
   public contractService = new ContractService();
   public protocolService = new ProtocolService();
   public blockchainService = new BlockchainService();
   public notificationService = new NotificationService();
 
-  doIt(): any {
-    console.log('Scheduling ContractAnomaliesJob');
-    schedule.scheduleJob('0 */5 * * *', () => this.generateNotifications());
+  constructor() {
+    logger.info('Scheduling ContractAnomaliesJob');
+    this.job = schedule.scheduleJob('0 */5 * * *', () => {
+      logger.info('Executing ContractAnomaliesJob');
+      this.executeJob().catch(e => {
+        logger.error('Exception while executing ContractAnomaliesJob', e);
+      });
+    });
   }
 
-  async generateNotifications() {
+  public cancelJob(): void {
+    if (this.job) {
+      this.job.cancel();
+    }
+  }
+
+  public async executeJob(): Promise<void> {
     const contracts = (await this.contractService.findAllContracts()).filter(this.contractService.isProxyContract);
-    console.log('ContractAnomaliesJob will check %d contracts', contracts.length);
+    logger.info('ContractAnomaliesJob will check %d contracts', contracts.length);
 
     // TODO: inaccurate temp solution to bypass alchemy api limits regarding notify api
     let detectedChanges = 0;
@@ -59,12 +72,12 @@ export class ContractAnomaliesJob implements RecurringJob {
     }
 
     anomaliesCounter.inc(detectedChanges);
-    console.log('ContractAnomaliesJob finished. Smart contracts modified: %d of %d', detectedChanges, contracts.length);
+    logger.info('ContractAnomaliesJob finished. Smart contracts modified: %d of %d', detectedChanges, contracts.length);
   }
 
   private async updateHistory(contract: Contract, request: PromiseSettledResult<string>, type: 'impl' | 'admin'): Promise<boolean> {
     if (isRejected(request)) {
-      console.log('Could not retrieve %s details of proxy=%s (%s)', type, contract.address, contract.network);
+      logger.info('Could not retrieve %s details of proxy=%s (%s)', type, contract.address, contract.network);
       return false;
     }
 
@@ -78,7 +91,7 @@ export class ContractAnomaliesJob implements RecurringJob {
         address: newAddress,
       });
 
-      console.log('Proxy=%s %s changed %s => %s', contract.address, type, currentAddress.address, newAddress);
+      logger.info('Proxy=%s %s changed %s => %s', contract.address, type, currentAddress.address, newAddress);
       return true;
     }
     return false;

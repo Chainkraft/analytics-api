@@ -1,32 +1,35 @@
-import { RecurringJob } from './recurring.job';
 import * as schedule from 'node-schedule';
 import NotificationService from '@services/notifications.service';
 import {
   Notification,
-  NotificationSeverity,
   NotificationLiquidityPoolCompositionChangeDataSchema,
+  NotificationSeverity,
   NotificationType,
 } from '@interfaces/notifications.interface';
 import { LiquidityPoolHistory } from '@/interfaces/liquidity-pool-history.interface';
 import moment from 'moment';
 import LiquidityPoolService from '@/services/liquidity-pools.service';
 import TokenService from '@services/tokens.service';
+import { RecurringJob } from '@/jobs/job.manager';
+import { logger } from '@/config/logger';
 
 export class PoolsCompositionNotificationsJob implements RecurringJob {
+  private readonly job: schedule.Job;
   public tokenService = new TokenService();
   public notificationService = new NotificationService();
   public liquidityPoolsService = new LiquidityPoolService();
 
-  doIt(): any {
-    console.log('Scheduling PoolsCompositionNotificationsJob');
-    schedule.scheduleJob({ hour: new schedule.Range(0, 23, 4), minute: 10, tz: 'Etc/UTC' }, () =>
-      this.generateNotifications().catch(e => {
-        console.error('Exception occurred while executing PoolsCompositionNotificationsJob', e);
-      }),
-    );
+  constructor() {
+    logger.info('Scheduling PoolsCompositionNotificationsJob');
+    this.job = schedule.scheduleJob({ hour: new schedule.Range(0, 23, 4), minute: 10, tz: 'Etc/UTC' }, () => {
+      logger.info('Executing PoolsCompositionNotificationsJob');
+      this.executeJob().catch(e => {
+        logger.error('Exception while executing PoolsCompositionNotificationsJob', e);
+      });
+    });
   }
 
-  async generateNotifications() {
+  public async executeJob(): Promise<void> {
     const liquidityPools: LiquidityPoolHistory[] = await this.liquidityPoolsService.findAllLiquiditiyPoolHistories();
     const latestNotifications: Notification[] = await this.notificationService.notifications
       .find({
@@ -46,13 +49,19 @@ export class PoolsCompositionNotificationsJob implements RecurringJob {
       newNotifications.push(...poolNotifications);
     }
 
-    console.log('PoolsCompositionNotificationsJob generated notifications:', newNotifications);
+    logger.info('PoolsCompositionNotificationsJob generated notifications:', newNotifications);
 
-    return Promise.all(
+    Promise.all(
       newNotifications.map(notification => {
         this.notificationService.createNotification(notification);
       }),
     );
+  }
+
+  public cancelJob(): void {
+    if (this.job) {
+      this.job.cancel();
+    }
   }
 
   async detectWeightChangeInPool(poolHistory: LiquidityPoolHistory, notifications: Notification[]): Promise<Notification[]> {
@@ -111,7 +120,7 @@ export class PoolsCompositionNotificationsJob implements RecurringJob {
             );
 
             if (!existingNotification) {
-              console.log(
+              logger.info(
                 'PoolsCompositionNotificationsJob',
                 `[${poolHistory.address}] Coin ${coin.symbol} has changed its weight by ${(weightChange * 100).toFixed(2)}% between ${
                   lastNotificationForCoin?.createdAt
@@ -151,7 +160,7 @@ export class PoolsCompositionNotificationsJob implements RecurringJob {
               );
 
               if (!existingNotification) {
-                console.log(
+                logger.info(
                   'PoolsCompositionNotificationsJob',
                   `[${poolHistory.address}] Coin ${coin.symbol} has changed its weight by ${(weightChange * 100).toFixed(2)}% between ${
                     prevBalance.date

@@ -2,7 +2,9 @@ import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import winston from 'winston';
 import winstonDaily from 'winston-daily-rotate-file';
-import { LOG_DIR } from '@config';
+import { LOG_DIR, LOG_LOKI_HOST } from '@/config/index';
+import { Request } from 'express';
+import LokiTransport from 'winston-loki';
 
 // logs dir
 const logDir: string = join(__dirname, LOG_DIR);
@@ -13,19 +15,15 @@ if (!existsSync(logDir)) {
 }
 
 // Define log format
-const logFormat = winston.format.printf(({ timestamp, level, message }) => `${timestamp} ${level}: ${message}`);
+const { combine, timestamp, json, errors, colorize, splat } = winston.format;
 
 /*
  * Log Level
  * error: 0, warn: 1, info: 2, http: 3, verbose: 4, debug: 5, silly: 6
  */
 const logger = winston.createLogger({
-  format: winston.format.combine(
-    winston.format.timestamp({
-      format: 'YYYY-MM-DD HH:mm:ss',
-    }),
-    logFormat,
-  ),
+  defaultMeta: { service: 'analytics-api' },
+  format: combine(errors({ stack: true }), timestamp(), splat(), json()),
   transports: [
     // debug log setting
     new winstonDaily({
@@ -45,17 +43,38 @@ const logger = winston.createLogger({
       filename: `%DATE%.log`,
       maxFiles: 30, // 30 Days saved
       handleExceptions: true,
-      json: false,
       zippedArchive: true,
     }),
   ],
 });
 
-logger.add(
-  new winston.transports.Console({
-    format: winston.format.combine(winston.format.splat(), winston.format.colorize()),
-  }),
-);
+if (process.env.NODE_ENV === 'production') {
+  logger.add(
+    new LokiTransport({
+      host: LOG_LOKI_HOST,
+    }),
+  );
+} else {
+  logger.add(
+    new winston.transports.Console({
+      level: 'debug',
+      format: combine(
+        errors({ stack: true }),
+        colorize(),
+        timestamp(),
+        splat(),
+        winston.format.printf(({ level, message, timestamp, stack }) => {
+          if (stack) {
+            // print log trace
+            return `${timestamp} ${level}: ${message} - ${stack}`;
+          }
+          return `${timestamp} ${level}: ${message}`;
+        }),
+      ),
+      handleExceptions: true,
+    }),
+  );
+}
 
 const stream = {
   write: (message: string) => {
@@ -63,6 +82,6 @@ const stream = {
   },
 };
 
-const skip = (req, res) => skipLogForUrls.includes(req.url);
+const skip = (req: Request) => skipLogForUrls.includes(req.url);
 
 export { logger, stream, skip };

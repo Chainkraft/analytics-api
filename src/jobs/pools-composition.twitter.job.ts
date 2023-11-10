@@ -3,22 +3,25 @@ import NotificationService from '@services/notifications.service';
 import * as schedule from 'node-schedule';
 import { dexLpNames, percentageFormat, shortCurrencyFormat } from '../utils/helpers';
 import { createChart, generateNewsletterTweet, waterMark } from './helpers';
-import { RecurringJob } from './recurring.job';
 import { EUploadMimeType, TwitterApi } from 'twitter-api-v2';
+import { logger } from "@/config/logger";
+import { RecurringJob } from "@/jobs/job.manager";
 
 export class PoolsCompositionTwitterJob implements RecurringJob {
+  private readonly job: schedule.Job;
   public notificationService = new NotificationService();
 
-  doIt(): any {
-    console.log('Scheduling PoolsCompositionTwitterJob');
-    schedule.scheduleJob({ hour: new schedule.Range(0, 23, 4), minute: 15, tz: 'Etc/UTC' }, () =>
-      this.generateTweets().catch(e => {
-        console.error('Exception occurred while executing PoolsCompositionTwitterJob', e);
-      }),
-    );
+  constructor() {
+    logger.info('Scheduling PoolsCompositionTwitterJob');
+    this.job = schedule.scheduleJob({ hour: new schedule.Range(0, 23, 4), minute: 15, tz: 'Etc/UTC' }, () => {
+      logger.info('Executing PoolsCompositionTwitterJob');
+      this.executeJob().catch(e => {
+        logger.error('Exception while executing PoolsCompositionTwitterJob', e);
+      });
+    });
   }
 
-  async generateTweets() {
+  public async executeJob(): Promise<void> {
     const notifications: Notification[] = await this.notificationService.notifications
       .find({
         type: NotificationType.LP_COMPOSITION_CHANGE,
@@ -29,7 +32,7 @@ export class PoolsCompositionTwitterJob implements RecurringJob {
       .populate('token')
       .populate('liquidityPool');
 
-    console.log('PoolsCompositionTwitterJob notifications', notifications);
+    logger.info('PoolsCompositionTwitterJob notifications', notifications);
 
     if (notifications.length === 0) {
       return;
@@ -44,9 +47,6 @@ export class PoolsCompositionTwitterJob implements RecurringJob {
 
     const groupedNotifications = this.groupNotificationsByLp(notifications);
 
-    console.log('PoolsCompositionTwitterJob notifications', groupedNotifications);
-
-    console.log('PoolsCompositionTwitterJob tweets: ');
     Array.from(groupedNotifications, async ([lpId, notifications]) => {
       const tweetText = this.constructTweet(lpId, notifications);
 
@@ -64,8 +64,15 @@ export class PoolsCompositionTwitterJob implements RecurringJob {
         { text: generateNewsletterTweet() }, // Second tweet for newsletter
       ];
 
-      console.log(await twitterClient.v2.tweetThread(tweets));
+      const result = await twitterClient.v2.tweetThread(tweets);
+      logger.info(result.map(tweet => tweet.data.text).join('\n'));
     });
+  }
+
+  public cancelJob(): void {
+    if (this.job) {
+      this.job.cancel();
+    }
   }
 
   private constructTweet(lpId: string, notifications: Notification[]): string {
