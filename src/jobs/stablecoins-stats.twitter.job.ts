@@ -13,7 +13,7 @@ export class StablecoinsStatsTwitterJob implements RecurringJob {
 
   constructor() {
     logger.info('Scheduling StablecoinsStatsTwitterJob');
-    this.job = schedule.scheduleJob({ hour: 18, minute: 10, tz: 'UTC' }, () => {
+    this.job = schedule.scheduleJob({ hour: 19, minute: 10, tz: 'UTC' }, () => {
       logger.info('Executing StablecoinsStatsTwitterJob');
       this.executeJob().catch(e => {
         logger.error('Exception while executing StablecoinsStatsTwitterJob', e);
