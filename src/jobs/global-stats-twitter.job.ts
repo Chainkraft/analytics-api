@@ -13,13 +13,13 @@ export class GlobalStatsTwitterJob implements RecurringJob {
   private readonly job: schedule.Job;
   private jobStatsService = new JobStatsService();
   private coingecko = new CoinGeckoClient({
-    timeout: 10000,
+    timeout: 60000,
     autoRetry: true,
   });
 
   constructor() {
     logger.info('Scheduling GlobalStatsTwitterJob');
-    this.job = schedule.scheduleJob({ hour: 20, minute: 0, tz: 'UTC' }, () => {
+    this.job = schedule.scheduleJob({ hour: 19, minute: 0, tz: 'UTC' }, () => {
       logger.info('Executing GlobalStatsTwitterJob');
       this.executeJob().catch(e => {
         logger.error('Exception while executing GlobalStatsTwitterJob', e);

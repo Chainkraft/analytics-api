@@ -4,8 +4,8 @@ import * as schedule from 'node-schedule';
 import { dexLpNames, percentageFormat, shortCurrencyFormat } from '../utils/helpers';
 import { createChart, generateNewsletterTweet, waterMark } from './helpers';
 import { EUploadMimeType, TwitterApi } from 'twitter-api-v2';
-import { logger } from "@/config/logger";
-import { RecurringJob } from "@/jobs/job.manager";
+import { logger } from '@/config/logger';
+import { RecurringJob } from '@/jobs/job.manager';
 
 export class PoolsCompositionTwitterJob implements RecurringJob {
   private readonly job: schedule.Job;

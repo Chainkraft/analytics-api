@@ -10,7 +10,7 @@ import { logger } from '@/config/logger';
 export class TopCoinsTwitterJob implements RecurringJob {
   private readonly job: schedule.Job;
   private readonly coingecko = new CoinGeckoClient({
-    timeout: 10000,
+    timeout: 60000,
     autoRetry: true,
   });
 

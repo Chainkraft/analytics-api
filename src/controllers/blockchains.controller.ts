@@ -10,7 +10,7 @@ class BlockchainsController {
     try {
       const blocks = new Map<ContractNetwork, number>();
       const requests = [];
-      Object.keys(ContractNetwork).forEach((key) => {
+      Object.keys(ContractNetwork).forEach(key => {
         const network = ContractNetwork[key];
         requests.push(this.blockchainService.getBlockNumber(network));
       });
