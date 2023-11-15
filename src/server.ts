@@ -12,6 +12,7 @@ import ProtocolsRoute from '@routes/protocols.route';
 import LiquidityPoolsRoute from './routes/pools.route';
 import BlockchainsRoute from '@routes/blockchains.route';
 import NotificationsRoute from '@routes/notifications.route';
+import StatsRoute from './routes/stats.route';
 
 validateEnv();
 
@@ -24,6 +25,7 @@ const app = new App([
   new NotificationsRoute(),
   new SubscribersRoute(),
   new TokensRoute(),
+  new StatsRoute(),
   new StablecoinsRoute(),
   new UsersRoute(),
   new ScoresRoute(),

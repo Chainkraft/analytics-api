@@ -1,13 +1,7 @@
 import axios from 'axios';
+import { llamaStablecoinsClient } from './api-clients';
 
 class TokenApiService {
-  private llamaStablecoinsClient = axios.create({
-    baseURL: 'https://stablecoins.llama.fi/',
-    headers: {
-      'content-type': 'application/json',
-    },
-  });
-
   private geckoClient = axios.create({
     baseURL: 'https://api.coingecko.com/api/v3/',
     headers: {
@@ -16,7 +10,7 @@ class TokenApiService {
   });
 
   public async getStablecoinsFromDefiLlama(): Promise<any> {
-    return (await this.llamaStablecoinsClient.get('stablecoins?includePrices=true')).data.peggedAssets;
+    return (await llamaStablecoinsClient.get('stablecoins?includePrices=true')).data.peggedAssets;
   }
 
   public async getStablecoinsPricesFromDefiLlama(): Promise<any> {
@@ -24,7 +18,7 @@ class TokenApiService {
   }
 
   public async getStablecoinDetailsFromDefiLlama(llamaId: string) {
-    return (await this.llamaStablecoinsClient.get(`stablecoin/${llamaId}`)).data;
+    return (await llamaStablecoinsClient.get(`stablecoin/${llamaId}`)).data;
   }
 
   public async getGeckoTokens(vs_currency: string, ids: string[]): Promise<any> {

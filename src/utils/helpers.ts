@@ -60,6 +60,8 @@ export const shortCurrencyFormat = (num: number) =>
     currency: 'USD',
     notation: 'compact',
     compactDisplay: 'long',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
   }).format(num);
 
 export const percentageFormat = (weight: number, multiplier = 1) => {
