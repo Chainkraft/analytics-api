@@ -10,6 +10,7 @@ import { StablecoinAnomaliesJob } from '@/jobs/stablecoin-anomalies.job';
 import { StablecoinTwitterJob } from '@/jobs/stablecoin-twitter.job';
 import { StablecoinContractsImport } from '@/jobs/stablecoin-contracts.job';
 import { PoolsCompositionTwitterJob } from './pools-composition.twitter.job';
+import { StablecoinsStatsTwitterJob } from './stablecoins-stats.twitter.job';
 
 export class JobManager {
   private jobs: Job[] = [];
@@ -26,6 +27,7 @@ export class JobManager {
 
     if (process.env.NODE_ENV === 'production') {
       // social posts
+      this.addJob(new StablecoinsStatsTwitterJob());
       this.addJob(new GlobalStatsTwitterJob());
       this.addJob(new PoolsCompositionTwitterJob());
       this.addJob(new StablecoinTwitterJob());

@@ -6,10 +6,13 @@ import { createChart, generateNewsletterTweet, waterMark } from './helpers';
 import { EUploadMimeType, TwitterApi } from 'twitter-api-v2';
 import { logger } from '@/config/logger';
 import { RecurringJob } from '@/jobs/job.manager';
+import { SocialMedia } from '@/interfaces/socia-media-post.interface';
+import SocialMediaPostService from '@/services/social-media-post.service';
 
 export class PoolsCompositionTwitterJob implements RecurringJob {
   private readonly job: schedule.Job;
-  public notificationService = new NotificationService();
+  private notificationService = new NotificationService();
+  private socialMediaPostService = new SocialMediaPostService();
 
   constructor() {
     logger.info('Scheduling PoolsCompositionTwitterJob');
@@ -66,6 +69,14 @@ export class PoolsCompositionTwitterJob implements RecurringJob {
 
       const result = await twitterClient.v2.tweetThread(tweets);
       logger.info(result.map(tweet => tweet.data.text).join('\n'));
+
+      // Save the social media post to the database after tweeting
+      await this.socialMediaPostService.saveSocialMediaPost({
+        socialMedia: SocialMedia.TWITTER,
+        account: 'chainkraftcom', // Update with the correct account name if needed
+        text: tweetText,
+        images: [{ data: watermarkedBuffer, contentType: EUploadMimeType.Png }],
+      });
     });
   }
 

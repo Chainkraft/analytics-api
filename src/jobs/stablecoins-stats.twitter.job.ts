@@ -5,11 +5,15 @@ import * as schedule from 'node-schedule';
 import { percentageFormat, shortCurrencyFormat } from '@utils/helpers';
 import { RecurringJob } from '@/jobs/job.manager';
 import { logger } from '@/config/logger';
-import { TwitterApi } from 'twitter-api-v2';
+import { EUploadMimeType, TwitterApi } from 'twitter-api-v2';
+import { createChart, waterMark } from './helpers';
+import SocialMediaPostService from '@/services/social-media-post.service';
+import { SocialMedia } from '@/interfaces/socia-media-post.interface';
 
 export class StablecoinsStatsTwitterJob implements RecurringJob {
   private readonly job: schedule.Job;
   private jobStatsService = new JobStatsService();
+  private socialMediaPostService = new SocialMediaPostService();
 
   constructor() {
     logger.info('Scheduling StablecoinsStatsTwitterJob');
@@ -46,15 +50,14 @@ export class StablecoinsStatsTwitterJob implements RecurringJob {
     const changeInStablecoinsMarketCap = latestStablecoinStats.totalMarketCapUSD - prevDayStablecoinStats.totalMarketCapUSD;
     const stablecoinsMarketCapShare = latestStablecoinStats.totalMarketCapUSD / latestGlobalStats.totalMarketCap;
 
-    const marketCapDirection = changeInStablecoinsMarketCap >= 0 ? `⬆️` : `🔻`;
+    // const stablecoinsMarketCapShare = latestStablecoinStats.totalMarketCapUSD / latestGlobalStats.totalMarketCap;
+    const prevDayStablecoinsMarketCapShare = prevDayStablecoinStats.totalMarketCapUSD / prevDayGlobalStats.totalMarketCap;
 
-    // Your tweet
-    const tweet =
-      `💰 Total stablecoins market cap: ${shortCurrencyFormat(totalStablecoinsMarketCap)} (${marketCapDirection} ${shortCurrencyFormat(
-        Math.abs(changeInStablecoinsMarketCap),
-      )})\n` +
-      `📊 Stablecoins' share of crypto market: ${percentageFormat(stablecoinsMarketCapShare, 100)}\n\n` +
-      `#crypto #stablecoins #DeFi`;
+    // Calculate the change in market cap share
+    const changeInMarketCapShare = stablecoinsMarketCapShare - prevDayStablecoinsMarketCapShare;
+    const marketCapShareDirection = changeInMarketCapShare >= 0 ? '+' : '-';
+
+    const marketCapDirection = changeInStablecoinsMarketCap >= 0 ? `+` : `-`;
 
     const twitterClient = new TwitterApi({
       appKey: process.env.STABLEALERTS_APP_KEY,
@@ -63,9 +66,37 @@ export class StablecoinsStatsTwitterJob implements RecurringJob {
       accessSecret: process.env.STABLEALERTS_ACCESS_SECRET,
     });
 
+    // Your tweet
+    const tweet =
+      `💰 Total market cap of stablecoins: ${shortCurrencyFormat(totalStablecoinsMarketCap)} (${marketCapDirection}${shortCurrencyFormat(
+        Math.abs(changeInStablecoinsMarketCap),
+      )})\n\n` +
+      `📊 Stablecoins' share of the crypto market: ${percentageFormat(stablecoinsMarketCapShare, 100)} (${marketCapShareDirection}${percentageFormat(
+        Math.abs(changeInMarketCapShare),
+        100,
+      )})\n\n` +
+      `#crypto #stablecoins #DeFi`;
+
+    const chartBuffer = await createChart(
+      `https://analytics.chainkraft.com/charts/stats`,
+      { width: 1280, height: 720 },
+      '#stablecoin-share-pie-chart',
+    );
+    const watermarkedBuffer = await waterMark(chartBuffer);
+
+    const mediaId = await twitterClient.v1.uploadMedia(watermarkedBuffer, { mimeType: EUploadMimeType.Png });
+
     const tweets = [];
-    tweets.push({ text: tweet });
+    tweets.push({ text: tweet, media: { media_ids: [mediaId] } });
     logger.info(await twitterClient.v2.tweetThread(tweets));
+
+    // Save SocialMediaPost here
+    await this.socialMediaPostService.saveSocialMediaPost({
+      socialMedia: SocialMedia.TWITTER,
+      account: 'stablealerts',
+      text: tweet,
+      images: [{ data: watermarkedBuffer, contentType: 'image/png' }], // Assuming the watermarkedBuffer is a Buffer
+    });
   }
 
   public cancelJob(): void {

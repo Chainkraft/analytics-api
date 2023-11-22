@@ -6,10 +6,13 @@ import { Notification, NotificationStablecoinDepegDataSchema, NotificationType }
 import { createChart, generateNewsletterTweet, waterMark } from './helpers';
 import { RecurringJob } from '@/jobs/job.manager';
 import { logger } from '@/config/logger';
+import { SocialMedia } from '@/interfaces/socia-media-post.interface';
+import SocialMediaPostService from '@/services/social-media-post.service';
 
 export class StablecoinTwitterJob implements RecurringJob {
   private readonly job: schedule.Job;
-  public notificationService = new NotificationService();
+  private notificationService = new NotificationService();
+  private socialMediaPostService = new SocialMediaPostService();
 
   constructor() {
     logger.info('Scheduling StablecoinTwitterJob');
@@ -59,7 +62,9 @@ export class StablecoinTwitterJob implements RecurringJob {
       firstTweet += `\n\nDetails 👇\n\n#DeFi #crypto`;
 
       const tweets = [];
+      const smPosts = [];
       tweets.push({ text: firstTweet });
+      smPosts.push({ text: firstTweet });
       for (const depeg of partialNotifications) {
         const data: NotificationStablecoinDepegDataSchema = depeg.data;
         const tweet =
@@ -75,11 +80,22 @@ export class StablecoinTwitterJob implements RecurringJob {
         );
         const watermarkedBuffer = await waterMark(chartBuffer);
         const mediaId = await twitterClient.v1.uploadMedia(watermarkedBuffer, { mimeType: EUploadMimeType.Png });
+        smPosts.push({ text: tweet, image: { data: watermarkedBuffer, contentType: EUploadMimeType.Png } });
         tweets.push({ text: tweet, media: { media_ids: [mediaId] } });
       }
       tweets.push({ text: generateNewsletterTweet() });
       const result = await twitterClient.v2.tweetThread(tweets);
       logger.info(result.map(tweet => tweet.data.text).join('\n'));
+
+      // Iterate over smPosts and save each to the database
+      for (const smPost of smPosts) {
+        await this.socialMediaPostService.saveSocialMediaPost({
+          socialMedia: SocialMedia.TWITTER,
+          account: 'stablealerts', // Update with the correct account name if needed
+          text: smPost.text,
+          images: smPost.image ? [smPost.image] : [],
+        });
+      }
     }
   }
 
