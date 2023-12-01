@@ -11,6 +11,7 @@ import { StablecoinTwitterJob } from '@/jobs/stablecoin-twitter.job';
 import { StablecoinContractsImport } from '@/jobs/stablecoin-contracts.job';
 import { PoolsCompositionTwitterJob } from './pools-composition.twitter.job';
 import { StablecoinsStatsTwitterJob } from './stablecoins-stats.twitter.job';
+import { StablecoinsWeeklyStatsTwitterJob } from './stablecoins-weekly-stats.twitter.job';
 
 export class JobManager {
   private jobs: Job[] = [];
@@ -32,6 +33,7 @@ export class JobManager {
       this.addJob(new PoolsCompositionTwitterJob());
       this.addJob(new StablecoinTwitterJob());
       this.addJob(new TopCoinsTwitterJob());
+      this.addJob(new StablecoinsWeeklyStatsTwitterJob());
     }
   }
 
