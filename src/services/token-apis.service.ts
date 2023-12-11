@@ -1,11 +1,20 @@
 import axios from 'axios';
 import { llamaStablecoinsClient } from './api-clients';
+import { COINGECKO_DEMO_API_KEY, COINMARKETCAP_DEMO_API_KEY } from '@config';
 
 class TokenApiService {
   private geckoClient = axios.create({
     baseURL: 'https://api.coingecko.com/api/v3/',
     headers: {
       'content-type': 'application/json',
+      'x_cg_demo_api_key': COINGECKO_DEMO_API_KEY,
+    },
+  });
+  private coinMarketCapClient = axios.create({
+    baseURL: 'https://pro-api.coinmarketcap.com/v1/',
+    headers: {
+      'content-type': 'application/json',
+      'X-CMC_PRO_API_KEY': COINMARKETCAP_DEMO_API_KEY,
     },
   });
 
@@ -42,6 +51,14 @@ class TokenApiService {
         developer_data: false,
       },
     });
+  }
+
+  public async getGlobal(): Promise<any> {
+    return this.geckoClient.get(`global`);
+  }
+
+  public async getCoinMarket(input: { start?: number; limit?: number }): Promise<any> {
+    return this.coinMarketCapClient.get(`cryptocurrency/listings/latest`, { params: input });
   }
 }
 

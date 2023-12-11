@@ -7,7 +7,7 @@ export interface SocialMediaPost {
   socialMedia: SocialMedia;
   account: string;
   text: string;
-  images: {
+  images?: {
     data: Buffer;
     contentType: string;
   }[];

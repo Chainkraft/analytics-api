@@ -126,7 +126,7 @@ class App {
     // customized initial data fetch
     this.jobManager
       .getJob(RefreshStablecoinPricesJob.name)
-      .executeJob()
+      ?.executeJob()
       .then(() => {
         this.jobManager.getJob(RefreshScoreJob.name).executeJob();
       });

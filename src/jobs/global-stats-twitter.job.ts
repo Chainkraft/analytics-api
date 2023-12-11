@@ -1,4 +1,4 @@
-import { CoinGeckoClient, GlobalResponse } from 'coingecko-api-v3';
+import { GlobalResponse } from 'coingecko-api-v3';
 import JobStatsService from '@services/job-stats.service';
 import { GlobalStats } from '@interfaces/jobs-stats.interface';
 import moment from 'moment';
@@ -8,14 +8,15 @@ import { RecurringJob } from '@/jobs/job.manager';
 import { logger } from '@/config/logger';
 import { TwitterApi } from 'twitter-api-v2';
 import { CRYPTOSTATS_ACCESS_SECRET, CRYPTOSTATS_ACCESS_TOKEN, CRYPTOSTATS_APP_KEY, CRYPTOSTATS_APP_SECRET } from '@config';
+import SocialMediaPostService from '@services/social-media-post.service';
+import { SocialMedia } from '@interfaces/socia-media-post.interface';
+import TokenApisService from '@services/token-apis.service';
 
 export class GlobalStatsTwitterJob implements RecurringJob {
   private readonly job: schedule.Job;
+  private apiService = new TokenApisService();
   private jobStatsService = new JobStatsService();
-  private coingecko = new CoinGeckoClient({
-    timeout: 60000,
-    autoRetry: true,
-  });
+  private socialMediaPostService = new SocialMediaPostService();
 
   constructor() {
     logger.info('Scheduling GlobalStatsTwitterJob');
@@ -56,6 +57,12 @@ export class GlobalStatsTwitterJob implements RecurringJob {
     });
     const result = await twitter.v2.tweetThread([{ text: tweet }]);
     logger.info(result.map(tweet => tweet.data.text).join('\n'));
+
+    await this.socialMediaPostService.saveSocialMediaPost({
+      socialMedia: SocialMedia.TWITTER,
+      account: 'GazillionCap',
+      text: tweet,
+    });
   }
 
   public cancelJob(): void {
@@ -67,12 +74,12 @@ export class GlobalStatsTwitterJob implements RecurringJob {
   private getValueWithChange(newValue: number, oldValue: number, format: '%' | '$' = '$'): string {
     const value = format === '$' ? shortCurrencyFormat(newValue) : `${newValue.toFixed(2)}%`;
     const direction = newValue >= oldValue ? `⬆️` : `🔻`;
-    const percentChange = Math.round(((newValue - oldValue) / Math.abs(oldValue)) * 100);
-    return `${value} (${direction} ${percentChange}%)`;
+    const percentChange = ((newValue - oldValue) / Math.abs(oldValue)) * 100;
+    return `${value} (${direction} ${percentChange.toFixed(2)}%)`;
   }
 
   private async collectData(): Promise<GlobalStats> {
-    const globalData: GlobalResponse = await this.coingecko.global();
+    const globalData: GlobalResponse = (await this.apiService.getGlobal()).data;
     const date = moment.unix(globalData.data.updated_at);
     return await this.jobStatsService.saveGlobalStats({
       _id: date.format('YYYY-MM-DD'),

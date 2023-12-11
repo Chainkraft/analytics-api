@@ -1,18 +1,16 @@
-import { CoinGeckoClient } from 'coingecko-api-v3';
-import { CoinMarket } from 'coingecko-api-v3/dist/Interface';
-import { COINGECKO_DEMO_API_KEY, CRYPTOSTATS_ACCESS_SECRET, CRYPTOSTATS_ACCESS_TOKEN, CRYPTOSTATS_APP_KEY, CRYPTOSTATS_APP_SECRET } from '@config';
-import { currencyFormat } from '@utils/helpers';
+import { CRYPTOSTATS_ACCESS_SECRET, CRYPTOSTATS_ACCESS_TOKEN, CRYPTOSTATS_APP_KEY, CRYPTOSTATS_APP_SECRET } from '@config';
 import * as schedule from 'node-schedule';
 import { RecurringJob } from '@/jobs/job.manager';
 import { TwitterApi } from 'twitter-api-v2';
 import { logger } from '@/config/logger';
+import TokenApisService from '@services/token-apis.service';
+import SocialMediaPostService from '@services/social-media-post.service';
+import { SocialMedia } from '@interfaces/socia-media-post.interface';
 
 export class TopCoinsTwitterJob implements RecurringJob {
   private readonly job: schedule.Job;
-  private readonly coingecko = new CoinGeckoClient({
-    timeout: 60000,
-    autoRetry: true,
-  });
+  private apiService = new TokenApisService();
+  private socialMediaPostService = new SocialMediaPostService();
 
   constructor() {
     logger.info('Scheduling TopCoinsTwitterJob');
@@ -71,45 +69,32 @@ export class TopCoinsTwitterJob implements RecurringJob {
     });
     const result = await twitter.v2.tweetThread([{ text: bigCapTweet }, { text: smallCapTweet }]);
     logger.info(result.map(tweet => tweet.data.text).join('\n'));
+
+    await this.socialMediaPostService.saveSocialMediaPost({
+      socialMedia: SocialMedia.TWITTER,
+      account: 'GazillionCap',
+      text: bigCapTweet + '\n\n' + smallCapTweet,
+    });
   }
 
-  private getCoinStatsRow(coin: CoinMarket, position: number): string {
-    const price = coin.current_price < 0.01 ? coin.current_price : currencyFormat(coin.current_price.toString(), 2);
-    let change = coin.price_change_percentage_24h > 0 ? `⬆️` : `🔻`;
-    change += coin.price_change_percentage_24h.toFixed(Math.abs(coin.price_change_percentage_24h) < 1 ? 2 : 0);
+  private getCoinStatsRow(coin: any, position: number): string {
+    let change = coin.quote.USD.percent_change_24h > 0 ? `⬆️` : `🔻`;
+    change += coin.quote.USD.percent_change_24h.toFixed(Math.abs(coin.quote.USD.percent_change_24h) < 1 ? 2 : 0);
 
     return `${position}. $${coin.symbol.toUpperCase()} ${change}%\n`;
   }
 
-  private async getCoinList(): Promise<CoinMarket[]> {
-    const coins: CoinMarket[] = [];
-    const PER_PAGE = 250;
-    const MAX_PAGES = 4;
-
-    for (let i = 1; i <= MAX_PAGES; i++) {
-      const pageCoins = await this.coingecko.coinMarket({
-        vs_currency: 'usd',
-        order: 'market_cap_desc',
-        per_page: PER_PAGE,
-        page: i,
-        sparkline: false,
-        // @ts-ignore - biblioteka nie pozwala na dodanie demo key
-        x_cg_demo_api_key: COINGECKO_DEMO_API_KEY,
-      });
-
-      if (pageCoins && pageCoins.length > 0) {
-        coins.push(...pageCoins);
-      } else {
-        break;
-      }
-    }
-
-    return coins;
+  private async getCoinList(): Promise<any[]> {
+    const pageCoins = await this.apiService.getCoinMarket({
+      start: 1,
+      limit: 1000,
+    });
+    return pageCoins.data.data;
   }
 
-  private getTopCoins(coins: CoinMarket[], fromIndex: number, toIndex: number, limit = 5): CoinMarket[] {
-    const sortByPriceChange = (a: CoinMarket, b: CoinMarket) => b.price_change_percentage_24h - a.price_change_percentage_24h;
+  private getTopCoins(coins: any[], fromIndex: number, toIndex: number, limit = 5): any[] {
+    const sortByPriceChange = (a: any, b: any) => b.quote.USD.percent_change_24h - a.quote.USD.percent_change_24h;
     coins = coins.slice(fromIndex, toIndex).sort(sortByPriceChange);
-    return limit > 0 ? coins.slice(0, limit) : coins.slice(limit);
+    return limit > 0 ? coins.slice(0, limit) : coins.slice(limit).sort((a: any, b: any) => sortByPriceChange(b, a));
   }
 }
