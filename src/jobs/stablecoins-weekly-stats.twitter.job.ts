@@ -87,7 +87,7 @@ export class StablecoinsWeeklyStatsTwitterJob implements RecurringJob {
       socialMedia: SocialMedia.TWITTER,
       account: 'chainkraftcom',
       text: tweet,
-      images: [{ data: watermarkedBuffer, contentType: EUploadMimeType.Png }],
+      // images: [{ data: watermarkedBuffer, contentType: EUploadMimeType.Png }],
     });
   }
 

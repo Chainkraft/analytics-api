@@ -95,7 +95,7 @@ export class StablecoinsStatsTwitterJob implements RecurringJob {
       socialMedia: SocialMedia.TWITTER,
       account: 'stablealerts',
       text: tweet,
-      images: [{ data: watermarkedBuffer, contentType: 'image/png' }], // Assuming the watermarkedBuffer is a Buffer
+      // images: [{ data: watermarkedBuffer, contentType: 'image/png' }], // Assuming the watermarkedBuffer is a Buffer
     });
   }
 

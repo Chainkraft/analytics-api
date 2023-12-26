@@ -93,7 +93,7 @@ export class StablecoinTwitterJob implements RecurringJob {
           socialMedia: SocialMedia.TWITTER,
           account: 'stablealerts', // Update with the correct account name if needed
           text: smPost.text,
-          images: smPost.image ? [smPost.image] : [],
+          //  images: smPost.image ? [smPost.image] : [],
         });
       }
     }

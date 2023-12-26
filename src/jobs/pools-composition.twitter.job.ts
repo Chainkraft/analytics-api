@@ -75,7 +75,7 @@ export class PoolsCompositionTwitterJob implements RecurringJob {
         socialMedia: SocialMedia.TWITTER,
         account: 'chainkraftcom', // Update with the correct account name if needed
         text: tweetText,
-        images: [{ data: watermarkedBuffer, contentType: EUploadMimeType.Png }],
+        // images: [{ data: watermarkedBuffer, contentType: EUploadMimeType.Png }],
       });
     });
   }
