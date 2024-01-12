@@ -30,7 +30,7 @@ export class JobManager {
       // social posts
       this.addJob(new StablecoinsStatsTwitterJob());
       this.addJob(new GlobalStatsTwitterJob());
-      this.addJob(new PoolsCompositionTwitterJob());
+      // this.addJob(new PoolsCompositionTwitterJob());
       this.addJob(new StablecoinTwitterJob());
       this.addJob(new TopCoinsTwitterJob());
       this.addJob(new StablecoinsWeeklyStatsTwitterJob());

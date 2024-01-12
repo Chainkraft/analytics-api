@@ -48,10 +48,10 @@ export class StablecoinsWeeklyStatsTwitterJob implements RecurringJob {
     const marketCapShareDirection = changeInMarketCapShare >= 0 ? '+' : '-';
 
     const twitterClient = new TwitterApi({
-      appKey: process.env.CHAINKRAFTCOM_APP_KEY,
-      appSecret: process.env.CHAINKRAFTCOM_APP_SECRET,
-      accessToken: process.env.CHAINKRAFTCOM_ACCESS_TOKEN,
-      accessSecret: process.env.CHAINKRAFTCOM_ACCESS_SECRET,
+      appKey: process.env.STABLEALERTS_APP_KEY,
+      appSecret: process.env.STABLEALERTS_APP_SECRET,
+      accessToken: process.env.STABLEALERTS_ACCESS_TOKEN,
+      accessSecret: process.env.STABLEALERTS_ACCESS_SECRET,
     });
 
     // Prepare tweet content
@@ -85,7 +85,7 @@ export class StablecoinsWeeklyStatsTwitterJob implements RecurringJob {
     // Save the tweet to the database
     await this.socialMediaPostService.saveSocialMediaPost({
       socialMedia: SocialMedia.TWITTER,
-      account: 'chainkraftcom',
+      account: 'stablealerts',
       text: tweet,
       // images: [{ data: watermarkedBuffer, contentType: EUploadMimeType.Png }],
     });
