@@ -13,13 +13,15 @@ import { PoolsCompositionTwitterJob } from './pools-composition.twitter.job';
 import { StablecoinsStatsTwitterJob } from './stablecoins-stats.twitter.job';
 import { StablecoinsWeeklyStatsTwitterJob } from './stablecoins-weekly-stats.twitter.job';
 
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 export class JobManager {
   private jobs: Job[] = [];
 
   constructor() {
     this.addJob(new ContractAnomaliesJob());
     this.addJob(new CurvePoolsJob());
-    this.addJob(new UniswapPoolsJob());
+    // this.addJob(new UniswapPoolsJob());
     this.addJob(new PoolsCompositionNotificationsJob());
     this.addJob(new RefreshScoreJob());
     this.addJob(new RefreshStablecoinPricesJob());
@@ -27,13 +29,13 @@ export class JobManager {
     this.addJob(new StablecoinContractsImport());
 
     if (process.env.NODE_ENV === 'production') {
-      // social posts
-      this.addJob(new StablecoinsStatsTwitterJob());
-      this.addJob(new GlobalStatsTwitterJob());
-      // this.addJob(new PoolsCompositionTwitterJob());
-      this.addJob(new StablecoinTwitterJob());
-      this.addJob(new TopCoinsTwitterJob());
-      this.addJob(new StablecoinsWeeklyStatsTwitterJob());
+      // // social posts
+      // this.addJob(new StablecoinsStatsTwitterJob());
+      // this.addJob(new GlobalStatsTwitterJob());
+      // // this.addJob(new PoolsCompositionTwitterJob());
+      // this.addJob(new StablecoinTwitterJob());
+      // this.addJob(new TopCoinsTwitterJob());
+      // this.addJob(new StablecoinsWeeklyStatsTwitterJob());
     }
   }
 
@@ -45,6 +47,26 @@ export class JobManager {
   public getJob(className: string): Job | undefined {
     return this.jobs.find(obj => obj.constructor.name === className);
   }
+
+  public async executeJobsSequentially() {
+    for (const job of this.jobs) {
+      try {
+        console.log(`Starting job: ${job.constructor.name} at ${new Date().toISOString()}`);
+        await job.executeJob();
+        console.log(`Completed job: ${job.constructor.name} at ${new Date().toISOString()}`);
+
+        // Wait for 1 minute between jobs
+        console.log('Waiting for 1 minute...');
+        await delay(60000); // 60000 ms = 1 minute
+      } catch (error) {
+        console.error(`Error in job ${job.constructor.name}:`, error);
+
+        // Still wait for 1 minute even if job fails
+        console.log('Waiting for 1 minute after job failure...');
+        await delay(60000);
+      }
+    }
+  }
 }
 
 export interface RecurringJob extends Job {
@@ -52,5 +74,5 @@ export interface RecurringJob extends Job {
 }
 
 export interface Job {
-  executeJob(): Promise<void>;
+  executeJob(): Promise<any>;
 }
