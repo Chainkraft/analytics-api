@@ -19,6 +19,7 @@ import { JobManager } from './jobs/job.manager';
 import { RefreshStablecoinPricesJob } from './jobs/refresh-stablecoin-prices.job';
 import { RefreshScoreJob } from './jobs/score-calculation.job';
 import slug from 'slug';
+import { NextFunction, Request, Response } from 'express';
 
 class App {
   public app: express.Application;
@@ -36,7 +37,7 @@ class App {
     this.initializeRoutes(routes);
     this.initializeSwagger();
     this.initializeErrorHandling();
-    this.initializeJobManager();
+    // this.initializeJobManager();
   }
 
   public listen() {
@@ -53,9 +54,10 @@ class App {
   }
 
   private connectToDatabase() {
-    if (this.env !== 'production') {
-      set('debug', true);
-    }
+    // if (this.env !== 'production') {
+    //   set('debug', true);
+    // }
+    set('debug', true);
 
     connect(dbConnection.url, dbConnection.options);
   }
@@ -82,6 +84,10 @@ class App {
     this.app.use(express.urlencoded({ extended: true }));
     this.app.use(cookieParser());
     this.app.use(userContext);
+    this.app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+      console.error(err.stack); // Log the error stack
+      res.status(500).send({ message: err.message }); // Send error response
+    });
 
     // static resources
     this.app.use('/static', express.static('static'));
